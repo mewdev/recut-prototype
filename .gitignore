@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+
+# Node
+node_modules/
+dist/
+.next/
+
+# Audio/large files
+*.mp3
+*.wav
+*.flac
+
+# Generated
+music.map.json
+podcast_intro.mp3
+
+# OS
+.DS_Store
+
+# Conda
+.conda/
