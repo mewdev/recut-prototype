@@ -34,7 +34,7 @@ def analyze(path):
     music_map = {
         "file": path,
         "duration": round(float(len(y) / sr), 2),
-        "bpm": round(float(tempo), 1),
+        "bpm": round(float(tempo.item()), 1),
         "key": key,
         "beats": [round(b, 3) for b in beat_times[:32]],
         "sections": sections
