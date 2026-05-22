@@ -1,0 +1,7 @@
+{
+  "keep_from": 0,
+  "keep_to": 69.52,
+  "fade_out_start": 65.0,
+  "fade_out_duration": 4.52,
+  "reasoning": "Section 3 boundary at 69.52s is the nearest natural phrase ending to the 60s target; cutting here avoids truncating mid-phrase."
+}
