@@ -14,9 +14,14 @@ dist/
 *.wav
 *.flac
 
-# Generated
+# Generated / large model artifacts
 music.map.json
-podcast_intro.mp3
+demix/
+spec/
+*.mid
+
+# Cloned external repos (too large to commit)
+ChordMiniApp/
 
 # OS
 .DS_Store
