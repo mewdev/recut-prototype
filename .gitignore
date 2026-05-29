@@ -19,6 +19,8 @@ music.map.json
 demix/
 spec/
 *.mid
+*-allin1.json
+labour-allin1.json
 
 # Cloned external repos (too large to commit)
 ChordMiniApp/

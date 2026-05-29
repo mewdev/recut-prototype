@@ -1,17 +1,40 @@
 # Todo & Ideas
 
 ## Analysis
+
 - [ ] Vocal position detection — detect where vocals are present/absent in a track.
       Needed for: smarter fade-out placement (avoid cutting mid-phrase/mid-word),
       better cut point selection, section labeling refinement.
       Tools to explore: pyannote.audio, Demucs vocal stem + energy envelope.
+
+- [ ] Cadence detection — currently `cadences: []` in the map. This is the primary "safe cut point" signal.
+      A perfect cadence = harmonic resolution = clean place to cut without tension.
+      Needed for: tier-2 primitives (borrowEndingCadence, crossfadeAtHarmonicNeutralPoint).
+
+- [ ] Roman numeral + harmonic function — chord fields `roman` and `function` are empty.
+      Have raw chords (Bm, Em, F#) but not harmonic roles (i, iv, V).
+      Needed for: reasoning about whether a cut lands on tension or resolution.
+
+- [ ] Phrase boundaries — within a section (e.g. 30s verse) there are no 4-bar/8-bar phrase markers.
+      Currently only have section-level and beat-level granularity — nothing in between.
+      Needed for: cuts that respect phrase structure, not just section boundaries.
+
+- [ ] Energy curve — no per-beat or per-segment loudness/density signal.
+      Needed for: detecting builds/drops, smarter fade placement, section labeling refinement.
+
+- [ ] Segment label accuracy — allin1 labels first segment as "verse" (should be "intro"),
+      and section boundaries are approximate (chorus detected at 54.7s, actual downbeat at 51.15s).
+      Consider: post-processing pass to correct intro/outro labels + snap boundaries to nearest downbeat.
 
 ## Primitives
 ## Editing
 ## Pipeline
 ## Stems
 
--  allinone default stem demucs is fine for vocals, but the rest of stems could have better separation quality
+- [ ] Extract stems from allin1 JSON output — write utility that reads `labour-allin1.json` and writes `testing/01/stems/{vocals,drums,bass,other}.wav`. No re-running needed, stems already computed by Demucs inside the Modal pipeline.
+      Use case: feed isolated vocal stem into ending delay layer (instead of full mix) for cleaner echo tail.
+
+- allin1 default Demucs model is fine for vocals, but other stems (drums, bass) could be higher quality with htdemucs or htdemucs_ft
 
 
 ## Documenting testing cases for cutting model traning:
