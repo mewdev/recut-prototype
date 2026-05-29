@@ -28,3 +28,6 @@ ChordMiniApp/
 
 # Conda
 .conda/
+
+# Agents
+.claude

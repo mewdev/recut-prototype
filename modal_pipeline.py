@@ -20,6 +20,8 @@ API:
 """
 
 import modal
+from fastapi import Request
+import sys, json, pathlib, base64
 
 app = modal.App("recut-analyze")
 
@@ -33,9 +35,9 @@ image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("ffmpeg", "libsndfile1", "libfftw3-dev", "build-essential", "git")
     .pip_install("torch==2.2.2", extra_index_url="https://download.pytorch.org/whl/cu121")
-    .pip_install("natten==0.14.6", extra_index_url="https://download.pytorch.org/whl/cu121")
     .pip_install("torchaudio==2.2.2", extra_index_url="https://download.pytorch.org/whl/cu121")
     .pip_install("allin1==1.1.0", "numpy==1.26.4", "librosa==0.10.2", "soundfile", "fastapi[standard]")
+    .run_commands("pip install natten==0.17.4+torch220cu121 --find-links https://shi-labs.com/natten/wheels/cu121/ --trusted-host shi-labs.com --no-deps")
     .run_commands("pip install git+https://github.com/CPJKU/madmom")
     .run_function(preload_model)
 )
@@ -52,15 +54,16 @@ def run_allin1(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         audio_path = tmp / filename
         audio_path.write_bytes(audio_bytes)
 
-        import allin1
+        import allin1, base64
+        demix_dir = tmp / "demix"
         r = allin1.analyze(
             str(audio_path),
             model="harmonix-all",
             device="cuda",
             multiprocess=False,
-            demix_dir=str(tmp / "demix"),
+            demix_dir=str(demix_dir),
             spec_dir=str(tmp / "spec"),
-            keep_byproducts=False,
+            keep_byproducts=True,
         )
 
         result = {
@@ -72,33 +75,36 @@ def run_allin1(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
                 {"label": s.label, "start": round(float(s.start), 3), "end": round(float(s.end), 3)}
                 for s in r.segments
             ],
+            "stems": {},
         }
+
+        if demix_dir.exists():
+            stems = demix_dir.rglob("*.wav")
+            for stem in stems:
+                result["stems"][stem.name] = base64.b64encode(stem.read_bytes()).decode()
+                
         print(f"allin1: bpm={result['bpm']} beats={len(result['beats'])} "
-              f"downbeats={len(result['downbeats'])} segments={len(result['segments'])}")
+              f"downbeats={len(result['downbeats'])} segments={len(result['segments'])}"
+              f" stems={len(result['stems'])}")
         return result
 
 
 @app.function(image=image)
 @modal.fastapi_endpoint(method="POST", requires_proxy_auth=True)
-async def analyze_web(request):
+async def analyze_web(request: Request):
     """POST multipart/form-data  file=@track.mp3  → allin1 JSON"""
     from fastapi.responses import JSONResponse
     form = await request.form()
     upload = form["file"]
     audio_bytes = await upload.read()
     filename = upload.filename or "track.mp3"
-    result = run_allin1.remote(audio_bytes, filename)
+    result = await run_allin1.remote.aio(audio_bytes, filename)
     return JSONResponse(result)
 
 
 @app.local_entrypoint()
-def main():
-    """modal run modal_pipeline.py path/to/track.mp3"""
-    import sys, json, pathlib
-    if len(sys.argv) < 2:
-        print("Usage: modal run modal_pipeline.py <path/to/track.mp3>")
-        sys.exit(1)
-    path = sys.argv[1]
+def main(path: str):
+    """modal run modal_pipeline.py --path path/to/track.mp3"""
     stem = pathlib.Path(path).stem
 
     print(f"Sending {path} to Modal GPU...")
@@ -108,6 +114,11 @@ def main():
     with open(out, "w") as f:
         json.dump(result, f, indent=2)
     print(f"Saved: {out}")
+
+    for filename, b64_string in result["stems"].items():
+        pathlib.Path(filename).write_bytes(base64.b64decode(b64_string))
+        print(f"Saved stem: {filename}")
+
     print(f"  bpm={result['bpm']}  beats={len(result['beats'])}  "
           f"downbeats={len(result['downbeats'])}  segments={len(result['segments'])}")
     print(f"\nNext steps:")
