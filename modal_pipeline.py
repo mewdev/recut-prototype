@@ -23,15 +23,21 @@ import modal
 
 app = modal.App("recut-analyze")
 
+
+def preload_model():
+    from allin1.models import load_pretrained_model
+    load_pretrained_model("harmonix-all", device="cpu")
+
+
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("ffmpeg", "libsndfile1", "libfftw3-dev", "build-essential", "git")
     .pip_install("torch==2.2.2", extra_index_url="https://download.pytorch.org/whl/cu121")
     .pip_install("natten==0.14.6", extra_index_url="https://download.pytorch.org/whl/cu121")
-    .pip_install("allin1==1.1.0", "numpy==1.26.4", "librosa==0.10.2", "soundfile")
+    .pip_install("torchaudio==2.2.2", extra_index_url="https://download.pytorch.org/whl/cu121")
+    .pip_install("allin1==1.1.0", "numpy==1.26.4", "librosa==0.10.2", "soundfile", "fastapi[standard]")
     .run_commands("pip install git+https://github.com/CPJKU/madmom")
-    .run_function(lambda: __import__("allin1.models", fromlist=["load_pretrained_model"])
-                          .load_pretrained_model("harmonix-all", device="cpu"))
+    .run_function(preload_model)
 )
 
 
@@ -73,7 +79,7 @@ def run_allin1(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
 
 
 @app.function(image=image)
-@modal.web_endpoint(method="POST")
+@modal.fastapi_endpoint(method="POST", requires_proxy_auth=True)
 async def analyze_web(request):
     """POST multipart/form-data  file=@track.mp3  → allin1 JSON"""
     from fastapi.responses import JSONResponse
@@ -89,7 +95,10 @@ async def analyze_web(request):
 def main():
     """modal run modal_pipeline.py path/to/track.mp3"""
     import sys, json, pathlib
-    path = sys.argv[1] if len(sys.argv) > 1 else "modern-classic/Building A Family (1).mp3"
+    if len(sys.argv) < 2:
+        print("Usage: modal run modal_pipeline.py <path/to/track.mp3>")
+        sys.exit(1)
+    path = sys.argv[1]
     stem = pathlib.Path(path).stem
 
     print(f"Sending {path} to Modal GPU...")
