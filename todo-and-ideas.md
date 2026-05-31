@@ -27,6 +27,16 @@
       Consider: post-processing pass to correct intro/outro labels + snap boundaries to nearest downbeat.
 
 ## Primitives
+
+- [ ] **LLM2Fx integration** — Sony Research paper (arXiv 2505.20770 + 2512.01559, GitHub: SonyResearch/LLM2Fx).
+      Two systems:
+      - LLM2Fx v1: natural language → EQ/reverb parameters (text-to-parameter)
+      - LLM2Fx-Tools v2: reference audio pair → effect chain with CoT reasoning (style transfer)
+      Relevance: when user describes a creative effect in natural language ("warm church reverb", "underwater feel"),
+      LLM2Fx predicts the parameters → feeds directly into our existing `chain()` primitives.
+      Integration point: `chain(audio, sr, (llm_fx_from_text, {"prompt": instruction}), ...)`
+      Also: LP-Fx dataset (101K instruction→effect chain examples) could augment training data for the cutting model.
+      Limitation: currently only EQ + reverb; GPT-4o works best for parameter prediction.
 ## Editing
 ## Pipeline
 ## Stems
