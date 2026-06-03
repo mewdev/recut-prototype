@@ -1,5 +1,18 @@
 # Changelog
 
+## [map v2] — 2026-06-10 — Downbeat snapping with drift fallback
+**Track tested:** end_of_beginning.mp3 (testing/04)
+
+Improved segment boundary accuracy in `map/make_map.py`:
+
+- **`snap_to_downbeat()`** replaces naive nearest-downbeat logic. Finds first downbeat ≥ `(t - tolerance)` but only snaps if within `fallback_threshold` (0.5s). Falls back to raw ChordMini value when beat tracker has drifted.
+- **Beat tracker drift** observed from ~88s onward in end_of_beginning — madmom DBN lost sync at a dynamic transition, shifting the downbeat grid by ~1.5 bars for the remainder of the track. Fallback handles this cleanly.
+- Segment boundary offset (ChordMini vs madmom misalignment) reduced from ~20–400ms to ~0–20ms for well-tracked sections.
+
+See `docs/analysis-findings.md` for full diagnosis and proposed GUI correction tool.
+
+---
+
 ## [edit 2.4] — 2026-05-29 — Current best
 **Track:** labour.mp3 (B minor, 83 BPM)
 **Cut:** 51.15s – 89.01s (chorus body, 37.86s)

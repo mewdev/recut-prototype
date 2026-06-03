@@ -1,0 +1,10882 @@
+{
+  "path": "older/billie-jean/billie_jean.mp3",
+  "bpm": 118,
+  "bpm_h1zero": 117.45,
+  "time_signature": 4,
+  "key": "F#",
+  "scale": "minor",
+  "tonal_zones": {
+    "zone_1": {
+      "label": "F#_minor",
+      "start": 0,
+      "end": 215.53
+    },
+    "zone_2": {
+      "label": "modulation",
+      "start": 215.53,
+      "end": null
+    }
+  },
+  "modulation_time": 215.53,
+  "unique_chords": [
+    "Bm7",
+    "C#m7",
+    "D",
+    "F#m7",
+    "F7",
+    "C7",
+    "C#7",
+    "Em7",
+    "F#7"
+  ],
+  "genre": "rock_pop",
+  "beats": [
+    0.25,
+    0.76,
+    1.29,
+    1.81,
+    2.32,
+    2.83,
+    3.35,
+    3.86,
+    4.38,
+    4.89,
+    5.4,
+    5.91,
+    6.42,
+    6.93,
+    7.45,
+    7.96,
+    8.47,
+    8.98,
+    9.5,
+    10.01,
+    10.52,
+    11.03,
+    11.54,
+    12.05,
+    12.56,
+    13.08,
+    13.59,
+    14.11,
+    14.62,
+    15.13,
+    15.65,
+    16.16,
+    16.68,
+    17.2,
+    17.71,
+    18.22,
+    18.74,
+    19.24,
+    19.76,
+    20.27,
+    20.78,
+    21.3,
+    21.82,
+    22.34,
+    22.85,
+    23.36,
+    23.87,
+    24.38,
+    24.9,
+    25.41,
+    25.92,
+    26.43,
+    26.95,
+    27.46,
+    27.98,
+    28.48,
+    29.0,
+    29.51,
+    30.02,
+    30.53,
+    31.04,
+    31.56,
+    32.07,
+    32.58,
+    33.09,
+    33.6,
+    34.12,
+    34.63,
+    35.14,
+    35.66,
+    36.17,
+    36.69,
+    37.21,
+    37.73,
+    38.24,
+    38.75,
+    39.26,
+    39.77,
+    40.28,
+    40.79,
+    41.3,
+    41.82,
+    42.33,
+    42.85,
+    43.36,
+    43.87,
+    44.38,
+    44.9,
+    45.41,
+    45.93,
+    46.44,
+    46.96,
+    47.47,
+    47.98,
+    48.48,
+    49.0,
+    49.51,
+    50.03,
+    50.54,
+    51.06,
+    51.57,
+    52.08,
+    52.6,
+    53.12,
+    53.63,
+    54.15,
+    54.65,
+    55.16,
+    55.68,
+    56.19,
+    56.71,
+    57.22,
+    57.73,
+    58.23,
+    58.74,
+    59.26,
+    59.77,
+    60.29,
+    60.8,
+    61.32,
+    61.83,
+    62.33,
+    62.86,
+    63.37,
+    63.88,
+    64.39,
+    64.9,
+    65.42,
+    65.93,
+    66.44,
+    66.96,
+    67.48,
+    68.0,
+    68.51,
+    69.02,
+    69.53,
+    70.04,
+    70.56,
+    71.07,
+    71.59,
+    72.09,
+    72.61,
+    73.12,
+    73.63,
+    74.14,
+    74.65,
+    75.16,
+    75.66,
+    76.18,
+    76.69,
+    77.2,
+    77.73,
+    78.24,
+    78.76,
+    79.28,
+    79.79,
+    80.3,
+    80.82,
+    81.34,
+    81.85,
+    82.36,
+    82.88,
+    83.4,
+    83.91,
+    84.42,
+    84.93,
+    85.44,
+    85.95,
+    86.45,
+    86.96,
+    87.47,
+    87.98,
+    88.5,
+    89.01,
+    89.52,
+    90.03,
+    90.54,
+    91.04,
+    91.55,
+    92.06,
+    92.58,
+    93.1,
+    93.62,
+    94.13,
+    94.65,
+    95.16,
+    95.67,
+    96.17,
+    96.69,
+    97.2,
+    97.72,
+    98.23,
+    98.74,
+    99.26,
+    99.77,
+    100.28,
+    100.79,
+    101.31,
+    101.82,
+    102.34,
+    102.85,
+    103.37,
+    103.88,
+    104.39,
+    104.9,
+    105.41,
+    105.92,
+    106.43,
+    106.95,
+    107.46,
+    107.98,
+    108.49,
+    109.0,
+    109.51,
+    110.03,
+    110.54,
+    111.05,
+    111.55,
+    112.07,
+    112.59,
+    113.09,
+    113.62,
+    114.13,
+    114.64,
+    115.14,
+    115.66,
+    116.16,
+    116.68,
+    117.19,
+    117.71,
+    118.23,
+    118.74,
+    119.25,
+    119.76,
+    120.27,
+    120.78,
+    121.3,
+    121.81,
+    122.33,
+    122.84,
+    123.35,
+    123.87,
+    124.38,
+    124.89,
+    125.4,
+    125.91,
+    126.43,
+    126.94,
+    127.46,
+    127.97,
+    128.48,
+    128.99,
+    129.5,
+    130.01,
+    130.53,
+    131.04,
+    131.55,
+    132.06,
+    132.57,
+    133.08,
+    133.6,
+    134.12,
+    134.63,
+    135.14,
+    135.64,
+    136.16,
+    136.67,
+    137.19,
+    137.7,
+    138.21,
+    138.73,
+    139.24,
+    139.74,
+    140.26,
+    140.77,
+    141.28,
+    141.79,
+    142.31,
+    142.83,
+    143.33,
+    143.85,
+    144.37,
+    144.88,
+    145.39,
+    145.89,
+    146.41,
+    146.91,
+    147.42,
+    147.94,
+    148.45,
+    148.96,
+    149.47,
+    149.99,
+    150.5,
+    151.01,
+    151.52,
+    152.02,
+    152.55,
+    153.05,
+    153.57,
+    154.08,
+    154.6,
+    155.11,
+    155.63,
+    156.14,
+    156.65,
+    157.16,
+    157.67,
+    158.19,
+    158.71,
+    159.22,
+    159.73,
+    160.24,
+    160.76,
+    161.26,
+    161.78,
+    162.29,
+    162.81,
+    163.32,
+    163.83,
+    164.34,
+    164.86,
+    165.37,
+    165.89,
+    166.39,
+    166.91,
+    167.42,
+    167.92,
+    168.43,
+    168.92,
+    169.44,
+    169.96,
+    170.47,
+    170.98,
+    171.49,
+    172.0,
+    172.51,
+    173.02,
+    173.53,
+    174.04,
+    174.55,
+    175.07,
+    175.58,
+    176.1,
+    176.61,
+    177.12,
+    177.63,
+    178.14,
+    178.64,
+    179.16,
+    179.67,
+    180.19,
+    180.7,
+    181.21,
+    181.73,
+    182.24,
+    182.75,
+    183.26,
+    183.77,
+    184.29,
+    184.8,
+    185.31,
+    185.82,
+    186.33,
+    186.85,
+    187.35,
+    187.87,
+    188.38,
+    188.89,
+    189.4,
+    189.91,
+    190.41,
+    190.93,
+    191.45,
+    191.97,
+    192.48,
+    192.99,
+    193.51,
+    194.02,
+    194.53,
+    195.04,
+    195.55,
+    196.06,
+    196.57,
+    197.08,
+    197.59,
+    198.11,
+    198.62,
+    199.13,
+    199.64,
+    200.16,
+    200.67,
+    201.19,
+    201.7,
+    202.21,
+    202.72,
+    203.23,
+    203.74,
+    204.25,
+    204.76,
+    205.28,
+    205.79,
+    206.31,
+    206.82,
+    207.33,
+    207.84,
+    208.35,
+    208.87,
+    209.37,
+    209.89,
+    210.41,
+    210.92,
+    211.43,
+    211.94,
+    212.45,
+    212.96,
+    213.48,
+    213.99,
+    214.5,
+    215.01,
+    215.53,
+    216.04,
+    216.56,
+    217.06,
+    217.58,
+    218.09,
+    218.6,
+    219.11,
+    219.62,
+    220.14,
+    220.64,
+    221.16,
+    221.67,
+    222.19,
+    222.69,
+    223.21,
+    223.72,
+    224.23,
+    224.74,
+    225.25,
+    225.77,
+    226.28,
+    226.79,
+    227.3,
+    227.81,
+    228.31,
+    228.83,
+    229.34,
+    229.85,
+    230.36,
+    230.88,
+    231.39,
+    231.91,
+    232.42,
+    232.93,
+    233.43,
+    233.96,
+    234.46,
+    234.97,
+    235.48,
+    235.99,
+    236.51,
+    237.02,
+    237.53,
+    238.04,
+    238.55,
+    239.06,
+    239.57,
+    240.09,
+    240.6,
+    241.11,
+    241.63,
+    242.14,
+    242.66,
+    243.16,
+    243.67,
+    244.18,
+    244.7,
+    245.21,
+    245.73,
+    246.24,
+    246.75,
+    247.26,
+    247.77,
+    248.29,
+    248.8,
+    249.31,
+    249.82,
+    250.33,
+    250.84,
+    251.36,
+    251.87,
+    252.37,
+    252.89,
+    253.4,
+    253.91,
+    254.41,
+    254.94,
+    255.45,
+    255.96,
+    256.47,
+    256.98,
+    257.5,
+    258.01,
+    258.53,
+    259.04,
+    259.55,
+    260.06,
+    260.57,
+    261.08,
+    261.59,
+    262.11,
+    262.62,
+    263.13,
+    263.65,
+    264.16,
+    264.66,
+    265.18,
+    265.68,
+    266.2,
+    266.7,
+    267.22,
+    267.73,
+    268.24,
+    268.75,
+    269.27,
+    269.78,
+    270.29,
+    270.8,
+    271.31,
+    271.82,
+    272.34,
+    272.85,
+    273.36,
+    273.87,
+    274.38,
+    274.89,
+    275.4,
+    275.91,
+    276.43,
+    276.94,
+    277.46,
+    277.96,
+    278.48,
+    278.99,
+    279.49,
+    280.0,
+    280.52,
+    281.04,
+    281.55,
+    282.06,
+    282.58,
+    283.09,
+    283.6,
+    284.1,
+    284.61,
+    285.13,
+    285.64,
+    286.15,
+    286.67,
+    287.18,
+    287.68,
+    288.2,
+    288.71,
+    289.22,
+    289.74
+  ],
+  "downbeats": [
+    0.25,
+    2.32,
+    4.38,
+    6.42,
+    8.47,
+    10.52,
+    12.56,
+    14.62,
+    16.68,
+    18.74,
+    20.78,
+    22.85,
+    24.9,
+    26.95,
+    29.0,
+    31.04,
+    33.09,
+    35.14,
+    37.21,
+    39.26,
+    41.3,
+    43.36,
+    45.41,
+    47.47,
+    49.51,
+    51.57,
+    53.63,
+    55.68,
+    57.73,
+    59.77,
+    61.83,
+    63.88,
+    65.93,
+    68.0,
+    70.04,
+    72.09,
+    74.14,
+    76.18,
+    78.24,
+    80.3,
+    82.36,
+    84.42,
+    86.45,
+    88.5,
+    90.54,
+    92.58,
+    94.65,
+    96.69,
+    98.74,
+    100.79,
+    102.85,
+    104.9,
+    106.95,
+    109.0,
+    111.05,
+    113.09,
+    115.14,
+    117.19,
+    119.25,
+    121.3,
+    123.35,
+    125.4,
+    127.46,
+    129.5,
+    131.55,
+    133.6,
+    135.64,
+    137.7,
+    139.74,
+    141.79,
+    143.85,
+    145.89,
+    147.94,
+    149.99,
+    152.02,
+    154.08,
+    156.14,
+    158.19,
+    160.24,
+    162.29,
+    164.34,
+    166.39,
+    168.43,
+    170.47,
+    172.51,
+    174.55,
+    176.61,
+    178.64,
+    180.7,
+    182.75,
+    184.8,
+    186.85,
+    188.89,
+    190.93,
+    192.99,
+    195.04,
+    197.08,
+    199.13,
+    201.19,
+    203.23,
+    205.28,
+    207.33,
+    209.37,
+    211.43,
+    213.48,
+    215.53,
+    217.58,
+    219.62,
+    221.67,
+    223.72,
+    225.77,
+    227.81,
+    229.85,
+    231.91,
+    233.96,
+    235.99,
+    238.04,
+    240.09,
+    242.14,
+    244.18,
+    246.24,
+    248.29,
+    250.33,
+    252.37,
+    254.41,
+    256.47,
+    258.53,
+    260.57,
+    262.62,
+    264.66,
+    266.7,
+    268.75,
+    270.8,
+    272.85,
+    274.89,
+    276.94,
+    278.99,
+    281.04,
+    283.09,
+    285.13,
+    287.18,
+    289.22
+  ],
+  "beat_positions": [
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2,
+    3,
+    4,
+    1,
+    2
+  ],
+  "downbeats_with_chords": [
+    {
+      "time": 0.25,
+      "chord": null,
+      "roman": null,
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [],
+      "bass_note": null
+    },
+    {
+      "time": 2.32,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 4.38,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 6.42,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 8.47,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "C#",
+        "E",
+        "F#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 10.52,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 12.56,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 14.62,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 16.68,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 18.74,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 20.78,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "G#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 22.85,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "C#",
+        "E"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 24.9,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 26.95,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "A",
+        "F#",
+        "E"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 29.0,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "C#",
+        "E",
+        "C"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 31.04,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 33.09,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 35.14,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B",
+        "A",
+        "G"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 37.21,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "A",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 39.26,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "A",
+        "B",
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 41.3,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "G#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 43.36,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "A",
+        "F#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 45.41,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 47.47,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 49.51,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 51.57,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 53.63,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 55.68,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 57.73,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 59.77,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "B"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 61.83,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "B",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 63.88,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 65.93,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [],
+      "bass_note": null
+    },
+    {
+      "time": 68.0,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#",
+        "D"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 70.04,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 72.09,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "A"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 74.14,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 76.18,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "D"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 78.24,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 80.3,
+      "chord": "F7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "D"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 82.36,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D",
+        "A"
+      ],
+      "bass_note": "A"
+    },
+    {
+      "time": 84.42,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "C#",
+        "F#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 86.45,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 88.5,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 90.54,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 92.58,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "E",
+        "B",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 94.65,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 96.69,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 98.74,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "G",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 100.79,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 102.85,
+      "chord": "Bm7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 104.9,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "C"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 106.95,
+      "chord": "C7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 109.0,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 111.05,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 113.09,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 115.14,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 117.19,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 119.25,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 121.3,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 123.35,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 125.4,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "A",
+        "B"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 127.46,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "A",
+        "F#",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 129.5,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "D",
+        "F#",
+        "A",
+        "G#",
+        "E",
+        "C#"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 131.55,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "C#",
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 133.6,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 135.64,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 137.7,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "D#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 139.74,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 141.79,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B",
+        "A"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 143.85,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 145.89,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "A",
+        "E",
+        "C",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 147.94,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 149.99,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 152.02,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 154.08,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 156.14,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D",
+        "F"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 158.19,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "A",
+        "D"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 160.24,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D",
+        "F#"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 162.29,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "D"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 164.34,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "D"
+      ],
+      "bass_note": "D"
+    },
+    {
+      "time": 166.39,
+      "chord": "D",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 168.43,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 170.47,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 172.51,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 174.55,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 176.61,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "A",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 178.64,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 180.7,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 182.75,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 184.8,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 186.85,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 188.89,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 190.93,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "B",
+        "C#"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 192.99,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E",
+        "G"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 195.04,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "D"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 197.08,
+      "chord": "Bm7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 199.13,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B",
+        "A"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 201.19,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 203.23,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "A",
+        "D"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 205.28,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "E"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 207.33,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 209.37,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 211.43,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 213.48,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "F#_minor",
+      "midi_pitches": [
+        "F#",
+        "G"
+      ],
+      "bass_note": "G"
+    },
+    {
+      "time": 215.53,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "G",
+        "F#"
+      ],
+      "bass_note": "G"
+    },
+    {
+      "time": 217.58,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 219.62,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 221.67,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 223.72,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E",
+        "C#",
+        "A"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 225.77,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "A",
+        "E"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 227.81,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "B",
+        "F#",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 229.85,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 231.91,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "C#",
+        "F#",
+        "E",
+        "B"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 233.96,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 235.99,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 238.04,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 240.09,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 242.14,
+      "chord": "F#7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "A",
+        "B",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 244.18,
+      "chord": "Bm7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "B",
+        "E",
+        "F#"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 246.24,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "A",
+        "D",
+        "C#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 248.29,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "A",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 250.33,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "B",
+        "E"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 252.37,
+      "chord": "Bm7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 254.41,
+      "chord": "Bm7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "C#",
+        "E",
+        "F#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 256.47,
+      "chord": "C#7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "C#",
+        "E",
+        "A#",
+        "B"
+      ],
+      "bass_note": "E"
+    },
+    {
+      "time": 258.53,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "A",
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 260.57,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 262.62,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 264.66,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 266.7,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 268.75,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 270.8,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#"
+      ],
+      "bass_note": "C#"
+    },
+    {
+      "time": 272.85,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 274.89,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "E",
+        "C#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 276.94,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 278.99,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "B"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 281.04,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 283.09,
+      "chord": "C#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    },
+    {
+      "time": 285.13,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 287.18,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#",
+        "C#",
+        "E",
+        "B"
+      ],
+      "bass_note": "B"
+    },
+    {
+      "time": 289.22,
+      "chord": "F#m7",
+      "roman": "",
+      "tonal_zone": "modulation",
+      "midi_pitches": [
+        "F#"
+      ],
+      "bass_note": "F#"
+    }
+  ],
+  "segments": [
+    {
+      "label": "start",
+      "start": 0.0,
+      "end": 0.24,
+      "chord_at_start": null,
+      "chord_at_end": null,
+      "tonal_zone": "unknown",
+      "midi_pitch_classes": [],
+      "midi_note_count": 0,
+      "predominant_midi_pc": null,
+      "chords_in_segment": []
+    },
+    {
+      "label": "intro",
+      "start": 0.24,
+      "end": 28.99,
+      "chord_at_start": null,
+      "chord_at_end": "C#m7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "E",
+        "B",
+        "G#",
+        "A"
+      ],
+      "midi_note_count": 67,
+      "predominant_midi_pc": "C#",
+      "chords_in_segment": [
+        {
+          "time": 0.37151927437641724,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.033
+        },
+        {
+          "time": 5.5147392290249435,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.85
+        },
+        {
+          "time": 7.047256235827664,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.652
+        },
+        {
+          "time": 7.558095238095238,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.843
+        },
+        {
+          "time": 9.102222222222222,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.666
+        },
+        {
+          "time": 9.601451247165533,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.923
+        },
+        {
+          "time": 13.188934240362812,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.712
+        },
+        {
+          "time": 13.699773242630386,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.976
+        },
+        {
+          "time": 15.255510204081633,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.799
+        },
+        {
+          "time": 15.766349206349206,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.917
+        },
+        {
+          "time": 17.322086167800453,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.632
+        },
+        {
+          "time": 17.821315192743764,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.859
+        },
+        {
+          "time": 21.420408163265307,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.737
+        },
+        {
+          "time": 21.91963718820862,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.878
+        },
+        {
+          "time": 25.530340136054424,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.809
+        },
+        {
+          "time": 26.02956916099773,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.574
+        },
+        {
+          "time": 27.573696145124718,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.703
+        },
+        {
+          "time": 28.08453514739229,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.724
+        }
+      ]
+    },
+    {
+      "label": "verse",
+      "start": 28.99,
+      "end": 53.62,
+      "chord_at_start": "C#m7",
+      "chord_at_end": "C#7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "C#",
+        "E",
+        "C",
+        "F#",
+        "B",
+        "A",
+        "G",
+        "G#"
+      ],
+      "midi_note_count": 58,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 31.114739229024945,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.159
+        },
+        {
+          "time": 32.15963718820862,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.769
+        },
+        {
+          "time": 33.7037641723356,
+          "chord": "Em7",
+          "roman": "",
+          "confidence": 0.828
+        },
+        {
+          "time": 34.21460317460318,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.944
+        },
+        {
+          "time": 35.236281179138324,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.219
+        },
+        {
+          "time": 37.83691609977324,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.55
+        },
+        {
+          "time": 38.32453514739229,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.711
+        },
+        {
+          "time": 42.44607709750567,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.052
+        },
+        {
+          "time": 43.96698412698413,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.707
+        },
+        {
+          "time": 46.03356009070295,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.534
+        },
+        {
+          "time": 46.521179138322,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.586
+        },
+        {
+          "time": 48.07691609977324,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.536
+        },
+        {
+          "time": 49.11020408163265,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.841
+        },
+        {
+          "time": 51.67600907029478,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.07
+        },
+        {
+          "time": 52.72090702947846,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.169
+        }
+      ]
+    },
+    {
+      "label": "verse",
+      "start": 53.62,
+      "end": 70.04,
+      "chord_at_start": "C#7",
+      "chord_at_end": "F#7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "E",
+        "B",
+        "D"
+      ],
+      "midi_note_count": 28,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 54.24181405895692,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.577
+        },
+        {
+          "time": 54.75265306122449,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.093
+        },
+        {
+          "time": 56.296780045351476,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.801
+        },
+        {
+          "time": 56.830839002267574,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.717
+        },
+        {
+          "time": 57.817687074829934,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.095
+        },
+        {
+          "time": 58.83936507936508,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.946
+        },
+        {
+          "time": 60.395102040816326,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.099
+        },
+        {
+          "time": 62.43845804988662,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.569
+        },
+        {
+          "time": 62.93768707482993,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.517
+        },
+        {
+          "time": 67.04761904761905,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.842
+        },
+        {
+          "time": 68.10412698412698,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.215
+        }
+      ]
+    },
+    {
+      "label": "verse",
+      "start": 70.04,
+      "end": 86.44,
+      "chord_at_start": "F#7",
+      "chord_at_end": "C#7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "D",
+        "F#",
+        "A",
+        "C#"
+      ],
+      "midi_note_count": 39,
+      "predominant_midi_pc": "D",
+      "chords_in_segment": [
+        {
+          "time": 70.11265306122449,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.44
+        },
+        {
+          "time": 72.17922902494331,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.52
+        },
+        {
+          "time": 74.21097505668934,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.273
+        },
+        {
+          "time": 76.2659410430839,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.592
+        },
+        {
+          "time": 78.3092970521542,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.545
+        },
+        {
+          "time": 79.88825396825396,
+          "chord": "F7",
+          "roman": "",
+          "confidence": 0.603
+        },
+        {
+          "time": 80.38748299319728,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.137
+        },
+        {
+          "time": 82.43083900226758,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.333
+        },
+        {
+          "time": 84.52063492063492,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.53
+        }
+      ]
+    },
+    {
+      "label": "chorus",
+      "start": 86.44,
+      "end": 106.95,
+      "chord_at_start": "C#7",
+      "chord_at_end": "C7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "E",
+        "A",
+        "B",
+        "G",
+        "C"
+      ],
+      "midi_note_count": 44,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 86.52916099773243,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.211
+        },
+        {
+          "time": 87.52761904761904,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.919
+        },
+        {
+          "time": 88.57251700680273,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.567
+        },
+        {
+          "time": 95.24825396825396,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.716
+        },
+        {
+          "time": 95.74748299319728,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.719
+        },
+        {
+          "time": 96.76916099773243,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.156
+        },
+        {
+          "time": 98.3132879818594,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.129
+        },
+        {
+          "time": 99.86902494331066,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.921
+        },
+        {
+          "time": 100.85587301587302,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.183
+        },
+        {
+          "time": 101.88916099773243,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.058
+        },
+        {
+          "time": 103.9673469387755,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.673
+        },
+        {
+          "time": 104.98902494331065,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.197
+        },
+        {
+          "time": 106.52154195011337,
+          "chord": "C7",
+          "roman": "",
+          "confidence": 0.552
+        }
+      ]
+    },
+    {
+      "label": "verse",
+      "start": 106.95,
+      "end": 135.64,
+      "chord_at_start": "C7",
+      "chord_at_end": "C#m7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "E",
+        "B",
+        "A",
+        "D",
+        "G#"
+      ],
+      "midi_note_count": 74,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 107.04399092970522,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.209
+        },
+        {
+          "time": 108.07727891156462,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.483
+        },
+        {
+          "time": 109.62140589569161,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.568
+        },
+        {
+          "time": 110.12063492063493,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.865
+        },
+        {
+          "time": 111.1307029478458,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.179
+        },
+        {
+          "time": 112.15238095238095,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.922
+        },
+        {
+          "time": 119.33895691609978,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.448
+        },
+        {
+          "time": 122.92643990929706,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.593
+        },
+        {
+          "time": 123.4140589569161,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.199
+        },
+        {
+          "time": 124.47056689342404,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.663
+        },
+        {
+          "time": 125.46902494331066,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.195
+        },
+        {
+          "time": 131.13469387755103,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.551
+        },
+        {
+          "time": 133.67727891156463,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.152
+        },
+        {
+          "time": 134.6873469387755,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.809
+        }
+      ]
+    },
+    {
+      "label": "verse",
+      "start": 135.64,
+      "end": 152.02,
+      "chord_at_start": "C#m7",
+      "chord_at_end": "C#m7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "E",
+        "D#",
+        "B",
+        "A",
+        "C"
+      ],
+      "midi_note_count": 45,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 140.35301587301586,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.739
+        },
+        {
+          "time": 140.84063492063493,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.302
+        },
+        {
+          "time": 141.88553287981858,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.12
+        },
+        {
+          "time": 142.90721088435373,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.565
+        },
+        {
+          "time": 143.92888888888888,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.035
+        },
+        {
+          "time": 144.95056689342402,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.59
+        },
+        {
+          "time": 147.52798185941043,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.813
+        },
+        {
+          "time": 150.09378684807257,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.127
+        },
+        {
+          "time": 151.09224489795918,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.807
+        }
+      ]
+    },
+    {
+      "label": "verse",
+      "start": 152.02,
+      "end": 168.42,
+      "chord_at_start": "C#m7",
+      "chord_at_end": "C#7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "D",
+        "F#",
+        "F",
+        "C#",
+        "A"
+      ],
+      "midi_note_count": 37,
+      "predominant_midi_pc": "D",
+      "chords_in_segment": [
+        {
+          "time": 152.11392290249432,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.64
+        },
+        {
+          "time": 154.1688888888889,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.51
+        },
+        {
+          "time": 156.21224489795918,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.621
+        },
+        {
+          "time": 158.278820861678,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.515
+        },
+        {
+          "time": 160.3570068027211,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.854
+        },
+        {
+          "time": 162.37714285714284,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.758
+        },
+        {
+          "time": 164.4088888888889,
+          "chord": "D",
+          "roman": "",
+          "confidence": 0.6
+        },
+        {
+          "time": 166.46385487528346,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.414
+        }
+      ]
+    },
+    {
+      "label": "chorus",
+      "start": 168.42,
+      "end": 209.36,
+      "chord_at_start": "C#7",
+      "chord_at_end": "C#m7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "B",
+        "E",
+        "A",
+        "G",
+        "D"
+      ],
+      "midi_note_count": 90,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 170.5621768707483,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.449
+        },
+        {
+          "time": 171.5722448979592,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.71
+        },
+        {
+          "time": 172.5707029478458,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.64
+        },
+        {
+          "time": 173.6156009070295,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.628
+        },
+        {
+          "time": 174.62566893424037,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.25
+        },
+        {
+          "time": 176.20462585034014,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.578
+        },
+        {
+          "time": 176.69224489795917,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.714
+        },
+        {
+          "time": 179.24643990929704,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.647
+        },
+        {
+          "time": 179.76888888888888,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.582
+        },
+        {
+          "time": 180.25650793650794,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.746
+        },
+        {
+          "time": 181.31301587301587,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.641
+        },
+        {
+          "time": 181.78902494331066,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.839
+        },
+        {
+          "time": 182.82231292517008,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.144
+        },
+        {
+          "time": 184.3780498866213,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.525
+        },
+        {
+          "time": 184.88888888888889,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.202
+        },
+        {
+          "time": 189.99727891156462,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.814
+        },
+        {
+          "time": 191.0073469387755,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.382
+        },
+        {
+          "time": 192.05224489795918,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.774
+        },
+        {
+          "time": 193.06231292517006,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.147
+        },
+        {
+          "time": 194.10721088435375,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.566
+        },
+        {
+          "time": 195.10566893424036,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.116
+        },
+        {
+          "time": 196.1621768707483,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.602
+        },
+        {
+          "time": 196.64979591836735,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.615
+        },
+        {
+          "time": 197.1722448979592,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.157
+        },
+        {
+          "time": 200.26049886621314,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.965
+        },
+        {
+          "time": 201.25895691609978,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.515
+        },
+        {
+          "time": 201.79301587301586,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.546
+        },
+        {
+          "time": 202.2922448979592,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.618
+        },
+        {
+          "time": 203.30231292517007,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.132
+        },
+        {
+          "time": 204.8348299319728,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.052
+        },
+        {
+          "time": 206.37895691609978,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.886
+        },
+        {
+          "time": 206.91301587301587,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.099
+        },
+        {
+          "time": 208.45714285714286,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.719
+        }
+      ]
+    },
+    {
+      "label": "bridge",
+      "start": 209.36,
+      "end": 223.72,
+      "chord_at_start": "C#m7",
+      "chord_at_end": "C#7",
+      "tonal_zone": "F#_minor",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "G"
+      ],
+      "midi_note_count": 20,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 209.4556009070295,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.698
+        },
+        {
+          "time": 214.598820861678,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.454
+        },
+        {
+          "time": 217.66385487528345,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.182
+        },
+        {
+          "time": 223.29469387755103,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.697
+        }
+      ]
+    },
+    {
+      "label": "chorus",
+      "start": 223.72,
+      "end": 254.41,
+      "chord_at_start": "C#7",
+      "chord_at_end": "Bm7",
+      "tonal_zone": "modulation",
+      "midi_pitch_classes": [
+        "B",
+        "F#",
+        "E",
+        "C#",
+        "A",
+        "D"
+      ],
+      "midi_note_count": 81,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 223.78231292517006,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.139
+        },
+        {
+          "time": 228.40308390022676,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.586
+        },
+        {
+          "time": 229.4247619047619,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.585
+        },
+        {
+          "time": 232.51301587301586,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.204
+        },
+        {
+          "time": 235.57804988662133,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.872
+        },
+        {
+          "time": 236.0888888888889,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.531
+        },
+        {
+          "time": 237.09895691609978,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.809
+        },
+        {
+          "time": 238.0974149659864,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.709
+        },
+        {
+          "time": 239.1307029478458,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.86
+        },
+        {
+          "time": 240.16399092970522,
+          "chord": "F#7",
+          "roman": "",
+          "confidence": 0.703
+        },
+        {
+          "time": 242.7414058956916,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.683
+        },
+        {
+          "time": 245.80643990929704,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.803
+        },
+        {
+          "time": 250.41560090702947,
+          "chord": "Bm7",
+          "roman": "",
+          "confidence": 0.149
+        }
+      ]
+    },
+    {
+      "label": "chorus",
+      "start": 254.41,
+      "end": 266.69,
+      "chord_at_start": "Bm7",
+      "chord_at_end": "F#m7",
+      "tonal_zone": "modulation",
+      "midi_pitch_classes": [
+        "C#",
+        "E",
+        "F#",
+        "B",
+        "A#",
+        "A"
+      ],
+      "midi_note_count": 27,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 254.51392290249433,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.392
+        },
+        {
+          "time": 255.03637188208617,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.595
+        },
+        {
+          "time": 255.5239909297052,
+          "chord": "C#7",
+          "roman": "",
+          "confidence": 0.094
+        },
+        {
+          "time": 257.0681179138322,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.119
+        },
+        {
+          "time": 264.24308390022674,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.661
+        },
+        {
+          "time": 264.7539229024943,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.236
+        }
+      ]
+    },
+    {
+      "label": "chorus",
+      "start": 266.69,
+      "end": 289.22,
+      "chord_at_start": "F#m7",
+      "chord_at_end": "F#m7",
+      "tonal_zone": "modulation",
+      "midi_pitch_classes": [
+        "F#",
+        "C#",
+        "B",
+        "E"
+      ],
+      "midi_note_count": 48,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": [
+        {
+          "time": 267.79573696145127,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.928
+        },
+        {
+          "time": 268.8406349206349,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.5
+        },
+        {
+          "time": 271.8940589569161,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.956
+        },
+        {
+          "time": 272.93895691609976,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.252
+        },
+        {
+          "time": 273.9606349206349,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.943
+        },
+        {
+          "time": 274.95909297052157,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.519
+        },
+        {
+          "time": 275.96916099773244,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.708
+        },
+        {
+          "time": 277.0372789115646,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.265
+        },
+        {
+          "time": 282.14566893424035,
+          "chord": "C#m7",
+          "roman": "",
+          "confidence": 0.765
+        },
+        {
+          "time": 283.1557369614512,
+          "chord": "F#m7",
+          "roman": "",
+          "confidence": 0.604
+        }
+      ]
+    },
+    {
+      "label": "end",
+      "start": 289.22,
+      "end": 293.81,
+      "chord_at_start": "F#m7",
+      "chord_at_end": "F#m7",
+      "tonal_zone": "modulation",
+      "midi_pitch_classes": [
+        "F#"
+      ],
+      "midi_note_count": 1,
+      "predominant_midi_pc": "F#",
+      "chords_in_segment": []
+    }
+  ],
+  "chords": [
+    {
+      "time": 0.37151927437641724,
+      "chord": "F#m7",
+      "confidence": 0.03259040014742445,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 5.5147392290249435,
+      "chord": "C#m7",
+      "confidence": 0.8501810646646536,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 7.047256235827664,
+      "chord": "F#7",
+      "confidence": 0.6522910824230422,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 7.558095238095238,
+      "chord": "C#m7",
+      "confidence": 0.8427107192890214,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 9.102222222222222,
+      "chord": "F#7",
+      "confidence": 0.6661084361389322,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 9.601451247165533,
+      "chord": "C#m7",
+      "confidence": 0.9228643542853274,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 13.188934240362812,
+      "chord": "F#7",
+      "confidence": 0.7117337371463863,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 13.699773242630386,
+      "chord": "C#m7",
+      "confidence": 0.9762192420982445,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 15.255510204081633,
+      "chord": "F#7",
+      "confidence": 0.799027643369457,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 15.766349206349206,
+      "chord": "C#m7",
+      "confidence": 0.9173908020495884,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 17.322086167800453,
+      "chord": "F#7",
+      "confidence": 0.6318828891233842,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 17.821315192743764,
+      "chord": "C#m7",
+      "confidence": 0.8585297895887243,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 21.420408163265307,
+      "chord": "F#m7",
+      "confidence": 0.7367445306995063,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 21.91963718820862,
+      "chord": "C#m7",
+      "confidence": 0.8783754419971441,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 25.530340136054424,
+      "chord": "F#m7",
+      "confidence": 0.8090900164975294,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 26.02956916099773,
+      "chord": "C#m7",
+      "confidence": 0.5740941177329331,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 27.573696145124718,
+      "chord": "F#m7",
+      "confidence": 0.7033239387996816,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 28.08453514739229,
+      "chord": "C#m7",
+      "confidence": 0.7236763044941795,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 31.114739229024945,
+      "chord": "F#m7",
+      "confidence": 0.15868316018197354,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 32.15963718820862,
+      "chord": "C#m7",
+      "confidence": 0.7685670355859535,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 33.7037641723356,
+      "chord": "Em7",
+      "confidence": 0.8276412142538301,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 34.21460317460318,
+      "chord": "C#m7",
+      "confidence": 0.943751025542463,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 35.236281179138324,
+      "chord": "F#7",
+      "confidence": 0.21924500327869761,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 37.83691609977324,
+      "chord": "Bm7",
+      "confidence": 0.5500188411106564,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 38.32453514739229,
+      "chord": "F#m7",
+      "confidence": 0.7108605185149296,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 42.44607709750567,
+      "chord": "C#7",
+      "confidence": 0.052122686742705926,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 43.96698412698413,
+      "chord": "F#m7",
+      "confidence": 0.7068798138852875,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 46.03356009070295,
+      "chord": "Bm7",
+      "confidence": 0.5337492032775606,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 46.521179138322,
+      "chord": "F#m7",
+      "confidence": 0.5859546759040857,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 48.07691609977324,
+      "chord": "Bm7",
+      "confidence": 0.5358557916302936,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 49.11020408163265,
+      "chord": "C#m7",
+      "confidence": 0.8409609313540438,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 51.67600907029478,
+      "chord": "F#m7",
+      "confidence": 0.07001012190403816,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 52.72090702947846,
+      "chord": "C#7",
+      "confidence": 0.16907909443926922,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 54.24181405895692,
+      "chord": "F#7",
+      "confidence": 0.5772054202031188,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 54.75265306122449,
+      "chord": "C#m7",
+      "confidence": 0.09273481519597068,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 56.296780045351476,
+      "chord": "F#m7",
+      "confidence": 0.8007831444034184,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 56.830839002267574,
+      "chord": "C#7",
+      "confidence": 0.7167975664378424,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 57.817687074829934,
+      "chord": "F#m7",
+      "confidence": 0.09541331659732574,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 58.83936507936508,
+      "chord": "C#m7",
+      "confidence": 0.9461953384707417,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 60.395102040816326,
+      "chord": "F#7",
+      "confidence": 0.09916667361792662,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 62.43845804988662,
+      "chord": "Bm7",
+      "confidence": 0.5686505427981959,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 62.93768707482993,
+      "chord": "F#m7",
+      "confidence": 0.5170068291788892,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 67.04761904761905,
+      "chord": "C#m7",
+      "confidence": 0.8424195899930838,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 68.10412698412698,
+      "chord": "F#7",
+      "confidence": 0.21500794852238408,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 70.11265306122449,
+      "chord": "D",
+      "confidence": 0.43982232240655533,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 72.17922902494331,
+      "chord": "F#m7",
+      "confidence": 0.5195748808692504,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 74.21097505668934,
+      "chord": "D",
+      "confidence": 0.27335596617685876,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 76.2659410430839,
+      "chord": "F#m7",
+      "confidence": 0.5918641669292827,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 78.3092970521542,
+      "chord": "D",
+      "confidence": 0.5450270402120043,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 79.88825396825396,
+      "chord": "F7",
+      "confidence": 0.6033895760291109,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 80.38748299319728,
+      "chord": "F#m7",
+      "confidence": 0.13734199809216593,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 82.43083900226758,
+      "chord": "D",
+      "confidence": 0.33282314762753595,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 84.52063492063492,
+      "chord": "C#7",
+      "confidence": 0.5301667650829447,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 86.52916099773243,
+      "chord": "F#m7",
+      "confidence": 0.21108551254636684,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 87.52761904761904,
+      "chord": "C#m7",
+      "confidence": 0.9191855812975592,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 88.57251700680273,
+      "chord": "F#m7",
+      "confidence": 0.5669774260864014,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 95.24825396825396,
+      "chord": "Bm7",
+      "confidence": 0.7164501221102155,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 95.74748299319728,
+      "chord": "F#m7",
+      "confidence": 0.718742307243889,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 96.76916099773243,
+      "chord": "Bm7",
+      "confidence": 0.15630528334254018,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 98.3132879818594,
+      "chord": "F#m7",
+      "confidence": 0.1287272401918959,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 99.86902494331066,
+      "chord": "C#m7",
+      "confidence": 0.9207225131231169,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 100.85587301587302,
+      "chord": "F#7",
+      "confidence": 0.1831686416644264,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 101.88916099773243,
+      "chord": "Bm7",
+      "confidence": 0.05843748476565998,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 103.9673469387755,
+      "chord": "F#m7",
+      "confidence": 0.6726048442806452,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 104.98902494331065,
+      "chord": "Bm7",
+      "confidence": 0.19671600355518593,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 106.52154195011337,
+      "chord": "C7",
+      "confidence": 0.551838423012902,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 107.04399092970522,
+      "chord": "F#m7",
+      "confidence": 0.2088834438228953,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 108.07727891156462,
+      "chord": "C#m7",
+      "confidence": 0.4828416248068307,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 109.62140589569161,
+      "chord": "F#7",
+      "confidence": 0.5684298326631994,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 110.12063492063493,
+      "chord": "C#m7",
+      "confidence": 0.8652522360552994,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 111.1307029478458,
+      "chord": "F#7",
+      "confidence": 0.17855049831032105,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 112.15238095238095,
+      "chord": "C#m7",
+      "confidence": 0.9215788299198352,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 119.33895691609978,
+      "chord": "F#m7",
+      "confidence": 0.4477649531144503,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 122.92643990929706,
+      "chord": "C#m7",
+      "confidence": 0.5932105508260087,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 123.4140589569161,
+      "chord": "F#7",
+      "confidence": 0.19881417023351744,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 124.47056689342404,
+      "chord": "C#m7",
+      "confidence": 0.6625012644451101,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 125.46902494331066,
+      "chord": "F#m7",
+      "confidence": 0.19543654826281584,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 131.13469387755103,
+      "chord": "C#m7",
+      "confidence": 0.5510724016653904,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 133.67727891156463,
+      "chord": "F#7",
+      "confidence": 0.15224315888393003,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 134.6873469387755,
+      "chord": "C#m7",
+      "confidence": 0.8087634721008738,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 140.35301587301586,
+      "chord": "F#m7",
+      "confidence": 0.7385867227556724,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 140.84063492063493,
+      "chord": "C#7",
+      "confidence": 0.3016478299682685,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 141.88553287981858,
+      "chord": "F#m7",
+      "confidence": 0.1197167129394087,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 142.90721088435373,
+      "chord": "C#7",
+      "confidence": 0.5650784103187781,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 143.92888888888888,
+      "chord": "Bm7",
+      "confidence": 0.0350905801234517,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 144.95056689342402,
+      "chord": "F#m7",
+      "confidence": 0.5904042556093013,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 147.52798185941043,
+      "chord": "C#m7",
+      "confidence": 0.8127035618511711,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 150.09378684807257,
+      "chord": "F#m7",
+      "confidence": 0.12673113304176709,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 151.09224489795918,
+      "chord": "C#m7",
+      "confidence": 0.8068939335811746,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 152.11392290249432,
+      "chord": "D",
+      "confidence": 0.6400112601525656,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 154.1688888888889,
+      "chord": "F#m7",
+      "confidence": 0.5103937139144034,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 156.21224489795918,
+      "chord": "D",
+      "confidence": 0.6214363013333895,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 158.278820861678,
+      "chord": "F#m7",
+      "confidence": 0.5145677774358918,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 160.3570068027211,
+      "chord": "D",
+      "confidence": 0.8543049502200804,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 162.37714285714284,
+      "chord": "F#m7",
+      "confidence": 0.7582965687538561,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 164.4088888888889,
+      "chord": "D",
+      "confidence": 0.5996160968125603,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 166.46385487528346,
+      "chord": "C#7",
+      "confidence": 0.4140214517690023,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 170.5621768707483,
+      "chord": "F#m7",
+      "confidence": 0.4491609259250026,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 171.5722448979592,
+      "chord": "C#7",
+      "confidence": 0.7104344233136441,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 172.5707029478458,
+      "chord": "F#m7",
+      "confidence": 0.640063699185651,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 173.6156009070295,
+      "chord": "C#m7",
+      "confidence": 0.6276002307912256,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 174.62566893424037,
+      "chord": "F#7",
+      "confidence": 0.2504515190603658,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 176.20462585034014,
+      "chord": "C#m7",
+      "confidence": 0.5783937748341106,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 176.69224489795917,
+      "chord": "F#m7",
+      "confidence": 0.7136876407312808,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 179.24643990929704,
+      "chord": "Bm7",
+      "confidence": 0.6471084310248912,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 179.76888888888888,
+      "chord": "F#m7",
+      "confidence": 0.5822083034804727,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 180.25650793650794,
+      "chord": "C#m7",
+      "confidence": 0.7462422949569171,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 181.31301587301587,
+      "chord": "F#m7",
+      "confidence": 0.6411121866815362,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 181.78902494331066,
+      "chord": "C#m7",
+      "confidence": 0.8390119112665343,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 182.82231292517008,
+      "chord": "F#7",
+      "confidence": 0.1437819607054837,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 184.3780498866213,
+      "chord": "C#m7",
+      "confidence": 0.525454899915332,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 184.88888888888889,
+      "chord": "F#m7",
+      "confidence": 0.20178761787932006,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 189.99727891156462,
+      "chord": "C#m7",
+      "confidence": 0.8142318706417061,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 191.0073469387755,
+      "chord": "F#m7",
+      "confidence": 0.3820675197163263,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 192.05224489795918,
+      "chord": "C#m7",
+      "confidence": 0.7740162988573552,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 193.06231292517006,
+      "chord": "Bm7",
+      "confidence": 0.1466003677518903,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 194.10721088435375,
+      "chord": "F#7",
+      "confidence": 0.566391407642378,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 195.10566893424036,
+      "chord": "Bm7",
+      "confidence": 0.11576609185522567,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 196.1621768707483,
+      "chord": "F#m7",
+      "confidence": 0.6022192723491235,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 196.64979591836735,
+      "chord": "Bm7",
+      "confidence": 0.6150003789586398,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 197.1722448979592,
+      "chord": "F#7",
+      "confidence": 0.15665364366871012,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 200.26049886621314,
+      "chord": "C#m7",
+      "confidence": 0.964693210085777,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 201.25895691609978,
+      "chord": "F#m7",
+      "confidence": 0.5147869036119477,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 201.79301587301586,
+      "chord": "Bm7",
+      "confidence": 0.5460711893236275,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 202.2922448979592,
+      "chord": "F#7",
+      "confidence": 0.6176917005744045,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 203.30231292517007,
+      "chord": "Bm7",
+      "confidence": 0.13192097317977045,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 204.8348299319728,
+      "chord": "F#m7",
+      "confidence": 0.05222395990636655,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 206.37895691609978,
+      "chord": "C#m7",
+      "confidence": 0.8858237159915774,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 206.91301587301587,
+      "chord": "F#7",
+      "confidence": 0.09853752347851617,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 208.45714285714286,
+      "chord": "C#m7",
+      "confidence": 0.719306614165279,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 209.4556009070295,
+      "chord": "F#m7",
+      "confidence": 0.6981263607856518,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 214.598820861678,
+      "chord": "C#m7",
+      "confidence": 0.4537416833190424,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 217.66385487528345,
+      "chord": "F#m7",
+      "confidence": 0.18174484631795973,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 223.29469387755103,
+      "chord": "C#7",
+      "confidence": 0.6966036796800568,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 223.78231292517006,
+      "chord": "F#m7",
+      "confidence": 0.13938884462510842,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 228.40308390022676,
+      "chord": "Bm7",
+      "confidence": 0.585648370314409,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 229.4247619047619,
+      "chord": "C#m7",
+      "confidence": 0.5849143192034473,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 232.51301587301586,
+      "chord": "F#m7",
+      "confidence": 0.2035716552591422,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 235.57804988662133,
+      "chord": "C#7",
+      "confidence": 0.8715781438775533,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 236.0888888888889,
+      "chord": "F#m7",
+      "confidence": 0.5313453352936542,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 237.09895691609978,
+      "chord": "C#m7",
+      "confidence": 0.8088654030879042,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 238.0974149659864,
+      "chord": "F#m7",
+      "confidence": 0.7091256106537125,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 239.1307029478458,
+      "chord": "C#m7",
+      "confidence": 0.8598597711767767,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 240.16399092970522,
+      "chord": "F#7",
+      "confidence": 0.7032858717796706,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 242.7414058956916,
+      "chord": "Bm7",
+      "confidence": 0.6830464138217032,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 245.80643990929704,
+      "chord": "C#m7",
+      "confidence": 0.8025533591487835,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 250.41560090702947,
+      "chord": "Bm7",
+      "confidence": 0.14944180376527752,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 254.51392290249433,
+      "chord": "C#m7",
+      "confidence": 0.3923298674244546,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 255.03637188208617,
+      "chord": "F#m7",
+      "confidence": 0.595186348550396,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 255.5239909297052,
+      "chord": "C#7",
+      "confidence": 0.09444362915784311,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 257.0681179138322,
+      "chord": "F#m7",
+      "confidence": 0.119341404206455,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 264.24308390022674,
+      "chord": "C#m7",
+      "confidence": 0.660755778956925,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 264.7539229024943,
+      "chord": "F#m7",
+      "confidence": 0.23616276433459893,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 267.79573696145127,
+      "chord": "C#m7",
+      "confidence": 0.9276637710737751,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 268.8406349206349,
+      "chord": "F#m7",
+      "confidence": 0.5002864118564614,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 271.8940589569161,
+      "chord": "C#m7",
+      "confidence": 0.9557908541360588,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 272.93895691609976,
+      "chord": "F#m7",
+      "confidence": 0.25226720559159943,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 273.9606349206349,
+      "chord": "C#m7",
+      "confidence": 0.9426580050004686,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 274.95909297052157,
+      "chord": "F#m7",
+      "confidence": 0.5185015713835304,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 275.96916099773244,
+      "chord": "C#m7",
+      "confidence": 0.7076871526063141,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 277.0372789115646,
+      "chord": "F#m7",
+      "confidence": 0.2646365114857324,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 282.14566893424035,
+      "chord": "C#m7",
+      "confidence": 0.7650465849501935,
+      "roman": "",
+      "function": ""
+    },
+    {
+      "time": 283.1557369614512,
+      "chord": "F#m7",
+      "confidence": 0.604277991211392,
+      "roman": "",
+      "function": ""
+    }
+  ],
+  "cadences": [
+    {
+      "time": 38.32453514739229,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 42.44607709750567,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 43.96698412698413,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 46.521179138322,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 52.72090702947846,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 56.830839002267574,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 57.817687074829934,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 62.93768707482993,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 84.52063492063492,
+      "type": "half",
+      "from": "D",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 86.52916099773243,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 95.74748299319728,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 98.3132879818594,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 103.9673469387755,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 140.84063492063493,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 141.88553287981858,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 142.90721088435373,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 144.95056689342402,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 166.46385487528346,
+      "type": "half",
+      "from": "D",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 170.5621768707483,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 171.5722448979592,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 172.5707029478458,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 179.76888888888888,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 196.1621768707483,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 204.8348299319728,
+      "type": "plagal",
+      "from": "Bm7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 soft cut point"
+    },
+    {
+      "time": 223.29469387755103,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 223.78231292517006,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 235.57804988662133,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 236.0888888888889,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    },
+    {
+      "time": 255.5239909297052,
+      "type": "half",
+      "from": "F#m7",
+      "to": "C#7",
+      "note": "tension \u2014 good re-entry, avoid as exit"
+    },
+    {
+      "time": 257.0681179138322,
+      "type": "authentic",
+      "from": "C#7",
+      "to": "F#m7",
+      "note": "phrase end \u2014 strong cut point"
+    }
+  ],
+  "midi_notes": [
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 4.368,
+      "end": 4.577,
+      "velocity": 42
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 4.425,
+      "end": 4.693,
+      "velocity": 50
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 4.589,
+      "end": 4.82,
+      "velocity": 68
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 4.891,
+      "end": 5.111,
+      "velocity": 58
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 5.634,
+      "end": 5.832,
+      "velocity": 77
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 5.877,
+      "end": 6.1,
+      "velocity": 35
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 6.1,
+      "end": 6.355,
+      "velocity": 69
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 6.459,
+      "end": 6.657,
+      "velocity": 50
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 6.668,
+      "end": 6.866,
+      "velocity": 65
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 6.934,
+      "end": 7.132,
+      "velocity": 43
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 7.18,
+      "end": 7.377,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 7.191,
+      "end": 7.4,
+      "velocity": 55
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 7.689,
+      "end": 7.886,
+      "velocity": 72
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 8.191,
+      "end": 8.411,
+      "velocity": 68
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 8.689,
+      "end": 8.909,
+      "velocity": 70
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 8.991,
+      "end": 9.211,
+      "velocity": 64
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 9.27,
+      "end": 9.468,
+      "velocity": 62
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 9.734,
+      "end": 9.932,
+      "velocity": 73
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 10.607,
+      "end": 10.827,
+      "velocity": 51
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 10.734,
+      "end": 10.955,
+      "velocity": 59
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 11.768,
+      "end": 11.966,
+      "velocity": 73
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 12.011,
+      "end": 12.234,
+      "velocity": 44
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 12.268,
+      "end": 12.489,
+      "velocity": 74
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 13.325,
+      "end": 13.523,
+      "velocity": 52
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 13.37,
+      "end": 13.568,
+      "velocity": 73
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 13.591,
+      "end": 13.834,
+      "velocity": 56
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 13.848,
+      "end": 14.045,
+      "velocity": 76
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 14.348,
+      "end": 14.545,
+      "velocity": 69
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 14.661,
+      "end": 14.859,
+      "velocity": 66
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 15.416,
+      "end": 15.614,
+      "velocity": 64
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 15.891,
+      "end": 16.08,
+      "velocity": 79
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 16.148,
+      "end": 16.357,
+      "velocity": 46
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 16.405,
+      "end": 16.6,
+      "velocity": 70
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 16.693,
+      "end": 16.891,
+      "velocity": 47
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 16.716,
+      "end": 16.939,
+      "velocity": 50
+    },
+    {
+      "pitch": 49,
+      "name": "C#3",
+      "pc": "C#",
+      "start": 16.775,
+      "end": 17.043,
+      "velocity": 38
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 17.436,
+      "end": 17.634,
+      "velocity": 53
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 17.961,
+      "end": 18.17,
+      "velocity": 83
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 18.134,
+      "end": 18.355,
+      "velocity": 33
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 18.459,
+      "end": 18.68,
+      "velocity": 75
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 18.727,
+      "end": 18.97,
+      "velocity": 52
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 19.47,
+      "end": 19.702,
+      "velocity": 40
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 19.759,
+      "end": 19.948,
+      "velocity": 37
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 19.97,
+      "end": 20.225,
+      "velocity": 73
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 20.214,
+      "end": 20.459,
+      "velocity": 37
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 20.516,
+      "end": 20.714,
+      "velocity": 72
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 20.795,
+      "end": 21.061,
+      "velocity": 47
+    },
+    {
+      "pitch": 66,
+      "name": "F#4",
+      "pc": "F#",
+      "start": 20.795,
+      "end": 21.166,
+      "velocity": 51
+    },
+    {
+      "pitch": 68,
+      "name": "G#4",
+      "pc": "G#",
+      "start": 21.584,
+      "end": 21.793,
+      "velocity": 49
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 22.05,
+      "end": 22.259,
+      "velocity": 68
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 22.561,
+      "end": 22.759,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 22.85,
+      "end": 23.095,
+      "velocity": 59
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 22.864,
+      "end": 23.211,
+      "velocity": 53
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 23.048,
+      "end": 23.305,
+      "velocity": 67
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 23.361,
+      "end": 23.57,
+      "velocity": 48
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 23.861,
+      "end": 24.07,
+      "velocity": 49
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 24.07,
+      "end": 24.305,
+      "velocity": 68
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 24.63,
+      "end": 24.839,
+      "velocity": 75
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 24.93,
+      "end": 25.15,
+      "velocity": 56
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 25.116,
+      "end": 25.314,
+      "velocity": 68
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 25.661,
+      "end": 25.85,
+      "velocity": 55
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 26.175,
+      "end": 26.37,
+      "velocity": 71
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 26.407,
+      "end": 26.65,
+      "velocity": 52
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 26.998,
+      "end": 27.3,
+      "velocity": 46
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 27.068,
+      "end": 27.266,
+      "velocity": 64
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 27.695,
+      "end": 27.893,
+      "velocity": 46
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 27.975,
+      "end": 28.184,
+      "velocity": 50
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 29.252,
+      "end": 29.45,
+      "velocity": 69
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 29.53,
+      "end": 29.75,
+      "velocity": 75
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 30.286,
+      "end": 30.495,
+      "velocity": 76
+    },
+    {
+      "pitch": 60,
+      "name": "C4",
+      "pc": "C",
+      "start": 30.775,
+      "end": 31.018,
+      "velocity": 56
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 31.064,
+      "end": 31.284,
+      "velocity": 59
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 31.564,
+      "end": 31.773,
+      "velocity": 53
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 32.634,
+      "end": 32.83,
+      "velocity": 78
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 33.18,
+      "end": 33.411,
+      "velocity": 64
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 33.33,
+      "end": 33.55,
+      "velocity": 77
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 33.689,
+      "end": 33.9,
+      "velocity": 73
+    },
+    {
+      "pitch": 49,
+      "name": "C#3",
+      "pc": "C#",
+      "start": 33.866,
+      "end": 34.061,
+      "velocity": 37
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 33.866,
+      "end": 34.295,
+      "velocity": 45
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 34.143,
+      "end": 34.364,
+      "velocity": 61
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 34.375,
+      "end": 34.584,
+      "velocity": 80
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 35.155,
+      "end": 35.409,
+      "velocity": 57
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 35.398,
+      "end": 35.595,
+      "velocity": 70
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 35.711,
+      "end": 35.898,
+      "velocity": 78
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 35.92,
+      "end": 36.118,
+      "velocity": 51
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 35.98,
+      "end": 36.293,
+      "velocity": 60
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 36.2,
+      "end": 36.42,
+      "velocity": 71
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 36.386,
+      "end": 36.607,
+      "velocity": 53
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 36.607,
+      "end": 36.861,
+      "velocity": 52
+    },
+    {
+      "pitch": 55,
+      "name": "G3",
+      "pc": "G",
+      "start": 36.966,
+      "end": 37.164,
+      "velocity": 48
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 37.209,
+      "end": 37.443,
+      "velocity": 66
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 37.466,
+      "end": 37.675,
+      "velocity": 69
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 37.732,
+      "end": 37.932,
+      "velocity": 44
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 38.489,
+      "end": 38.709,
+      "velocity": 76
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 38.766,
+      "end": 38.975,
+      "velocity": 59
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 39.777,
+      "end": 39.986,
+      "velocity": 46
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 40.08,
+      "end": 40.416,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 40.545,
+      "end": 40.777,
+      "velocity": 86
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 41.334,
+      "end": 41.577,
+      "velocity": 63
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 41.555,
+      "end": 41.752,
+      "velocity": 69
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 41.845,
+      "end": 42.055,
+      "velocity": 53
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 42.055,
+      "end": 42.252,
+      "velocity": 58
+    },
+    {
+      "pitch": 68,
+      "name": "G#4",
+      "pc": "G#",
+      "start": 42.091,
+      "end": 42.286,
+      "velocity": 55
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 42.357,
+      "end": 42.555,
+      "velocity": 57
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 43.961,
+      "end": 44.157,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 44.123,
+      "end": 44.355,
+      "velocity": 47
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 44.391,
+      "end": 44.623,
+      "velocity": 63
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 44.645,
+      "end": 44.843,
+      "velocity": 65
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 45.168,
+      "end": 45.377,
+      "velocity": 50
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 45.366,
+      "end": 45.598,
+      "velocity": 37
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 45.668,
+      "end": 45.855,
+      "velocity": 58
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 46.145,
+      "end": 46.389,
+      "velocity": 53
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 46.318,
+      "end": 46.598,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 46.702,
+      "end": 46.923,
+      "velocity": 77
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 47.48,
+      "end": 47.677,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 47.714,
+      "end": 47.911,
+      "velocity": 74
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 48.293,
+      "end": 48.491,
+      "velocity": 57
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 49.002,
+      "end": 49.2,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 49.536,
+      "end": 49.768,
+      "velocity": 54
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 49.768,
+      "end": 49.977,
+      "velocity": 70
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 50.036,
+      "end": 50.234,
+      "velocity": 57
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 50.57,
+      "end": 50.768,
+      "velocity": 59
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 50.78,
+      "end": 50.977,
+      "velocity": 69
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 51.034,
+      "end": 51.243,
+      "velocity": 41
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 52.348,
+      "end": 52.545,
+      "velocity": 73
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 53.639,
+      "end": 53.859,
+      "velocity": 60
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 54.405,
+      "end": 54.602,
+      "velocity": 41
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 55.402,
+      "end": 55.6,
+      "velocity": 62
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 55.718,
+      "end": 55.914,
+      "velocity": 70
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 57.739,
+      "end": 57.97,
+      "velocity": 44
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 58.773,
+      "end": 58.993,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 59.748,
+      "end": 59.982,
+      "velocity": 65
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 60.259,
+      "end": 60.491,
+      "velocity": 53
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 60.607,
+      "end": 60.932,
+      "velocity": 47
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 60.711,
+      "end": 60.932,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 62.073,
+      "end": 62.268,
+      "velocity": 54
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 62.607,
+      "end": 62.816,
+      "velocity": 63
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 62.734,
+      "end": 62.989,
+      "velocity": 57
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 63.116,
+      "end": 63.325,
+      "velocity": 89
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 63.395,
+      "end": 63.582,
+      "velocity": 65
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 63.618,
+      "end": 63.839,
+      "velocity": 45
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 63.873,
+      "end": 64.127,
+      "velocity": 74
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 63.907,
+      "end": 64.116,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 64.152,
+      "end": 64.361,
+      "velocity": 81
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 64.777,
+      "end": 65.057,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 65.184,
+      "end": 65.405,
+      "velocity": 70
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 65.416,
+      "end": 65.605,
+      "velocity": 73
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 68.055,
+      "end": 68.252,
+      "velocity": 67
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 68.427,
+      "end": 68.705,
+      "velocity": 42
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 68.716,
+      "end": 68.95,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 68.764,
+      "end": 68.984,
+      "velocity": 62
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 69.25,
+      "end": 69.459,
+      "velocity": 58
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 70.018,
+      "end": 70.261,
+      "velocity": 68
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 70.261,
+      "end": 70.459,
+      "velocity": 105
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 70.459,
+      "end": 71.064,
+      "velocity": 71
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 71.064,
+      "end": 71.33,
+      "velocity": 76
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 71.33,
+      "end": 71.623,
+      "velocity": 82
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 72.157,
+      "end": 72.886,
+      "velocity": 65
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 72.886,
+      "end": 73.341,
+      "velocity": 52
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 73.143,
+      "end": 73.352,
+      "velocity": 73
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 73.211,
+      "end": 73.898,
+      "velocity": 75
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 73.702,
+      "end": 73.909,
+      "velocity": 49
+    },
+    {
+      "pitch": 33,
+      "name": "A1",
+      "pc": "A",
+      "start": 73.852,
+      "end": 74.05,
+      "velocity": 57
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 74.293,
+      "end": 74.641,
+      "velocity": 101
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 74.641,
+      "end": 75.07,
+      "velocity": 75
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 75.257,
+      "end": 75.618,
+      "velocity": 80
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 76.302,
+      "end": 76.664,
+      "velocity": 79
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 76.791,
+      "end": 77.0,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 77.266,
+      "end": 77.548,
+      "velocity": 54
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 77.277,
+      "end": 77.918,
+      "velocity": 58
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 78.209,
+      "end": 78.464,
+      "velocity": 81
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 78.464,
+      "end": 78.755,
+      "velocity": 100
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 78.755,
+      "end": 78.964,
+      "velocity": 78
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 78.964,
+      "end": 79.161,
+      "velocity": 82
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 79.161,
+      "end": 79.405,
+      "velocity": 47
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 79.405,
+      "end": 79.707,
+      "velocity": 75
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 80.405,
+      "end": 80.636,
+      "velocity": 71
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 80.648,
+      "end": 81.216,
+      "velocity": 60
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 81.357,
+      "end": 81.555,
+      "velocity": 52
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 81.425,
+      "end": 82.1,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 81.45,
+      "end": 81.648,
+      "velocity": 43
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 82.286,
+      "end": 82.541,
+      "velocity": 58
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 82.541,
+      "end": 82.877,
+      "velocity": 102
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 82.877,
+      "end": 83.239,
+      "velocity": 73
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 83.611,
+      "end": 83.889,
+      "velocity": 88
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 83.914,
+      "end": 84.145,
+      "velocity": 56
+    },
+    {
+      "pitch": 33,
+      "name": "A1",
+      "pc": "A",
+      "start": 84.134,
+      "end": 84.355,
+      "velocity": 69
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 84.482,
+      "end": 84.691,
+      "velocity": 46
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 84.691,
+      "end": 84.889,
+      "velocity": 64
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 84.957,
+      "end": 85.295,
+      "velocity": 51
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 85.295,
+      "end": 85.945,
+      "velocity": 62
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 85.945,
+      "end": 86.143,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 86.445,
+      "end": 86.666,
+      "velocity": 64
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 86.666,
+      "end": 86.898,
+      "velocity": 59
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 87.2,
+      "end": 87.409,
+      "velocity": 65
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 87.666,
+      "end": 87.92,
+      "velocity": 56
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 88.177,
+      "end": 88.409,
+      "velocity": 66
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 88.548,
+      "end": 88.873,
+      "velocity": 57
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 89.245,
+      "end": 89.466,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 90.605,
+      "end": 90.986,
+      "velocity": 53
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 91.045,
+      "end": 91.243,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 91.3,
+      "end": 91.489,
+      "velocity": 64
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 92.602,
+      "end": 92.916,
+      "velocity": 45
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 92.602,
+      "end": 92.939,
+      "velocity": 75
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 92.882,
+      "end": 93.091,
+      "velocity": 43
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 93.102,
+      "end": 93.334,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 93.382,
+      "end": 93.602,
+      "velocity": 61
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 93.52,
+      "end": 93.718,
+      "velocity": 39
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 93.73,
+      "end": 94.02,
+      "velocity": 41
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 93.88,
+      "end": 94.077,
+      "velocity": 58
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 94.136,
+      "end": 94.391,
+      "velocity": 60
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 94.634,
+      "end": 94.832,
+      "velocity": 66
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 95.82,
+      "end": 96.089,
+      "velocity": 54
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 96.134,
+      "end": 96.377,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 96.436,
+      "end": 96.634,
+      "velocity": 66
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 97.518,
+      "end": 97.75,
+      "velocity": 71
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 98.191,
+      "end": 98.434,
+      "velocity": 60
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 98.83,
+      "end": 99.027,
+      "velocity": 71
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 99.002,
+      "end": 99.2,
+      "velocity": 61
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 99.27,
+      "end": 99.457,
+      "velocity": 52
+    },
+    {
+      "pitch": 79,
+      "name": "G5",
+      "pc": "G",
+      "start": 99.516,
+      "end": 99.736,
+      "velocity": 76
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 100.025,
+      "end": 100.234,
+      "velocity": 79
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 100.316,
+      "end": 100.514,
+      "velocity": 65
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 100.861,
+      "end": 101.07,
+      "velocity": 81
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 101.559,
+      "end": 101.768,
+      "velocity": 65
+    },
+    {
+      "pitch": 71,
+      "name": "B4",
+      "pc": "B",
+      "start": 101.827,
+      "end": 102.036,
+      "velocity": 62
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 102.848,
+      "end": 103.068,
+      "velocity": 54
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 102.964,
+      "end": 103.161,
+      "velocity": 60
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 103.616,
+      "end": 103.825,
+      "velocity": 55
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 103.616,
+      "end": 103.848,
+      "velocity": 73
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 103.825,
+      "end": 104.023,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 104.127,
+      "end": 104.325,
+      "velocity": 60
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 104.893,
+      "end": 105.207,
+      "velocity": 45
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 104.905,
+      "end": 105.114,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 106.159,
+      "end": 106.357,
+      "velocity": 48
+    },
+    {
+      "pitch": 36,
+      "name": "C2",
+      "pc": "C",
+      "start": 106.509,
+      "end": 106.764,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 107.032,
+      "end": 107.227,
+      "velocity": 61
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 107.67,
+      "end": 107.902,
+      "velocity": 65
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 108.227,
+      "end": 108.425,
+      "velocity": 77
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 109.086,
+      "end": 109.309,
+      "velocity": 73
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 109.227,
+      "end": 109.448,
+      "velocity": 80
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 109.484,
+      "end": 109.739,
+      "velocity": 53
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 109.75,
+      "end": 109.959,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 109.784,
+      "end": 109.982,
+      "velocity": 62
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 110.261,
+      "end": 110.459,
+      "velocity": 71
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 110.516,
+      "end": 110.736,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 111.05,
+      "end": 111.295,
+      "velocity": 61
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 111.261,
+      "end": 111.459,
+      "velocity": 50
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 111.564,
+      "end": 111.77,
+      "velocity": 55
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 111.784,
+      "end": 112.016,
+      "velocity": 59
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 111.83,
+      "end": 112.05,
+      "velocity": 65
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 113.152,
+      "end": 113.352,
+      "velocity": 64
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 115.175,
+      "end": 115.455,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 115.93,
+      "end": 116.15,
+      "velocity": 73
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 116.127,
+      "end": 116.384,
+      "velocity": 50
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 116.164,
+      "end": 116.359,
+      "velocity": 52
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 116.964,
+      "end": 117.161,
+      "velocity": 44
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 117.232,
+      "end": 117.441,
+      "velocity": 73
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 117.43,
+      "end": 117.661,
+      "velocity": 58
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 117.695,
+      "end": 117.916,
+      "velocity": 47
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 118.334,
+      "end": 118.695,
+      "velocity": 48
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 118.718,
+      "end": 118.984,
+      "velocity": 57
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 119.461,
+      "end": 119.718,
+      "velocity": 43
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 119.486,
+      "end": 119.707,
+      "velocity": 56
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 119.764,
+      "end": 119.973,
+      "velocity": 56
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 119.891,
+      "end": 120.264,
+      "velocity": 61
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 120.275,
+      "end": 120.495,
+      "velocity": 60
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 120.566,
+      "end": 120.786,
+      "velocity": 68
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 120.716,
+      "end": 120.959,
+      "velocity": 43
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 120.995,
+      "end": 121.205,
+      "velocity": 58
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 121.332,
+      "end": 121.53,
+      "velocity": 81
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 121.541,
+      "end": 121.775,
+      "velocity": 66
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 123.366,
+      "end": 123.575,
+      "velocity": 63
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 123.575,
+      "end": 123.773,
+      "velocity": 59
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 124.098,
+      "end": 124.318,
+      "velocity": 56
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 124.109,
+      "end": 124.33,
+      "velocity": 54
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 124.389,
+      "end": 124.584,
+      "velocity": 50
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 124.934,
+      "end": 125.13,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 125.411,
+      "end": 125.632,
+      "velocity": 74
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 125.898,
+      "end": 126.095,
+      "velocity": 40
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 126.42,
+      "end": 126.652,
+      "velocity": 57
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 126.689,
+      "end": 126.898,
+      "velocity": 64
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 127.432,
+      "end": 127.63,
+      "velocity": 57
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 127.466,
+      "end": 127.675,
+      "velocity": 43
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 127.989,
+      "end": 128.186,
+      "velocity": 71
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 128.245,
+      "end": 128.627,
+      "velocity": 55
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 128.755,
+      "end": 128.964,
+      "velocity": 75
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 128.977,
+      "end": 129.186,
+      "velocity": 52
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 129.186,
+      "end": 129.441,
+      "velocity": 54
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 129.5,
+      "end": 129.709,
+      "velocity": 59
+    },
+    {
+      "pitch": 74,
+      "name": "D5",
+      "pc": "D",
+      "start": 129.557,
+      "end": 129.755,
+      "velocity": 52
+    },
+    {
+      "pitch": 62,
+      "name": "D4",
+      "pc": "D",
+      "start": 129.582,
+      "end": 129.975,
+      "velocity": 72
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 129.743,
+      "end": 129.986,
+      "velocity": 75
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 130.034,
+      "end": 130.232,
+      "velocity": 61
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 130.184,
+      "end": 130.441,
+      "velocity": 56
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 130.277,
+      "end": 130.475,
+      "velocity": 45
+    },
+    {
+      "pitch": 56,
+      "name": "G#3",
+      "pc": "G#",
+      "start": 130.534,
+      "end": 130.789,
+      "velocity": 75
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 130.777,
+      "end": 130.986,
+      "velocity": 70
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 131.043,
+      "end": 131.243,
+      "velocity": 56
+    },
+    {
+      "pitch": 50,
+      "name": "D3",
+      "pc": "D",
+      "start": 131.3,
+      "end": 131.498,
+      "velocity": 38
+    },
+    {
+      "pitch": 49,
+      "name": "C#3",
+      "pc": "C#",
+      "start": 131.498,
+      "end": 131.811,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 131.568,
+      "end": 131.8,
+      "velocity": 50
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 132.066,
+      "end": 132.264,
+      "velocity": 52
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 132.6,
+      "end": 132.798,
+      "velocity": 56
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 133.6,
+      "end": 133.891,
+      "velocity": 72
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 133.845,
+      "end": 134.041,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 134.32,
+      "end": 134.564,
+      "velocity": 42
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 134.343,
+      "end": 134.589,
+      "velocity": 63
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 134.889,
+      "end": 135.089,
+      "velocity": 78
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 135.075,
+      "end": 135.309,
+      "velocity": 37
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 135.645,
+      "end": 135.9,
+      "velocity": 72
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 135.889,
+      "end": 136.086,
+      "velocity": 63
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 136.389,
+      "end": 136.586,
+      "velocity": 65
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 136.434,
+      "end": 136.632,
+      "velocity": 62
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 137.748,
+      "end": 137.957,
+      "velocity": 73
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 138.039,
+      "end": 138.457,
+      "velocity": 54
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 138.7,
+      "end": 138.92,
+      "velocity": 38
+    },
+    {
+      "pitch": 63,
+      "name": "D#4",
+      "pc": "D#",
+      "start": 138.839,
+      "end": 139.189,
+      "velocity": 45
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 138.955,
+      "end": 139.155,
+      "velocity": 53
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 139.211,
+      "end": 139.409,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 139.782,
+      "end": 139.98,
+      "velocity": 59
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 140.107,
+      "end": 140.5,
+      "velocity": 41
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 140.5,
+      "end": 140.698,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 140.514,
+      "end": 140.745,
+      "velocity": 69
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 140.514,
+      "end": 140.989,
+      "velocity": 46
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 141.011,
+      "end": 141.223,
+      "velocity": 63
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 141.152,
+      "end": 141.5,
+      "velocity": 45
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 141.443,
+      "end": 141.709,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 141.745,
+      "end": 142.0,
+      "velocity": 56
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 142.139,
+      "end": 142.5,
+      "velocity": 52
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 142.395,
+      "end": 142.639,
+      "velocity": 55
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 142.568,
+      "end": 142.825,
+      "velocity": 58
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 142.616,
+      "end": 142.836,
+      "velocity": 51
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 143.02,
+      "end": 143.232,
+      "velocity": 47
+    },
+    {
+      "pitch": 59,
+      "name": "B3",
+      "pc": "B",
+      "start": 143.034,
+      "end": 143.266,
+      "velocity": 44
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 143.43,
+      "end": 143.627,
+      "velocity": 45
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 144.475,
+      "end": 144.834,
+      "velocity": 45
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 144.509,
+      "end": 144.707,
+      "velocity": 32
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 144.591,
+      "end": 144.811,
+      "velocity": 52
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 144.893,
+      "end": 145.08,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 145.114,
+      "end": 145.311,
+      "velocity": 77
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 145.891,
+      "end": 146.1,
+      "velocity": 61
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 146.077,
+      "end": 146.298,
+      "velocity": 38
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 146.38,
+      "end": 146.623,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 147.055,
+      "end": 147.332,
+      "velocity": 56
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 147.425,
+      "end": 147.645,
+      "velocity": 76
+    },
+    {
+      "pitch": 60,
+      "name": "C4",
+      "pc": "C",
+      "start": 147.436,
+      "end": 147.693,
+      "velocity": 66
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 147.611,
+      "end": 147.843,
+      "velocity": 57
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 148.03,
+      "end": 148.273,
+      "velocity": 46
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 148.145,
+      "end": 148.355,
+      "velocity": 60
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 148.18,
+      "end": 148.436,
+      "velocity": 60
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 148.343,
+      "end": 148.634,
+      "velocity": 40
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 149.389,
+      "end": 149.657,
+      "velocity": 41
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 150.061,
+      "end": 150.284,
+      "velocity": 71
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 150.736,
+      "end": 150.968,
+      "velocity": 53
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 152.141,
+      "end": 152.536,
+      "velocity": 103
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 152.536,
+      "end": 152.932,
+      "velocity": 77
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 153.152,
+      "end": 153.548,
+      "velocity": 103
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 153.548,
+      "end": 153.802,
+      "velocity": 57
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 154.152,
+      "end": 154.955,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 155.186,
+      "end": 155.545,
+      "velocity": 47
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 155.232,
+      "end": 155.802,
+      "velocity": 62
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 156.243,
+      "end": 156.975,
+      "velocity": 84
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 157.184,
+      "end": 157.405,
+      "velocity": 88
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 157.405,
+      "end": 157.741,
+      "velocity": 86
+    },
+    {
+      "pitch": 41,
+      "name": "F2",
+      "pc": "F",
+      "start": 157.939,
+      "end": 158.148,
+      "velocity": 59
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 158.241,
+      "end": 159.089,
+      "velocity": 68
+    },
+    {
+      "pitch": 73,
+      "name": "C#5",
+      "pc": "C#",
+      "start": 159.055,
+      "end": 159.38,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 159.089,
+      "end": 159.368,
+      "velocity": 40
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 159.089,
+      "end": 159.891,
+      "velocity": 56
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 159.148,
+      "end": 159.345,
+      "velocity": 38
+    },
+    {
+      "pitch": 33,
+      "name": "A1",
+      "pc": "A",
+      "start": 159.925,
+      "end": 160.123,
+      "velocity": 44
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 160.1,
+      "end": 160.355,
+      "velocity": 48
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 160.355,
+      "end": 160.727,
+      "velocity": 85
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 160.727,
+      "end": 161.507,
+      "velocity": 58
+    },
+    {
+      "pitch": 66,
+      "name": "F#4",
+      "pc": "F#",
+      "start": 161.03,
+      "end": 161.227,
+      "velocity": 42
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 161.507,
+      "end": 161.739,
+      "velocity": 79
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 162.377,
+      "end": 163.052,
+      "velocity": 77
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 162.527,
+      "end": 162.759,
+      "velocity": 43
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 163.052,
+      "end": 163.33,
+      "velocity": 61
+    },
+    {
+      "pitch": 50,
+      "name": "D3",
+      "pc": "D",
+      "start": 163.143,
+      "end": 163.389,
+      "velocity": 39
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 163.33,
+      "end": 163.714,
+      "velocity": 54
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 163.445,
+      "end": 163.714,
+      "velocity": 49
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 164.445,
+      "end": 164.85,
+      "velocity": 98
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 164.85,
+      "end": 165.839,
+      "velocity": 68
+    },
+    {
+      "pitch": 38,
+      "name": "D2",
+      "pc": "D",
+      "start": 166.141,
+      "end": 166.373,
+      "velocity": 80
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 166.675,
+      "end": 166.977,
+      "velocity": 50
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 166.977,
+      "end": 167.198,
+      "velocity": 73
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 167.198,
+      "end": 167.466,
+      "velocity": 57
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 167.466,
+      "end": 167.698,
+      "velocity": 70
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 167.698,
+      "end": 167.93,
+      "velocity": 61
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 167.93,
+      "end": 168.395,
+      "velocity": 59
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 168.452,
+      "end": 168.873,
+      "velocity": 65
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 168.684,
+      "end": 168.873,
+      "velocity": 70
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 169.65,
+      "end": 169.882,
+      "velocity": 62
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 169.975,
+      "end": 170.195,
+      "velocity": 75
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 170.195,
+      "end": 170.416,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 170.461,
+      "end": 170.718,
+      "velocity": 61
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 170.964,
+      "end": 171.195,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 171.218,
+      "end": 171.498,
+      "velocity": 47
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 172.634,
+      "end": 172.95,
+      "velocity": 63
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 172.645,
+      "end": 172.834,
+      "velocity": 54
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 174.632,
+      "end": 174.914,
+      "velocity": 41
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 174.632,
+      "end": 174.948,
+      "velocity": 77
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 175.041,
+      "end": 175.295,
+      "velocity": 48
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 175.239,
+      "end": 175.505,
+      "velocity": 53
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 176.109,
+      "end": 176.307,
+      "velocity": 49
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 176.584,
+      "end": 176.805,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 176.805,
+      "end": 177.016,
+      "velocity": 49
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 177.132,
+      "end": 177.341,
+      "velocity": 57
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 177.386,
+      "end": 177.759,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 177.875,
+      "end": 178.073,
+      "velocity": 64
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 178.189,
+      "end": 178.386,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 178.386,
+      "end": 178.582,
+      "velocity": 69
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 178.618,
+      "end": 178.852,
+      "velocity": 49
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 178.652,
+      "end": 178.875,
+      "velocity": 44
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 179.548,
+      "end": 179.802,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 179.895,
+      "end": 180.105,
+      "velocity": 62
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 180.175,
+      "end": 180.384,
+      "velocity": 56
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 180.743,
+      "end": 180.943,
+      "velocity": 58
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 181.209,
+      "end": 181.407,
+      "velocity": 41
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 181.545,
+      "end": 181.743,
+      "velocity": 64
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 181.998,
+      "end": 182.195,
+      "velocity": 82
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 182.777,
+      "end": 183.068,
+      "velocity": 59
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 183.243,
+      "end": 183.498,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 183.58,
+      "end": 183.777,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 184.939,
+      "end": 185.17,
+      "velocity": 48
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 185.241,
+      "end": 185.45,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 185.473,
+      "end": 185.727,
+      "velocity": 44
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 186.343,
+      "end": 186.541,
+      "velocity": 52
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 186.832,
+      "end": 187.111,
+      "velocity": 62
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 187.077,
+      "end": 187.284,
+      "velocity": 57
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 187.193,
+      "end": 187.482,
+      "velocity": 44
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 187.355,
+      "end": 187.552,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 187.623,
+      "end": 187.832,
+      "velocity": 62
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 189.677,
+      "end": 189.875,
+      "velocity": 63
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 190.711,
+      "end": 190.898,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 191.061,
+      "end": 191.305,
+      "velocity": 79
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 191.455,
+      "end": 191.664,
+      "velocity": 54
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 191.989,
+      "end": 192.186,
+      "velocity": 42
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 192.175,
+      "end": 192.443,
+      "velocity": 45
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 192.5,
+      "end": 192.711,
+      "velocity": 54
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 192.723,
+      "end": 192.932,
+      "velocity": 59
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 193.059,
+      "end": 193.257,
+      "velocity": 62
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 193.082,
+      "end": 193.291,
+      "velocity": 51
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 193.768,
+      "end": 194.139,
+      "velocity": 50
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 194.255,
+      "end": 194.452,
+      "velocity": 62
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 194.557,
+      "end": 194.743,
+      "velocity": 73
+    },
+    {
+      "pitch": 43,
+      "name": "G2",
+      "pc": "G",
+      "start": 194.72,
+      "end": 194.918,
+      "velocity": 40
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 195.848,
+      "end": 196.068,
+      "velocity": 62
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 196.311,
+      "end": 196.52,
+      "velocity": 65
+    },
+    {
+      "pitch": 62,
+      "name": "D4",
+      "pc": "D",
+      "start": 196.591,
+      "end": 196.834,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 197.091,
+      "end": 197.368,
+      "velocity": 37
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 197.589,
+      "end": 197.798,
+      "velocity": 51
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 198.018,
+      "end": 198.32,
+      "velocity": 40
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 198.38,
+      "end": 198.577,
+      "velocity": 68
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 198.657,
+      "end": 198.88,
+      "velocity": 56
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 198.868,
+      "end": 199.077,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 199.193,
+      "end": 199.425,
+      "velocity": 60
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 199.332,
+      "end": 199.541,
+      "velocity": 63
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 199.634,
+      "end": 199.877,
+      "velocity": 61
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 199.866,
+      "end": 200.075,
+      "velocity": 56
+    },
+    {
+      "pitch": 71,
+      "name": "B4",
+      "pc": "B",
+      "start": 199.97,
+      "end": 200.366,
+      "velocity": 58
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 200.411,
+      "end": 200.784,
+      "velocity": 52
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 200.68,
+      "end": 200.889,
+      "velocity": 76
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 201.202,
+      "end": 201.434,
+      "velocity": 46
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 201.225,
+      "end": 201.459,
+      "velocity": 69
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 201.877,
+      "end": 202.109,
+      "velocity": 40
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 202.061,
+      "end": 202.364,
+      "velocity": 55
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 202.491,
+      "end": 202.68,
+      "velocity": 64
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 202.714,
+      "end": 202.911,
+      "velocity": 62
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 203.259,
+      "end": 203.457,
+      "velocity": 37
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 203.375,
+      "end": 203.63,
+      "velocity": 59
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 203.734,
+      "end": 203.943,
+      "velocity": 51
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 204.002,
+      "end": 204.234,
+      "velocity": 53
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 204.014,
+      "end": 204.327,
+      "velocity": 52
+    },
+    {
+      "pitch": 62,
+      "name": "D4",
+      "pc": "D",
+      "start": 204.909,
+      "end": 205.223,
+      "velocity": 39
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 205.305,
+      "end": 205.698,
+      "velocity": 47
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 205.78,
+      "end": 206.048,
+      "velocity": 57
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 207.395,
+      "end": 207.593,
+      "velocity": 65
+    },
+    {
+      "pitch": 73,
+      "name": "C#5",
+      "pc": "C#",
+      "start": 207.441,
+      "end": 207.766,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 208.102,
+      "end": 208.3,
+      "velocity": 59
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 209.37,
+      "end": 209.707,
+      "velocity": 58
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 210.323,
+      "end": 210.625,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 210.323,
+      "end": 210.67,
+      "velocity": 56
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 210.67,
+      "end": 210.868,
+      "velocity": 57
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 211.53,
+      "end": 211.764,
+      "velocity": 68
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 213.505,
+      "end": 213.75,
+      "velocity": 45
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 214.668,
+      "end": 214.866,
+      "velocity": 51
+    },
+    {
+      "pitch": 31,
+      "name": "G1",
+      "pc": "G",
+      "start": 215.516,
+      "end": 215.793,
+      "velocity": 39
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 215.584,
+      "end": 215.805,
+      "velocity": 69
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 217.618,
+      "end": 217.955,
+      "velocity": 61
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 218.314,
+      "end": 218.536,
+      "velocity": 46
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 218.511,
+      "end": 218.711,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 219.639,
+      "end": 219.884,
+      "velocity": 65
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 220.336,
+      "end": 220.545,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 221.73,
+      "end": 221.927,
+      "velocity": 71
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 221.823,
+      "end": 222.043,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 221.927,
+      "end": 222.207,
+      "velocity": 58
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 222.591,
+      "end": 222.834,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 222.602,
+      "end": 222.823,
+      "velocity": 45
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 223.416,
+      "end": 223.614,
+      "velocity": 59
+    },
+    {
+      "pitch": 71,
+      "name": "B4",
+      "pc": "B",
+      "start": 224.555,
+      "end": 224.984,
+      "velocity": 56
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 224.693,
+      "end": 225.134,
+      "velocity": 43
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 224.73,
+      "end": 224.961,
+      "velocity": 55
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 224.798,
+      "end": 225.03,
+      "velocity": 40
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 224.95,
+      "end": 225.182,
+      "velocity": 63
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 224.984,
+      "end": 225.205,
+      "velocity": 79
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 225.145,
+      "end": 225.366,
+      "velocity": 42
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 225.264,
+      "end": 225.495,
+      "velocity": 60
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 225.459,
+      "end": 225.668,
+      "velocity": 52
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 225.809,
+      "end": 226.018,
+      "velocity": 64
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 226.098,
+      "end": 226.307,
+      "velocity": 61
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 226.295,
+      "end": 226.495,
+      "velocity": 53
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 226.68,
+      "end": 226.97,
+      "velocity": 63
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 226.982,
+      "end": 227.202,
+      "velocity": 57
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 227.295,
+      "end": 227.505,
+      "velocity": 58
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 227.83,
+      "end": 228.061,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 228.027,
+      "end": 228.27,
+      "velocity": 68
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 228.748,
+      "end": 228.945,
+      "velocity": 59
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 229.341,
+      "end": 229.55,
+      "velocity": 44
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 229.886,
+      "end": 230.107,
+      "velocity": 67
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 230.118,
+      "end": 230.316,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 230.573,
+      "end": 230.77,
+      "velocity": 59
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 231.107,
+      "end": 231.327,
+      "velocity": 68
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 231.641,
+      "end": 231.839,
+      "velocity": 62
+    },
+    {
+      "pitch": 73,
+      "name": "C#5",
+      "pc": "C#",
+      "start": 231.652,
+      "end": 232.082,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 231.955,
+      "end": 232.186,
+      "velocity": 67
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 232.15,
+      "end": 232.359,
+      "velocity": 64
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 232.432,
+      "end": 232.641,
+      "velocity": 52
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 232.941,
+      "end": 233.175,
+      "velocity": 67
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 233.325,
+      "end": 233.591,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 233.975,
+      "end": 234.184,
+      "velocity": 75
+    },
+    {
+      "pitch": 57,
+      "name": "A3",
+      "pc": "A",
+      "start": 234.057,
+      "end": 234.393,
+      "velocity": 45
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 234.184,
+      "end": 234.393,
+      "velocity": 64
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 234.184,
+      "end": 234.43,
+      "velocity": 67
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 234.684,
+      "end": 234.93,
+      "velocity": 59
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 235.73,
+      "end": 235.927,
+      "velocity": 65
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 236.032,
+      "end": 236.252,
+      "velocity": 82
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 236.066,
+      "end": 236.298,
+      "velocity": 48
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 236.498,
+      "end": 236.752,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 238.03,
+      "end": 238.273,
+      "velocity": 82
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 238.273,
+      "end": 238.727,
+      "velocity": 56
+    },
+    {
+      "pitch": 61,
+      "name": "C#4",
+      "pc": "C#",
+      "start": 238.309,
+      "end": 238.495,
+      "velocity": 38
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 238.727,
+      "end": 239.007,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 240.132,
+      "end": 240.47,
+      "velocity": 65
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 240.33,
+      "end": 240.527,
+      "velocity": 52
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 240.436,
+      "end": 240.784,
+      "velocity": 54
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 240.736,
+      "end": 240.993,
+      "velocity": 50
+    },
+    {
+      "pitch": 71,
+      "name": "B4",
+      "pc": "B",
+      "start": 241.027,
+      "end": 241.33,
+      "velocity": 50
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 241.33,
+      "end": 241.561,
+      "velocity": 63
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 241.375,
+      "end": 241.573,
+      "velocity": 55
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 241.643,
+      "end": 241.852,
+      "velocity": 56
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 242.364,
+      "end": 242.561,
+      "velocity": 47
+    },
+    {
+      "pitch": 45,
+      "name": "A2",
+      "pc": "A",
+      "start": 242.655,
+      "end": 242.852,
+      "velocity": 44
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 242.898,
+      "end": 243.107,
+      "velocity": 61
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 242.968,
+      "end": 243.166,
+      "velocity": 63
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 243.675,
+      "end": 243.884,
+      "velocity": 50
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 243.92,
+      "end": 244.13,
+      "velocity": 62
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 244.048,
+      "end": 244.314,
+      "velocity": 64
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 244.059,
+      "end": 244.291,
+      "velocity": 43
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 244.314,
+      "end": 244.582,
+      "velocity": 61
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 244.943,
+      "end": 245.186,
+      "velocity": 54
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 245.0,
+      "end": 245.198,
+      "velocity": 60
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 245.709,
+      "end": 245.93,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 246.209,
+      "end": 246.418,
+      "velocity": 60
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 246.266,
+      "end": 246.466,
+      "velocity": 52
+    },
+    {
+      "pitch": 66,
+      "name": "F#4",
+      "pc": "F#",
+      "start": 246.266,
+      "end": 246.466,
+      "velocity": 40
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 246.277,
+      "end": 246.582,
+      "velocity": 49
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 246.743,
+      "end": 246.941,
+      "velocity": 48
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 246.848,
+      "end": 247.057,
+      "velocity": 47
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 247.232,
+      "end": 247.452,
+      "velocity": 45
+    },
+    {
+      "pitch": 74,
+      "name": "D5",
+      "pc": "D",
+      "start": 247.905,
+      "end": 248.23,
+      "velocity": 47
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 248.02,
+      "end": 248.218,
+      "velocity": 65
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 248.289,
+      "end": 248.475,
+      "velocity": 62
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 249.311,
+      "end": 249.532,
+      "velocity": 48
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 249.611,
+      "end": 249.914,
+      "velocity": 37
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 249.845,
+      "end": 250.041,
+      "velocity": 71
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 250.345,
+      "end": 250.577,
+      "velocity": 43
+    },
+    {
+      "pitch": 47,
+      "name": "B2",
+      "pc": "B",
+      "start": 250.38,
+      "end": 250.577,
+      "velocity": 64
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 251.077,
+      "end": 251.32,
+      "velocity": 79
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 251.843,
+      "end": 252.134,
+      "velocity": 75
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 252.47,
+      "end": 252.784,
+      "velocity": 43
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 254.655,
+      "end": 254.875,
+      "velocity": 75
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 254.945,
+      "end": 255.177,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 255.177,
+      "end": 255.386,
+      "velocity": 44
+    },
+    {
+      "pitch": 78,
+      "name": "F#5",
+      "pc": "F#",
+      "start": 255.2,
+      "end": 255.42,
+      "velocity": 63
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 255.98,
+      "end": 256.175,
+      "velocity": 55
+    },
+    {
+      "pitch": 73,
+      "name": "C#5",
+      "pc": "C#",
+      "start": 256.536,
+      "end": 256.932,
+      "velocity": 52
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 256.991,
+      "end": 257.223,
+      "velocity": 71
+    },
+    {
+      "pitch": 70,
+      "name": "A#4",
+      "pc": "A#",
+      "start": 257.048,
+      "end": 257.291,
+      "velocity": 45
+    },
+    {
+      "pitch": 71,
+      "name": "B4",
+      "pc": "B",
+      "start": 257.302,
+      "end": 257.72,
+      "velocity": 40
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 257.489,
+      "end": 257.734,
+      "velocity": 57
+    },
+    {
+      "pitch": 69,
+      "name": "A4",
+      "pc": "A",
+      "start": 258.652,
+      "end": 258.861,
+      "velocity": 39
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 258.698,
+      "end": 258.918,
+      "velocity": 71
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 259.255,
+      "end": 259.464,
+      "velocity": 54
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 259.302,
+      "end": 259.511,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 259.475,
+      "end": 260.034,
+      "velocity": 52
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 260.627,
+      "end": 260.836,
+      "velocity": 68
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 260.65,
+      "end": 260.941,
+      "velocity": 52
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 261.289,
+      "end": 261.532,
+      "velocity": 58
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 261.311,
+      "end": 261.52,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 262.636,
+      "end": 263.089,
+      "velocity": 47
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 263.368,
+      "end": 263.566,
+      "velocity": 62
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 263.566,
+      "end": 263.925,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 263.925,
+      "end": 264.123,
+      "velocity": 65
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 264.18,
+      "end": 264.38,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 264.727,
+      "end": 264.982,
+      "velocity": 66
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 264.798,
+      "end": 265.064,
+      "velocity": 51
+    },
+    {
+      "pitch": 71,
+      "name": "B4",
+      "pc": "B",
+      "start": 265.702,
+      "end": 265.9,
+      "velocity": 47
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 266.818,
+      "end": 267.061,
+      "velocity": 37
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 266.923,
+      "end": 267.12,
+      "velocity": 58
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 267.991,
+      "end": 268.189,
+      "velocity": 67
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 268.248,
+      "end": 268.502,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 268.875,
+      "end": 269.107,
+      "velocity": 53
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 269.245,
+      "end": 269.455,
+      "velocity": 49
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 269.477,
+      "end": 269.686,
+      "velocity": 46
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 269.502,
+      "end": 269.7,
+      "velocity": 52
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 270.339,
+      "end": 270.548,
+      "velocity": 64
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 270.861,
+      "end": 271.186,
+      "velocity": 59
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 271.232,
+      "end": 271.441,
+      "velocity": 35
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 272.057,
+      "end": 272.268,
+      "velocity": 71
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 272.593,
+      "end": 272.789,
+      "velocity": 69
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 272.918,
+      "end": 273.116,
+      "velocity": 67
+    },
+    {
+      "pitch": 54,
+      "name": "F#3",
+      "pc": "F#",
+      "start": 273.277,
+      "end": 273.509,
+      "velocity": 42
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 273.661,
+      "end": 273.927,
+      "velocity": 40
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 273.916,
+      "end": 274.114,
+      "velocity": 58
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 274.125,
+      "end": 274.323,
+      "velocity": 70
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 274.452,
+      "end": 274.648,
+      "velocity": 78
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 274.927,
+      "end": 275.17,
+      "velocity": 43
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 275.009,
+      "end": 275.334,
+      "velocity": 46
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 275.323,
+      "end": 275.52,
+      "velocity": 35
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 275.67,
+      "end": 275.88,
+      "velocity": 70
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 276.193,
+      "end": 276.391,
+      "velocity": 74
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 276.391,
+      "end": 276.705,
+      "velocity": 55
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 276.995,
+      "end": 277.216,
+      "velocity": 61
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 277.182,
+      "end": 277.391,
+      "velocity": 66
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 278.482,
+      "end": 278.739,
+      "velocity": 62
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 278.982,
+      "end": 279.261,
+      "velocity": 51
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 279.691,
+      "end": 279.945,
+      "velocity": 53
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 279.714,
+      "end": 280.005,
+      "velocity": 41
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 280.005,
+      "end": 280.202,
+      "velocity": 40
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 280.539,
+      "end": 280.77,
+      "velocity": 61
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 281.095,
+      "end": 281.364,
+      "velocity": 73
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 282.293,
+      "end": 282.514,
+      "velocity": 43
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 282.595,
+      "end": 282.805,
+      "velocity": 58
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 283.082,
+      "end": 283.511,
+      "velocity": 46
+    },
+    {
+      "pitch": 30,
+      "name": "F#1",
+      "pc": "F#",
+      "start": 283.211,
+      "end": 283.443,
+      "velocity": 50
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 283.836,
+      "end": 284.034,
+      "velocity": 70
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 284.034,
+      "end": 284.234,
+      "velocity": 51
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 285.139,
+      "end": 285.407,
+      "velocity": 52
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 285.927,
+      "end": 286.173,
+      "velocity": 48
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 286.695,
+      "end": 286.905,
+      "velocity": 64
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 287.218,
+      "end": 287.543,
+      "velocity": 63
+    },
+    {
+      "pitch": 37,
+      "name": "C#2",
+      "pc": "C#",
+      "start": 287.416,
+      "end": 287.625,
+      "velocity": 43
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 287.682,
+      "end": 287.902,
+      "velocity": 46
+    },
+    {
+      "pitch": 40,
+      "name": "E2",
+      "pc": "E",
+      "start": 288.173,
+      "end": 288.427,
+      "velocity": 49
+    },
+    {
+      "pitch": 35,
+      "name": "B1",
+      "pc": "B",
+      "start": 288.741,
+      "end": 288.973,
+      "velocity": 59
+    },
+    {
+      "pitch": 42,
+      "name": "F#2",
+      "pc": "F#",
+      "start": 289.286,
+      "end": 289.541,
+      "velocity": 74
+    }
+  ],
+  "_sources": {
+    "structure": "sakemin/all-in-one-music-structure-analyzer (Replicate)",
+    "harmony": "Izreals/h1zero-chord-detection (HuggingFace Space)",
+    "midi": "Basic Pitch ONNX \u2014 billie_jean.midi-basicpitch.mid"
+  }
+}

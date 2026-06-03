@@ -1,0 +1,13 @@
+SOURCE: https://theartofrockmusic.voices.wooster.edu/wp-content/uploads/sites/180/2015/01/Billie-Jean-Michael-Jackson-1983-1.pdfmap/billie_jean/billie_jean_hooktheory_raw.json map/billie_jean/billie_jean_sections.txt map/billie_jean/billie_jean-allin1.json
+
+0:00 – 0:28 | Intro: The song opens with isolated drums and the famous bassline, followed by a synthesizer melody.
+0:28 – 0:53 | Verse 1: Lead vocals enter with heavy reverb, starting with "She was more like a beauty queen..."
+0:53 – 1:10 | Verse 2: Continues the story and introduces the titular character, starting with "She told me her name was Billie Jean..."
+1:10 – 1:26 | Pre-Chorus: The arrangement builds with additional synth layers and the "Be careful of what you do" warning.
+1:26 – 1:51 | Chorus: The title hook begins with "Billie Jean is not my lover," accompanied by strings and backing vocals.
+1:51 – 2:19 | Verse 3: The third verse picks up the narrative ("For forty days and for forty nights").
+2:19 – 2:36 | Pre-Chorus: The warning section repeats.
+2:36 – 3:02 | Chorus: The chorus repeats.
+3:02 – 3:43 | Bridge / Instrumental Break: The song strips down, isolating the iconic instrumental breakdown—a famous moment frequently extended in live performances.
+3:43 – 4:09 | Chorus: The final full-scale chorus with layered instrumentation.
+4:09 – 4:54 | Outro / Fade: Jackson ad-libs over the main groove as the track slowly fades out.

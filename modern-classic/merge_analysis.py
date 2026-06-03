@@ -37,6 +37,9 @@ MIDI_CACHE = AUDIO.with_suffix(".midi-basicpitch.mid")
 OUT        = AUDIO.with_suffix("").name + "-full.json"
 
 NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+NOTE_TO_PC = {n: i for i, n in enumerate(NOTE_NAMES)}
+MAJOR_INTERVALS = [0, 2, 4, 5, 7, 9, 11]
+MINOR_INTERVALS = [0, 2, 3, 5, 7, 8, 10]
 def pc(p):   return NOTE_NAMES[p % 12]
 def name(p): return NOTE_NAMES[p % 12] + str(p // 12 - 1)
 
@@ -115,30 +118,35 @@ def bass_at(t, end):
     return min(active, key=lambda n: n["pitch"])["pc"] if active else None
 
 # ── Step 5: Tonal zone detection ──────────────────────────────────────────────
-# Chromatic notes relative to A major: D#, G# sustained = modulation to E/B major
-CHROMATIC_IN_A = {"D#", "A#", "G"}   # notes outside A major diatonic scale
 MODULATION_THRESHOLD = 2              # bars in a row with chromatic notes = new zone
 
-zone_labels, current_zone, count = [], "A_major", 0
+root_pc    = NOTE_TO_PC[h1["key"]]
+intervals  = MAJOR_INTERVALS if h1["scale"] == "major" else MINOR_INTERVALS
+diatonic_pcs     = {(root_pc + i) % 12 for i in intervals}
+chromatic_notes  = {NOTE_NAMES[i] for i in range(12) if i not in diatonic_pcs}
+zone_label_1     = f"{h1['key']}_{h1['scale']}"
+zone_label_2     = "modulation"
+
+zone_labels, current_zone, count = [], zone_label_1, 0
 for i, beat in enumerate(db):
     end = db[i+1] if i+1 < len(db) else beat + 1.95
     pcs = set(pcs_in(beat, end))
-    has_chromatic = bool(pcs & {"D#", "G#"})   # D# or G# = E/B major territory
+    has_chromatic = bool(pcs & chromatic_notes)
     if has_chromatic:
         count += 1
     else:
         count = 0
-    if count >= MODULATION_THRESHOLD and current_zone == "A_major":
-        current_zone = "E_B_major"
+    if count >= MODULATION_THRESHOLD and current_zone == zone_label_1:
+        current_zone = zone_label_2
     zone_labels.append(current_zone)
 
 modulation_time = None
 for i, z in enumerate(zone_labels):
-    if z == "E_B_major":
+    if z == zone_label_2:
         modulation_time = round(db[i], 3)
         break
 
-print(f"Tonal zones: A_major until {modulation_time}s → E/B major")
+print(f"Tonal zones: {zone_label_1} until {modulation_time}s → modulation")
 
 # ── Step 6: Enriched downbeats ────────────────────────────────────────────────
 downbeats_with_chords = []
@@ -185,17 +193,30 @@ for seg in allin1["segments"]:
     })
 
 # ── Step 8: Cadence map ───────────────────────────────────────────────────────
+degree_1 = NOTE_NAMES[root_pc]
+degree_4 = NOTE_NAMES[(root_pc + 5) % 12]
+degree_5 = NOTE_NAMES[(root_pc + 7) % 12]
+
+if h1["scale"] == "major":
+    tonic_chords      = {degree_1, degree_1 + "maj7"}
+    subdominant_chords = {degree_4, degree_4 + "maj7"}
+    dominant_chords   = {degree_5, degree_5 + "7"}
+else:  # minor — V is major (harmonic minor)
+    tonic_chords      = {degree_1 + "m", degree_1 + "m7"}
+    subdominant_chords = {degree_4 + "m", degree_4 + "m7"}
+    dominant_chords   = {degree_5, degree_5 + "7"}
+
 cadences = []
 for i in range(len(chords) - 1):
     curr, nxt = chords[i]["chord"], chords[i+1]["chord"]
     t = chords[i+1]["time"]
-    if curr in ("E","E7") and nxt in ("A","Amaj7"):
+    if curr in dominant_chords and nxt in tonic_chords:
         cadences.append({"time": t, "type": "authentic", "from": curr, "to": nxt,
                          "note": "phrase end — strong cut point"})
-    elif curr == "D" and nxt == "A":
+    elif curr in subdominant_chords and nxt in tonic_chords:
         cadences.append({"time": t, "type": "plagal",    "from": curr, "to": nxt,
                          "note": "phrase end — soft cut point"})
-    elif nxt in ("E","E7") and curr not in ("E","E7"):
+    elif nxt in dominant_chords and curr not in dominant_chords:
         cadences.append({"time": t, "type": "half",      "from": curr, "to": nxt,
                          "note": "tension — good re-entry, avoid as exit"})
 
@@ -208,8 +229,8 @@ merged = {
     "key":          h1["key"],
     "scale":        h1["scale"],
     "tonal_zones": {
-        "zone_1": {"label": "A_major",   "start": 0, "end": modulation_time},
-        "zone_2": {"label": "E_B_major", "start": modulation_time, "end": None},
+        "zone_1": {"label": zone_label_1, "start": 0, "end": modulation_time},
+        "zone_2": {"label": zone_label_2, "start": modulation_time, "end": None},
     },
     "modulation_time": modulation_time,
     "unique_chords":   h1["unique_chords"],
