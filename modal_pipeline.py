@@ -105,19 +105,22 @@ async def analyze_web(request: Request):
 @app.local_entrypoint()
 def main(path: str):
     """modal run modal_pipeline.py --path path/to/track.mp3"""
-    stem = pathlib.Path(path).stem
+    audio_path = pathlib.Path(path)
+    stem = audio_path.stem
+    out_dir = audio_path.parent
 
     print(f"Sending {path} to Modal GPU...")
-    result = run_allin1.remote(open(path, "rb").read(), pathlib.Path(path).name)
+    result = run_allin1.remote(open(path, "rb").read(), audio_path.name)
 
-    out = f"{stem}-allin1.json"
+    out = out_dir / f"{stem}-allin1.json"
     with open(out, "w") as f:
         json.dump(result, f, indent=2)
     print(f"Saved: {out}")
 
     for filename, b64_string in result["stems"].items():
-        pathlib.Path(filename).write_bytes(base64.b64decode(b64_string))
-        print(f"Saved stem: {filename}")
+        stem_path = out_dir / filename
+        stem_path.write_bytes(base64.b64decode(b64_string))
+        print(f"Saved stem: {stem_path}")
 
     print(f"  bpm={result['bpm']}  beats={len(result['beats'])}  "
           f"downbeats={len(result['downbeats'])}  segments={len(result['segments'])}")
