@@ -1,0 +1,241 @@
+{
+  "path": "heroes-bowie.mp3",
+  "bpm": 113.21,
+  "time_signature": "4/4",
+  "duration": 215.3,
+  "segments": [
+    {
+      "index": 0,
+      "label": "silence",
+      "start": 0.0,
+      "end": 0.13,
+      "duration": 0.13,
+      "bars": 0,
+      "chords": [
+        "D:maj"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "D:maj",
+      "loudness_db": -28.9,
+      "loudness_start_db": -14.9,
+      "loudness_end_db": -28.9
+    },
+    {
+      "index": 1,
+      "label": "intro",
+      "start": 0.13,
+      "end": 17.24,
+      "duration": 17.11,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "D:maj"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -13.4,
+      "loudness_start_db": -13.9,
+      "loudness_end_db": -14.5
+    },
+    {
+      "index": 2,
+      "label": "verse",
+      "start": 17.24,
+      "end": 34.43,
+      "duration": 17.19,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "D:maj",
+        "C:maj"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -12.3,
+      "loudness_start_db": -11.9,
+      "loudness_end_db": -10.7
+    },
+    {
+      "index": 3,
+      "label": "verse",
+      "start": 34.43,
+      "end": 51.58,
+      "duration": 17.15,
+      "bars": 8,
+      "chords": [
+        "D:maj",
+        "A:min",
+        "E:min",
+        "C:maj"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "D:maj",
+      "loudness_db": -12.3,
+      "loudness_start_db": -12.5,
+      "loudness_end_db": -10.4
+    },
+    {
+      "index": 4,
+      "label": "inst",
+      "start": 51.58,
+      "end": 77.3,
+      "duration": 25.72,
+      "bars": 12,
+      "chords": [
+        "G:maj",
+        "D:maj"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -12.4,
+      "loudness_start_db": -11.4,
+      "loudness_end_db": -13.3
+    },
+    {
+      "index": 5,
+      "label": "verse",
+      "start": 77.3,
+      "end": 94.36,
+      "duration": 17.06,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "D:maj"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -12.0,
+      "loudness_start_db": -9.5,
+      "loudness_end_db": -11.5
+    },
+    {
+      "index": 6,
+      "label": "verse",
+      "start": 94.36,
+      "end": 120.15,
+      "duration": 25.79,
+      "bars": 12,
+      "chords": [
+        "C:maj",
+        "D:maj",
+        "A:min",
+        "E:min",
+        "G:maj"
+      ],
+      "chord_at_start": "C:maj",
+      "chord_at_end": "D:maj",
+      "loudness_db": -12.3,
+      "loudness_start_db": -11.8,
+      "loudness_end_db": -12.1
+    },
+    {
+      "index": 7,
+      "label": "chorus",
+      "start": 120.15,
+      "end": 137.28,
+      "duration": 17.13,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "D:maj"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -12.1,
+      "loudness_start_db": -10.2,
+      "loudness_end_db": -10.9
+    },
+    {
+      "index": 8,
+      "label": "verse",
+      "start": 137.28,
+      "end": 154.36,
+      "duration": 17.08,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "D:maj",
+        "C:maj"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -12.0,
+      "loudness_start_db": -11.3,
+      "loudness_end_db": -11.1
+    },
+    {
+      "index": 9,
+      "label": "chorus",
+      "start": 154.36,
+      "end": 180.03,
+      "duration": 25.67,
+      "bars": 12,
+      "chords": [
+        "D:maj",
+        "A:min",
+        "E:min",
+        "C:maj",
+        "G:maj",
+        "D:7"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "D:7",
+      "loudness_db": -12.6,
+      "loudness_start_db": -12.2,
+      "loudness_end_db": -11.6
+    },
+    {
+      "index": 10,
+      "label": "chorus",
+      "start": 180.03,
+      "end": 196.97,
+      "duration": 16.94,
+      "bars": 8,
+      "chords": [
+        "D:maj",
+        "G:maj"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -13.0,
+      "loudness_start_db": -11.7,
+      "loudness_end_db": -16.5
+    },
+    {
+      "index": 11,
+      "label": "outro",
+      "start": 196.97,
+      "end": 212.65,
+      "duration": 15.68,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "G:maj/5"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": null,
+      "loudness_db": -22.7,
+      "loudness_start_db": -17.0,
+      "loudness_end_db": -61.3
+    },
+    {
+      "index": 12,
+      "label": "silence",
+      "start": 212.65,
+      "end": 215.77,
+      "duration": 3.12,
+      "bars": 1,
+      "chords": [],
+      "chord_at_start": null,
+      "chord_at_end": null,
+      "loudness_db": -72.5,
+      "loudness_start_db": -65.7,
+      "loudness_end_db": -100.5
+    }
+  ],
+  "_sources": {
+    "beats": "madmom",
+    "chords": "chord-cnn-lstm (full)",
+    "structure": "songformer"
+  }
+}
