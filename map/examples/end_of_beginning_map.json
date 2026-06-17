@@ -1,0 +1,190 @@
+{
+  "path": "end_of_beginning.mp3",
+  "bpm": 80.0,
+  "time_signature": "4/4",
+  "duration": 158.83,
+  "segments": [
+    {
+      "index": 0,
+      "label": "silence",
+      "start": 0.0,
+      "end": 0.1,
+      "duration": 0.1,
+      "bars": 0,
+      "chords": [],
+      "chord_at_start": null,
+      "chord_at_end": null,
+      "loudness_db": -91.1,
+      "loudness_start_db": -15.4,
+      "loudness_end_db": -91.1
+    },
+    {
+      "index": 1,
+      "label": "intro",
+      "start": 0.1,
+      "end": 3.1,
+      "duration": 3.0,
+      "bars": 1,
+      "chords": [
+        "D:maj"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": null,
+      "loudness_db": -18.3,
+      "loudness_start_db": -15.4,
+      "loudness_end_db": -39.3
+    },
+    {
+      "index": 2,
+      "label": "verse",
+      "start": 3.1,
+      "end": 36.1,
+      "duration": 33.0,
+      "bars": 11,
+      "chords": [
+        "B:min",
+        "A:maj",
+        "D:maj",
+        "E:maj",
+        "G:maj"
+      ],
+      "chord_at_start": "B:min",
+      "chord_at_end": "A:maj",
+      "loudness_db": -13.0,
+      "loudness_start_db": -12.7,
+      "loudness_end_db": -35.3
+    },
+    {
+      "index": 3,
+      "label": "chorus",
+      "start": 36.1,
+      "end": 60.11,
+      "duration": 24.01,
+      "bars": 8,
+      "chords": [
+        "D:maj",
+        "A:maj",
+        "G:maj",
+        "B:min"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -9.8,
+      "loudness_start_db": -9.9,
+      "loudness_end_db": -12.9
+    },
+    {
+      "index": 4,
+      "label": "verse",
+      "start": 60.11,
+      "end": 72.1,
+      "duration": 11.99,
+      "bars": 4,
+      "chords": [
+        "D:maj",
+        "B:min",
+        "A:maj"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "A:maj",
+      "loudness_db": -13.7,
+      "loudness_start_db": -13.3,
+      "loudness_end_db": -16.2
+    },
+    {
+      "index": 5,
+      "label": "verse",
+      "start": 72.1,
+      "end": 88.56,
+      "duration": 16.46,
+      "bars": 6,
+      "chords": [
+        "D:maj",
+        "B:min",
+        "E:maj",
+        "A:maj"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": "A:maj",
+      "loudness_db": -12.9,
+      "loudness_start_db": -12.0,
+      "loudness_end_db": -13.4
+    },
+    {
+      "index": 6,
+      "label": "chorus",
+      "start": 88.56,
+      "end": 112.56,
+      "duration": 24.0,
+      "bars": 8,
+      "chords": [
+        "G:maj",
+        "D:maj",
+        "A:maj",
+        "B:min"
+      ],
+      "chord_at_start": "G:maj",
+      "chord_at_end": "G:maj",
+      "loudness_db": -9.6,
+      "loudness_start_db": -9.6,
+      "loudness_end_db": -10.9
+    },
+    {
+      "index": 7,
+      "label": "bridge",
+      "start": 112.56,
+      "end": 133.69,
+      "duration": 21.13,
+      "bars": 7,
+      "chords": [
+        "A:maj",
+        "B:min",
+        "G:maj"
+      ],
+      "chord_at_start": "A:maj",
+      "chord_at_end": null,
+      "loudness_db": -11.4,
+      "loudness_start_db": -11.4,
+      "loudness_end_db": -13.6
+    },
+    {
+      "index": 8,
+      "label": "chorus",
+      "start": 133.69,
+      "end": 157.21,
+      "duration": 23.52,
+      "bars": 8,
+      "chords": [
+        "D:maj",
+        "A:maj",
+        "G:maj",
+        "B:min",
+        "B:min/b7"
+      ],
+      "chord_at_start": "D:maj",
+      "chord_at_end": null,
+      "loudness_db": -12.3,
+      "loudness_start_db": -33.0,
+      "loudness_end_db": -21.2
+    },
+    {
+      "index": 9,
+      "label": "silence",
+      "start": 157.21,
+      "end": 159.25,
+      "duration": 2.04,
+      "bars": 1,
+      "chords": [],
+      "chord_at_start": null,
+      "chord_at_end": null,
+      "loudness_db": -67.4,
+      "loudness_start_db": -61.3,
+      "loudness_end_db": -106.9
+    }
+  ],
+  "_sources": {
+    "beats": "madmom",
+    "chords": "chord-cnn-lstm (full)",
+    "structure": "songformer"
+  }
+}
