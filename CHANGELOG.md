@@ -1,4 +1,29 @@
 # Changelog
+n
+## [analysis] — 2026-07-03 — MUF architecture reverse-engineering + map enhancement plan
+
+Fully reverse-engineered Apple's `MusicUnderstanding.framework` (iOS/macOS 27.0) from `.swiftinterface`, `.tbd`, binary strings, CoreML MIL files, and live runtime output.
+
+**Key findings:**
+- 4 separate CoreML models: DownbeatTracker (ConvNeXt CNN + JointHMM), KeyModel (repurposed chord detector), InstrumentActivityModel (6-bit quantized CNN), StructuralFeaturesModel (distilled CNN, 204s receptive field)
+- Beat tracker = CNN observation model + HMM decoder (same architecture as madmom DBNBeatTrackingProcessor)
+- 3-level structure hierarchy: sections → segments → phrases (Apple finds 29 phrases on a 2:39 track)
+- Instrument activity = 4-class presence classifier (not stems) — 10× lighter than Demucs
+- Pace output = cuts-per-minute recommendation (41-class, 0–80 cuts/min per section)
+- `VideoCuesProvider` (direct Recut analog) fully implemented in binary — model simply not bundled
+
+**Map comparison (end_of_beginning.mp3):**
+- Our map: 6KB, named labels, chords, LLM-optimized
+- Apple MUF: 3.8MB, sample-precise (÷44100), no labels, no chords
+- Boundary agreement: ~0.1s on well-tracked sections, up to 3s disagreement on others
+- Strategy: MUF precision where aligned, our labels as semantic layer, chords as tiebreaker
+
+**Enhancement plan:** See `todo-and-ideas.md` → "Map schema v3" section.
+Reference: `MusicUnderstandingFramework/MusicUnderstanding_framework_architecture.md`, `MusicUnderstandingFramework/comparison.md`, `learning/music_analysis_guide_for_musicians.md`
+
+---
+
+
 
 ## [map v2] — 2026-06-10 — Downbeat snapping with drift fallback
 **Track tested:** end_of_beginning.mp3 (testing/04)

@@ -1,5 +1,34 @@
 # Todo & Ideas
 
+## Map schema v3 — MUF-informed enhancements
+*From MUF architecture analysis (2026-07-03). Priority order:*
+
+- [ ] **Key field** — add `"key": {"tonic": "D", "mode": "major"}` to map output.
+      ChordMini already computes chords; key = most common chord root + mode aggregated over song.
+      Lowest effort of all enhancements.
+
+- [ ] **Phrase-level segmentation** — add `"phrases": [t0, t1, t2, ...]` timestamps within each segment.
+      Apple finds ~29 phrases on a 2:39 track (avg 5.1s = 8 beats at 80 BPM).
+      Options: allin1 already outputs phrase boundaries — extract them into map. Or post-process segments by downbeat count.
+      Critical for: LLM cutting decisions at sub-section granularity.
+
+- [ ] **Instrument activity per segment** (not full stems) — `"instruments": {"vocal": 0.72, "bass": 0.68, "drums": 0.81, "other": 0.55}`.
+      Derive from Demucs stems already computed: RMS per stem per segment → normalize 0–1.
+      Apple's approach (10× lighter than Demucs) — we already have Demucs so activity is free.
+      Use case: "cut where bass drops", "cut on a drum hit".
+
+- [ ] **EBU R128 loudness** — add integrated LUFS to map metadata.
+      `pip install pyloudnorm` → one call → `{"integrated": -9.61, "peak": -0.01}`.
+      Use case: detect loudness mismatch between sections, normalize to streaming targets (-14 LUFS Spotify).
+
+- [ ] **Pace / cut-rate field per segment** — `"pace_cuts_per_min": 20.0`.
+      Apple derives from structure model (41-class, 0–80 cuts/min). Approximate: `60 / (beats_per_cut × bpm)`.
+      Gives LLM a concrete "how dense should editing be here" signal.
+
+- [ ] **Per-beat + downbeat timestamps** — currently have bar count per segment, not timestamped beats.
+      madmom DBN already outputs these. Add `"beats": [...]` and `"downbeats": [...]` to map root.
+      Apple outputs 211 beats + 53 downbeats for a 2:39 track.
+
 ## Analysis
 
 - [ ] Vocal position detection — detect where vocals are present/absent in a track.
