@@ -1,5 +1,5 @@
 # Changelog
-n
+
 ## [analysis] — 2026-07-03 — MUF architecture reverse-engineering + map enhancement plan
 
 Fully reverse-engineered Apple's `MusicUnderstanding.framework` (iOS/macOS 27.0) from `.swiftinterface`, `.tbd`, binary strings, CoreML MIL files, and live runtime output.
