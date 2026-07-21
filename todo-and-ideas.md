@@ -1,5 +1,18 @@
 # Todo & Ideas
 
+## Pipeline fixes (post map-schema v3)
+
+- [ ] **Key detection improvement** — current frequency heuristic (`detect_key`) picks most common chord root.
+      Fails when dominant (V) chord appears more than tonic (e.g. "End of Beginning": A:maj > D:maj but key is D major).
+      Fix: implement Krumhansl-Schmuckler algorithm or use `music21` key detection.
+      Known limitation in v0.1 map output.
+
+- [ ] **Time signature detection** — `modal_chordmini.py` hardcodes `"4/4"` (line 177).
+      madmom's `DBNDownBeatTrackingProcessor` needs meter as input, doesn't detect it.
+      Needs separate meter classifier (`RNNBarProcessor` + meter model).
+      Required before processing waltz, 6/8, or odd-meter tracks.
+      Block: implement after map schema v3 is settled.
+
 ## Map schema v3 — MUF-informed enhancements
 *From MUF architecture analysis (2026-07-03). Priority order:*
 

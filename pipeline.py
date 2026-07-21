@@ -36,9 +36,10 @@ import pathlib
 
 app = modal.App("recut-chordmini")
 
+# TODO: we should run form one source, no separated local / remote models
 # ── Local model paths ──────────────────────────────────────────────────────────
-CHORD_MODEL_LOCAL = pathlib.Path(__file__).parent / "ChordMiniApp/python_backend/models/Chord-CNN-LSTM"
-SONGFORMER_LOCAL  = pathlib.Path(__file__).parent / "ChordMiniApp/SongFormer"
+CHORD_MODEL_LOCAL = pathlib.Path(__file__).parent / "archive/ChordMiniApp/python_backend/models/Chord-CNN-LSTM"
+SONGFORMER_LOCAL  = pathlib.Path(__file__).parent / "archive/ChordMiniApp/SongFormer"
 
 # ── Images ─────────────────────────────────────────────────────────────────────
 _base = (
