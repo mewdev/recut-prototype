@@ -20,9 +20,9 @@ class Audio:
         if self.is_mono:
             return Audio(fn(self.samples), self.sr)
 
-        return Audio(np.stack([fn(self.samples[0]), fn(self.samples[1])]), self.sr)
+        return Audio(np.stack([fn(self.samples[i]) for i in range(self.samples.shape[0])]), self.sr)
 
     @classmethod
     def load(cls, path:str) -> "Audio":
-        samples, sr = load(path, sr=None)
+        samples, sr = load(path, sr=None, mono=False)
         return cls(samples, int(sr))
