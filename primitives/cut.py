@@ -1,19 +1,8 @@
-"""
-cut(audio, sr, start, end) → np.ndarray
+from audio import Audio
 
-Slice audio to [start, end] seconds. Hard cut, no fades.
-"""
-
-import numpy as np
-
-
-def cut(audio: np.ndarray, sr: int, start: float, end: float) -> np.ndarray:
-    """
-    audio: (channels, samples) or (samples,)
-    Returns same shape, trimmed to [start, end].
-    """
-    s = int(round(start * sr))
-    e = int(round(end * sr))
-    if audio.ndim == 1:
-        return audio[s:e]
-    return audio[:, s:e]
+def cut(start: float, end: float):
+    def apply(audio: Audio) -> Audio:
+        s = int(round(start * audio.sr))
+        e = int(round(end * audio.sr))
+        return audio.apply_to_channels(lambda ch: ch[s:e])
+    return apply
