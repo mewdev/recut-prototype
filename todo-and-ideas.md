@@ -80,6 +80,9 @@
       Also: LP-Fx dataset (101K instruction→effect chain examples) could augment training data for the cutting model.
       Limitation: currently only EQ + reverb; GPT-4o works best for parameter prediction.
 ## Editing
+
+- [ ] **Static edit validator** (issue #10) — lint for audio cuts. Checks edit plan against MusicMap before render: cut points inside segments, non-adjacent joins, key/energy mismatch. MVP = structural checks only (map-based). Perceptual checks (click detection, loudness jump) later. Runs as `plan.validate()` before `plan.render()`.
+  - Q: How to ensure `compose()` is always written correctly? Runtime validation catches map-level mistakes (wrong labels, bad cut points). Static types (Pylance) catch wrong arg types. `Literal` typing for segment labels impractical with dynamic maps — runtime is right call for MVP.
 ## Pipeline
 ## Stems
 
