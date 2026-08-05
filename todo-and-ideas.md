@@ -70,6 +70,11 @@
 
 ## Primitives
 
+- [ ] **Understand xfade math** — equal-power crossfade uses sqrt ramps (not linear) because amplitude→loudness is squared.
+      `sqrt(0.5)² + sqrt(0.5)² = 1` → constant loudness at midpoint. Linear ramps would dip.
+      Slices: `[..., -N:]` (last axis) vs `[:, -N:]` (rows/stereo-only) — ellipsis handles mono+stereo.
+      See `primitives/xfade.py`.
+
 - [ ] **Full pedalboard adoption** — migrate all primitives to use pedalboard as the primary audio I/O and effects layer.
       Current state: pedalboard already used in `filter_sweep` and `reverb`, but librosa handles loading elsewhere.
       Goals:
