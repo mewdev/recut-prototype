@@ -70,6 +70,19 @@
 
 ## Primitives
 
+- [ ] **Full pedalboard adoption** — migrate all primitives to use pedalboard as the primary audio I/O and effects layer.
+      Current state: pedalboard already used in `filter_sweep` and `reverb`, but librosa handles loading elsewhere.
+      Goals:
+      - Replace `librosa.load()` with `pedalboard.io.AudioFile` — streams without full RAM load, faster for long tracks.
+      - Standardize effect primitives on `Pedalboard([...])` chain API (mirrors our `chain()` composition pattern exactly).
+      - Expose VST3 plugin support: `pedalboard.load_plugin("path/to/plugin.vst3")` → any DAW effect programmable.
+      - Example chain from docs (https://spotify.github.io/pedalboard/examples.html):
+        ```python
+        board = Pedalboard([Compressor(...), Gain(...), Chorus(), LadderFilter(...), Phaser(), Convolution(...), Reverb(...)])
+        ```
+      Benefit: C++ audio buffers (faster than numpy round-trips), unified API, pro-grade plugins without rewriting DSP.
+      Ref: https://spotify.github.io/pedalboard/examples.html
+
 - [ ] **LLM2Fx integration** — Sony Research paper (arXiv 2505.20770 + 2512.01559, GitHub: SonyResearch/LLM2Fx).
       Two systems:
       - LLM2Fx v1: natural language → EQ/reverb parameters (text-to-parameter)
