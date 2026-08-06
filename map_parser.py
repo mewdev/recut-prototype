@@ -49,4 +49,50 @@ class OurMapParser(MapParser):
         
         segment = segments[index - 1]
         
-        return {"start": segment["start"],"end": segment["end"]}
+        result = {"start": segment["start"], "end": segment["end"]}
+        if "downbeats" in segment:
+            result["downbeats"] = segment["downbeats"]
+            # TODO: learn later why this matters
+            # audio_start = first downbeat (skips pre-roll silence before first beat)
+            # audio_end = last downbeat + 1 bar (ensures cut lands after full last bar, not at ML boundary)
+            result["audio_start"] = segment["downbeats"][0]
+            result["audio_end"] = segment["downbeats"][-1]
+        return result
+
+
+class MUFParser(MapParser):
+    """Parser for Apple MUF format (MusicUnderstandingFramework/*.json).
+
+    MUF has no segment labels — get_segment() uses index only (label ignored).
+    Sections are sample-based: value / timescale = seconds.
+    """
+
+    def __init__(self, muf_path: str):
+        import json
+        with open(muf_path) as f:
+            self._map = json.load(f)
+
+    def _to_seconds(self, ts: dict) -> float:
+        """Convert MUF timestamp dict to seconds."""
+        return ts["value"] / ts["timescale"]
+
+    def get_bpm(self) -> float:
+        return self._map["rhythm"]["beatsPerMinute"]
+
+    def bars_to_seconds(self, bars: float) -> float:
+        # MUF has no time_signature field — assuming 4/4
+        return bars * 4 * (60.0 / self.get_bpm())
+
+    def get_segment(self, label: str, index: int = 1) -> dict:
+        """Return {start, end} for section at index (label ignored — MUF has no labels)."""
+        sections = self._map["structure"]["sections"]
+
+        if len(sections) < index:
+                    raise ValueError(f"No section at index {index}") 
+
+        section = sections[index - 1]
+
+        return {
+            "start": self._to_seconds(section["start"]),
+            "end": self._to_seconds(section["start"]) + self._to_seconds(section["duration"])
+        }

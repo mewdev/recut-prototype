@@ -97,6 +97,14 @@
       Integration point: `chain(audio, sr, (llm_fx_from_text, {"prompt": instruction}), ...)`
       Also: LP-Fx dataset (101K instruction→effect chain examples) could augment training data for the cutting model.
       Limitation: currently only EQ + reverb; GPT-4o works best for parameter prediction.
+## Tooling / GUI
+
+- [ ] **Segment boundary editor GUI** — minimal visual tool for correcting ML segment boundaries.
+      Display: waveform + beat grid + section labels. Controls: play section, drag boundary timestamps, save back to map JSON.
+      Key insight: beat detection is accurate (rhythm model gets timing right), segment labeling is accurate (structural model gets labels right) — but boundary *timestamps* from the structural model can be 20–100ms off from true downbeats.
+      Fix: when user drags a boundary, snap it to nearest downbeat from the beat grid. User picks the right section label, beat grid provides the precise timestamp.
+      Stack: Gradio or Streamlit — no need for a full DAW.
+
 ## Editing
 
 - [ ] **Static edit validator** (issue #10) — lint for audio cuts. Checks edit plan against MusicMap before render: cut points inside segments, non-adjacent joins, key/energy mismatch. MVP = structural checks only (map-based). Perceptual checks (click detection, loudness jump) later. Runs as `plan.validate()` before `plan.render()`.
