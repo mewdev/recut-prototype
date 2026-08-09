@@ -97,6 +97,10 @@
       Integration point: `chain(audio, sr, (llm_fx_from_text, {"prompt": instruction}), ...)`
       Also: LP-Fx dataset (101K instruction→effect chain examples) could augment training data for the cutting model.
       Limitation: currently only EQ + reverb; GPT-4o works best for parameter prediction.
+## DX / Tooling Ideas
+
+- [ ] **Segment label autocomplete** — `Clip("...")` should suggest valid labels from the map. Static types can't do this (labels known only at runtime). Solution: code-gen step that reads map JSON and outputs `labels.py` with `Literal["intro", "verse", "chorus", ...]`. Regenerate when map changes. Gives Pylance full autocomplete + typo detection at write time.
+
 ## Tooling / GUI
 
 - [ ] **Segment boundary editor GUI** — minimal visual tool for correcting ML segment boundaries.
