@@ -1,5 +1,6 @@
-from dataclasses import dataclass, field
-from typing import Union, Optional
+from dataclasses import dataclass
+from typing import Optional, Union
+
 import numpy as np
 
 from audio import Audio
@@ -58,6 +59,7 @@ def compose(parser: MapParser, audio_path: str, *nodes: Node) -> Audio:
             loop = [clip] * (node.times)
             composition.extend(loop)
 
-        else: composition.append(clip)
+        else:
+            composition.append(clip)
 
     return Audio(np.concatenate([a.samples for a in composition], axis=-1), audio.sr)

@@ -1,5 +1,6 @@
 from audio import Audio
 
+
 def chain(audio: Audio, *transforms) -> Audio:
     for transform in transforms:
         audio = transform(audio)

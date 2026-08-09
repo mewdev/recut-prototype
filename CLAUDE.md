@@ -7,6 +7,9 @@ Analysis pipeline → JSON music map → primitives → LLM orchestration → sp
 ## Python Environment
 Always use `/Users/michal/miniconda3/envs/recut/bin/python` — never `conda run -n recut` (picks up wrong system Python).
 
+## Before Every Commit
+Run `/Users/michal/miniconda3/envs/recut/bin/ruff check .` — fix all errors before committing.
+
 ## Key Files
 - `music-cutting-system-plan.md` — architecture plan
 - `CHANGELOG.md` — edit version history + primitives table

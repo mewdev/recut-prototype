@@ -1,6 +1,8 @@
-from audio import Audio
-from pedalboard import Pedalboard, Reverb # type: ignore
 from typing import Literal
+
+from pedalboard import Pedalboard, Reverb  # type: ignore
+
+from audio import Audio
 
 ReverbType = Literal["room", "hall", "plate"]
 
@@ -26,9 +28,12 @@ def reverb(
     """
     def apply(audio: Audio) -> Audio:
         preset = PRESETS[reverb_type].copy()
-        if room_size is not None: preset["room_size"] = room_size
-        if damping is not None: preset["damping"] = damping
-        if width is not None: preset["width"] = width
+        if room_size is not None:
+            preset["room_size"] = room_size
+        if damping is not None:
+            preset["damping"] = damping
+        if width is not None:
+            preset["width"] = width
 
         board = Pedalboard([Reverb(
             room_size=preset["room_size"],

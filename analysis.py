@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from map.schema import RawAnalysis
-from pipeline import analyze_all
 from pathlib import Path
 from typing import cast
+
+from map.schema import RawAnalysis
+from pipeline import analyze_all
+
 
 class AnalysisPipeline(ABC):
     @abstractmethod

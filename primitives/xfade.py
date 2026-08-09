@@ -1,5 +1,6 @@
-from audio import Audio
 import numpy as np
+
+from audio import Audio
 
 
 def xfade(xfade_ms: float = 500):

@@ -1,5 +1,6 @@
 from audio import Audio
 
+
 def cut(start: float, end: float):
     def apply(audio: Audio) -> Audio:
         s = int(round(start * audio.sr))

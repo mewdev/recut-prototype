@@ -1,6 +1,8 @@
-from audio import Audio
-import numpy as np
 from typing import Literal
+
+import numpy as np
+
+from audio import Audio
 
 Curve = Literal["linear", "log", "exp", "qsin"]
 

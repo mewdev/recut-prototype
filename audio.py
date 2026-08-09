@@ -3,6 +3,7 @@
 import numpy as np
 from librosa import load
 
+
 class Audio:
     def __init__(self, samples: np.ndarray, sr:int) -> None:
         self.samples = samples

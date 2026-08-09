@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 100
+exclude = ["archive/", "primitives_old/"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering)
+]
+ignore = [
+    "E501",  # line too long — handled by formatter
+]

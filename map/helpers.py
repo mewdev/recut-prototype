@@ -3,7 +3,9 @@ helpers.py — pure helper functions for map enrichment
 """
 
 import hashlib
+
 import numpy as np
+
 from map.schema import BeatTime, ChordEntry
 
 

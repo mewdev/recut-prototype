@@ -1,5 +1,7 @@
+from pedalboard import Delay, Pedalboard  # type: ignore
+
 from audio import Audio
-from pedalboard import Pedalboard, Delay  # type: ignore
+
 
 def delay(
     delay_seconds: float = 0.5,  # echo time in seconds

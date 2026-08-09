@@ -16,6 +16,7 @@ MUF sections (44100Hz):
 """
 
 import sys
+
 import numpy as np
 import soundfile as sf
 
@@ -71,7 +72,8 @@ def main():
     # Chorus plays to completion, bridge starts clean at 1:52
     result = np.concatenate([intro_swept, chorus_01, bridge_processed], axis=1)
 
-    import os; os.makedirs("output", exist_ok=True)
+    import os
+    os.makedirs("output", exist_ok=True)
     sf.write(AUDIO_OUT, result.T, sr)
 
     print(f"Written: {AUDIO_OUT}  ({result.shape[1]/sr:.1f}s)")

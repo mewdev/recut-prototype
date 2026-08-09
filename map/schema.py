@@ -6,9 +6,8 @@ beat tracking (BeatNet), chord recognition (Chord-CNN-LSTM), structure (SongForm
 RawAnalysis mirrors the JSON output shape that pipeline produces.
 """
 
-from typing import TypedDict, Optional, Literal, NewType
 from pathlib import Path
-
+from typing import Literal, NewType, Optional, TypedDict
 
 # ---------------------------------------------------------------------------
 # CONSTANTS

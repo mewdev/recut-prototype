@@ -10,17 +10,14 @@ Usage:
 """
 
 import json
-import numpy as np
-import librosa
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
-from map.schema import (
-    BeatTime, ChordEntry, RawAnalysis, EnrichedSegment, MusicMap, RawSegment
-)
-from map.helpers import (
-    hash_file, phrase_in, chords_in, downbeats_in, loudness_rms_db
-)
+import librosa
+import numpy as np
+
+from map.helpers import chords_in, downbeats_in, hash_file, loudness_rms_db, phrase_in
+from map.schema import BeatTime, ChordEntry, EnrichedSegment, MusicMap, RawAnalysis, RawSegment
 
 
 def build_segment(

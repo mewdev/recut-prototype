@@ -1,7 +1,9 @@
-from audio import Audio
+from typing import Literal
+
 import numpy as np
 from scipy.signal import butter, sosfilt, sosfilt_zi
-from typing import Literal
+
+from audio import Audio
 
 FilterType = Literal["low", "high"]
 

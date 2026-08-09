@@ -30,9 +30,10 @@ Output: <stem>-chordmini.json
     }
 """
 
-import modal
 import json
 import pathlib
+
+import modal
 
 app = modal.App("recut-chordmini")
 
@@ -148,7 +149,9 @@ structure_image = (
 @app.function(image=beats_image, timeout=300, memory=4096)
 def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
     """madmom RNN beat tracking → beats, downbeats, bpm."""
-    import tempfile, time
+    import tempfile
+    import time
+
     import numpy as np
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -156,7 +159,7 @@ def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         audio_path.write_bytes(audio_bytes)
 
         t0 = time.time()
-        from madmom.features.beats import RNNBeatProcessor, DBNBeatTrackingProcessor
+        from madmom.features.beats import DBNBeatTrackingProcessor, RNNBeatProcessor
 
         beat_activation = RNNBeatProcessor()(str(audio_path))
         beat_times = DBNBeatTrackingProcessor(fps=100)(beat_activation)
@@ -183,7 +186,10 @@ def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
 @app.function(image=chords_image, timeout=600, memory=4096)
 def run_chords(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str = "full") -> dict:
     """Chord-CNN-LSTM ensemble → chord list with start/end/chord."""
-    import tempfile, os, sys, time
+    import os
+    import sys
+    import tempfile
+    import time
 
     with tempfile.TemporaryDirectory() as tmp:
         audio_path = pathlib.Path(tmp) / filename
@@ -226,7 +232,10 @@ def run_chords(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str 
 @app.function(image=structure_image, gpu="T4", timeout=300, memory=12288)
 def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
     """SongFormer (MuQ + MusicFM) → section segments with labels."""
-    import tempfile, os, sys, time, importlib.util
+    import importlib.util
+    import sys
+    import tempfile
+    import time
 
     with tempfile.TemporaryDirectory() as tmp:
         audio_path = pathlib.Path(tmp) / filename
