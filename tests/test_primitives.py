@@ -8,7 +8,6 @@ from primitives.chain import chain
 from primitives.cut import cut
 from primitives.fade import fade
 
-
 # --- Helpers ---------------------------------------------------------------
 
 

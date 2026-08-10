@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>recut editor</title>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1e1e1e; color: #ccc;
+      font-family: monospace; font-size: 12px;
+      user-select: none;
+    }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    #header {
+      height: 38px; background: #111;
+      border-bottom: 1px solid #2a2a2a;
+      display: flex; align-items: center; gap: 10px; padding: 0 14px;
+    }
+    #header h1 { font-size: 11px; color: #444; font-weight: normal; margin-right: 4px; }
+    button {
+      background: #2a2a2a; color: #bbb;
+      border: 1px solid #3a3a3a;
+      padding: 3px 10px; cursor: pointer; border-radius: 3px;
+      font-family: monospace; font-size: 11px;
+    }
+    button:hover { background: #363636; }
+    button.primary { background: #1a4a2a; border-color: #2a6a3a; color: #5fc87a; }
+    button.primary:hover { background: #235a34; }
+    .vsep { width: 1px; height: 18px; background: #2a2a2a; margin: 0 4px; }
+    #playhead-pos { color: #888; font-size: 11px; min-width: 70px; }
+    #status { margin-left: auto; color: #444; font-size: 11px; }
+    #snap-label { color: #666; font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    #zoom-info { color: #444; font-size: 11px; min-width: 36px; text-align: center; }
+
+    /* ── Timeline (ruler + seg lane + waveform) ──────────────── */
+    #timeline { position: relative; cursor: default; }
+
+    /* playhead line: spans full timeline height */
+    #playhead-line {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgba(255, 210, 0, 0.85);
+      pointer-events: none; z-index: 30; display: none;
+    }
+
+    /* Ruler */
+    #ruler {
+      height: 24px; overflow: hidden; position: relative;
+      border-bottom: 1px solid #1a1a1a;
+      cursor: pointer;
+    }
+    #ruler-canvas { display: block; }
+
+    /* Segment lane */
+    #seg-lane {
+      height: 30px; position: relative;
+      border-bottom: 1px solid #181818;
+      background: #1c1c1c; overflow: hidden;
+    }
+    .seg-block {
+      position: absolute; top: 2px; bottom: 2px;
+      border-radius: 2px; overflow: hidden;
+      display: flex; align-items: center; padding: 0 6px;
+      font-size: 10px; font-weight: bold; letter-spacing: 0.4px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .seg-block:hover { filter: brightness(1.1); }
+    /* boundary handle */
+    .seg-handle {
+      position: absolute; top: 0; bottom: 0; width: 12px;
+      transform: translateX(-50%);
+      cursor: col-resize; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .seg-handle::after {
+      content: ''; display: block; width: 2px; height: 100%;
+      background: rgba(255,255,255,0.4); border-radius: 1px;
+    }
+    .seg-handle:hover::after,
+    .seg-handle.dragging::after { background: rgba(255,210,0,0.9); width: 2px; }
+
+    /* Waveform wrap */
+    #waveform-wrap { position: relative; }
+    #waveform { display: block; }
+    #grid-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* Mini-map: full-song overview strip */
+    #mini-map {
+      height: 6px; background: #111;
+      border-top: 1px solid #1a1a1a;
+      position: relative; overflow: hidden;
+    }
+    #mini-map-segments { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+    #mini-map-window {
+      position: absolute; top: 0; bottom: 0;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      pointer-events: none;
+    }
+
+    /* ── Controls ─────────────────────────────────────────────── */
+    #controls {
+      padding: 6px 14px;
+      display: flex; gap: 10px; align-items: center;
+      border-top: 1px solid #252525;
+      background: #1a1a1a;
+    }
+    #time-display { margin-left: auto; color: #555; font-size: 11px; min-width: 70px; text-align: right; }
+
+    /* ── Segment list ─────────────────────────────────────────── */
+    #seg-list-panel { padding: 8px 14px; }
+    #seg-list-panel h2 { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    #segment-list { display: flex; flex-direction: column; gap: 2px; }
+    .seg-row {
+      display: grid;
+      grid-template-columns: 110px 90px 90px 60px 1fr 46px;
+      gap: 6px; align-items: center;
+      padding: 3px 8px; background: #222; border-radius: 3px;
+      border-left: 3px solid var(--color);
+    }
+    .seg-row:hover { background: #272727; }
+    .seg-label-cell { font-weight: bold; color: var(--color); font-size: 11px; }
+    .seg-input {
+      background: #111; border: 1px solid #333; color: #ccc;
+      padding: 2px 5px; font-family: monospace; font-size: 11px;
+      width: 100%; border-radius: 2px;
+    }
+    .seg-input:focus { outline: none; border-color: #555; }
+    .seg-dur { color: #555; font-size: 10px; }
+    .seg-play { padding: 2px 7px; font-size: 11px; }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    #footer {
+      padding: 7px 14px; background: #111;
+      border-top: 1px solid #222;
+      display: flex; gap: 8px; align-items: center;
+    }
+    #save-status { color: #555; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <h1>⬡ recut</h1>
+  <button id="btn-play" onclick="togglePlay()">▶ Play</button>
+  <button onclick="stopPlayback()">■ Stop</button>
+  <div class="vsep"></div>
+  <button onclick="document.getElementById('file-input').click()">📂 Load JSON</button>
+  <input type="file" id="file-input" accept=".json" style="display:none" onchange="loadFromFile(event)">
+  <div class="vsep"></div>
+  <button onclick="changeZoom(2, null)">＋</button>
+  <span id="zoom-info">1×</span>
+  <button onclick="changeZoom(0.5, null)">－</button>
+  <div class="vsep"></div>
+  <label id="snap-label"><input type="checkbox" id="snap-toggle" checked> Snap</label>
+  <div class="vsep"></div>
+  <span style="color:#555;font-size:11px;">▸</span>
+  <span id="playhead-pos">0:00.000</span>
+  <div class="vsep"></div>
+  <span id="file-display" style="color:#666;font-size:11px;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="">—</span>
+  <span id="status">Loading…</span>
+</div>
+
+<div id="timeline">
+  <div id="playhead-line"></div>
+  <div id="ruler"><canvas id="ruler-canvas"></canvas></div>
+  <div id="seg-lane"></div>
+  <div id="waveform-wrap">
+    <div id="waveform"></div>
+    <canvas id="grid-canvas"></canvas>
+  </div>
+  <div id="mini-map">
+    <div id="mini-map-segments"></div>
+    <div id="mini-map-window"></div>
+  </div>
+</div>
+
+<div id="controls">
+  <span style="color:#555;font-size:11px">Scroll to zoom · Drag boundaries to edit</span>
+  <span id="time-display">0:00.000</span>
+</div>
+
+<div id="seg-list-panel">
+  <h2>Segments</h2>
+  <div id="segment-list"></div>
+</div>
+
+<div id="footer">
+  <button class="primary" onclick="saveMap()">💾 Save</button>
+  <button onclick="reloadMap()">↺ Reload</button>
+  <span id="save-status"></span>
+</div>
+
+<script>
+// ── Colors ────────────────────────────────────────────────────────────────────
+const COLORS = {
+  intro:   '#3a5fee',
+  verse:   '#2a8ee0',
+  chorus:  '#b030ee',
+  bridge:  '#d07010',
+  outro:   '#20b878',
+  silence: '#3a3a3a',
+};
+function segColor(l) { return COLORS[l] || '#666'; }
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let mapData      = null;
+let beats        = [];
+let downbeatsArr = [];   // sorted array of downbeat times (seconds)
+let downbeatSet  = new Set();
+let bpm          = 120;
+let beatsPerBar  = 4;
+
+let basePxPerSec = null;
+let zoomLevel    = 1;
+let visibleStart = 0;
+let visibleEnd   = 0;
+
+let playheadTime = 0;
+let isPlaying    = false;
+let blockScroll  = false;  // true while changeZoom is in flight
+let currentFile  = null;   // full path (server) or filename (local)
+
+// ── WaveSurfer ────────────────────────────────────────────────────────────────
+const ws = WaveSurfer.create({
+  container: '#waveform',
+  waveColor: '#3a3a55',
+  progressColor: '#5a5a80', // brighter for played portion; we draw playhead separately
+  height: 120,
+  interact: true,
+  hideScrollbar: false,
+});
+ws.load('/audio');
+
+ws.on('ready', () => {
+  setStatus('Ready — ' + fmtTime(ws.getDuration()));
+  const W = document.getElementById('waveform').offsetWidth;
+  basePxPerSec = W / ws.getDuration();
+  visibleStart = 0;
+  visibleEnd   = ws.getDuration();
+  ws.zoom(basePxPerSec);
+  loadMap();
+});
+
+ws.on('scroll', (start, end) => {
+  if (blockScroll) return;   // ignore stale events during zoom
+  visibleStart = start;
+  visibleEnd   = end;
+  drawRuler();
+  drawGrid();
+  renderSegLane();
+  updatePlayheadLine();
+  updateMiniMapWindow();
+});
+
+ws.on('timeupdate', t => {
+  document.getElementById('time-display').textContent = fmtTime(t);
+  if (isPlaying) {
+    playheadTime = t;
+    updatePlayheadLine();
+    updatePlayheadPos();
+  }
+});
+
+ws.on('finish', () => {
+  isPlaying = false;
+  document.getElementById('btn-play').textContent = '▶ Play';
+});
+
+// click on waveform → set playhead
+ws.on('interaction', t => {
+  setPlayhead(t);
+});
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+});
+
+// ── Zoom with mouse wheel ─────────────────────────────────────────────────────
+document.getElementById('timeline').addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor   = e.deltaY < 0 ? 1.25 : 1 / 1.25;
+  const rect     = document.getElementById('timeline').getBoundingClientRect();
+  const cursorX  = e.clientX - rect.left;
+  changeZoom(factor, cursorX);
+}, { passive: false });
+
+// click ruler → set playhead
+document.getElementById('ruler').addEventListener('click', e => {
+  const rect  = document.getElementById('ruler').getBoundingClientRect();
+  const x     = e.clientX - rect.left;
+  const range = visibleEnd - visibleStart;
+  const t     = visibleStart + (x / rect.width) * range;
+  setPlayhead(Math.max(0, Math.min(t, ws.getDuration())));
+});
+
+// ── Load map ──────────────────────────────────────────────────────────────────
+async function loadMap() {
+  const res = await fetch('/map');
+  setFileDisplay(res.headers.get('X-Map-File') || 'server map');
+  initMapData(await res.json());
+
+  window.addEventListener('resize', () => {
+    if (!mapData) return;
+    const W = document.getElementById('waveform').offsetWidth;
+    basePxPerSec = W / ws.getDuration();
+    ws.zoom(basePxPerSec * zoomLevel);
+    drawRuler(); drawGrid(); renderSegLane(); renderMiniMap();
+  });
+}
+
+function reloadMap() { loadMap(); }
+
+function loadFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  // reset so same file can be re-loaded
+  event.target.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      initMapData(JSON.parse(e.target.result));
+      setFileDisplay(file.name);
+      setStatus('Loaded');
+    } catch (err) {
+      setStatus('Error: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function initMapData(data) {
+  mapData = data;
+  beats = mapData.beats || [];
+  bpm   = mapData.bpm || 120;
+  const tsSplit = (mapData.time_signature || '4/4').split('/');
+  beatsPerBar = parseInt(tsSplit[0]) || 4;
+
+  const raw = (mapData.downbeats && mapData.downbeats.length)
+    ? mapData.downbeats
+    : mapData.segments.flatMap(s => s.downbeats || []);
+  downbeatsArr = [...new Set(raw.map(t => +t.toFixed(4)))].sort((a, b) => a - b);
+  downbeatSet  = new Set(downbeatsArr.map(t => Math.round(t * 1000)));
+
+  drawRuler(); drawGrid(); renderSegLane(); renderSegList(); renderMiniMap();
+}
+
+// ── Playback ──────────────────────────────────────────────────────────────────
+function togglePlay() {
+  if (isPlaying) {
+    ws.pause();
+    isPlaying = false;
+    document.getElementById('btn-play').textContent = '▶ Play';
+  } else {
+    ws.play(playheadTime);
+    isPlaying = true;
+    document.getElementById('btn-play').textContent = '⏸ Pause';
+  }
+}
+
+function stopPlayback() {
+  ws.stop();
+  isPlaying = false;
+  document.getElementById('btn-play').textContent = '▶ Play';
+  playheadTime = 0;
+  updatePlayheadLine();
+  updatePlayheadPos();
+}
+
+function setPlayhead(t) {
+  playheadTime = t;
+  ws.seekTo(t / ws.getDuration());
+  updatePlayheadPos();
+  // WaveSurfer scrolls asynchronously after seekTo — defer until scroll settles
+  requestAnimationFrame(() => requestAnimationFrame(() => updatePlayheadLine()));
+}
+
+function updatePlayheadLine() {
+  const el = document.getElementById('playhead-line');
+  if (!basePxPerSec) return;
+
+  // Read actual DOM scroll — avoids stale visibleStart after ws.seekTo() scrolls internally
+  const wrapper  = ws.getWrapper();
+  const scrollL  = wrapper ? wrapper.scrollLeft : 0;
+  const W        = document.getElementById('waveform').offsetWidth;
+  const pxPerSec = basePxPerSec * zoomLevel;
+  const vs       = scrollL / pxPerSec;
+  const range    = W / pxPerSec;
+
+  const pct = (playheadTime - vs) / range;
+  if (pct < 0 || pct > 1) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.style.left    = (pct * 100) + '%';
+}
+
+function updatePlayheadPos() {
+  document.getElementById('playhead-pos').textContent = fmtTime(playheadTime);
+}
+
+// ── Zoom ──────────────────────────────────────────────────────────────────────
+function changeZoom(factor, cursorX) {
+  if (!basePxPerSec) return;
+
+  // block scroll events while WaveSurfer emits stale events during rerender
+  blockScroll = true;
+
+  zoomLevel = Math.max(1, Math.min(128, zoomLevel * factor));
+  document.getElementById('zoom-info').textContent = Math.round(zoomLevel) + '×';
+
+  const W = document.getElementById('waveform').offsetWidth;
+
+  // time under cursor before zoom
+  const range   = visibleEnd - visibleStart;
+  const relX    = (cursorX !== null) ? Math.max(0, Math.min(cursorX, W)) : W / 2;
+  const tCursor = visibleStart + (relX / W) * range;
+
+  ws.zoom(basePxPerSec * zoomLevel);   // triggers internal scroll events → blocked
+
+  // reposition so tCursor stays under cursor
+  const newPxPerSec   = basePxPerSec * zoomLevel;
+  const newScrollLeft = Math.max(0, tCursor * newPxPerSec - relX);
+  const wrapper = ws.getWrapper();
+  if (wrapper) wrapper.scrollLeft = newScrollLeft;
+
+  // compute visible window from our own math (authoritative during blockScroll)
+  const dur = ws.getDuration();
+  visibleStart = newScrollLeft / newPxPerSec;
+  visibleEnd   = Math.min(dur, visibleStart + W / newPxPerSec);
+
+  drawRuler();
+  drawGrid();
+  renderSegLane();
+  updatePlayheadLine();
+  updateMiniMapWindow();
+
+  // unblock after 2 animation frames — gives WaveSurfer time to flush
+  requestAnimationFrame(() => requestAnimationFrame(() => { blockScroll = false; }));
+}
+
+// ── Ruler (Ableton-style) ─────────────────────────────────────────────────────
+function drawRuler() {
+  const canvas = document.getElementById('ruler-canvas');
+  const W = document.getElementById('ruler').offsetWidth;
+  canvas.width  = W;
+  canvas.height = 24;
+  const ctx   = canvas.getContext('2d');
+  const range = visibleEnd - visibleStart;
+
+  // background
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, 0, W, 24);
+
+  // alternating 2-bar shading (like Ableton)
+  downbeatsArr.forEach((t, i) => {
+    if (i % 2 !== 0) return;
+    const x1 = ((t - visibleStart) / range) * W;
+    const nextBar = downbeatsArr[i + 2] || (t + 2 * (60 / bpm) * beatsPerBar);
+    const x2 = ((nextBar - visibleStart) / range) * W;
+    if (x2 < 0 || x1 > W) return;
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    ctx.fillRect(Math.max(0, x1), 0, Math.min(x2, W) - Math.max(0, x1), 24);
+  });
+
+  // determine label interval: aim for ~80px per label
+  const barsVisible = range / ((60 / bpm) * beatsPerBar);
+  let labelEvery = 1;
+  if (barsVisible > 64)       labelEvery = 16;
+  else if (barsVisible > 32)  labelEvery = 8;
+  else if (barsVisible > 16)  labelEvery = 4;
+  else if (barsVisible > 8)   labelEvery = 2;
+
+  ctx.font = '9px monospace';
+  ctx.textBaseline = 'top';
+
+  downbeatsArr.forEach((t, i) => {
+    if (t < visibleStart - 0.5 || t > visibleEnd + 0.5) return;
+    const x      = ((t - visibleStart) / range) * W;
+    const barNum = i + 1;
+
+    // bar line
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 24); ctx.stroke();
+
+    // bar number (at interval)
+    if (barNum === 1 || (barNum - 1) % labelEvery === 0) {
+      ctx.fillStyle = '#999';
+      ctx.fillText(barNum, x + 2, 3);
+    }
+  });
+
+  // beat ticks (visible at higher zoom)
+  if (zoomLevel >= 2) {
+    beats.forEach(t => {
+      if (downbeatSet.has(Math.round(t * 1000))) return;
+      if (t < visibleStart || t > visibleEnd) return;
+      const x = ((t - visibleStart) / range) * W;
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(x, 17); ctx.lineTo(x, 24); ctx.stroke();
+    });
+  }
+}
+
+// ── Grid + segment fills over waveform ───────────────────────────────────────
+function drawGrid() {
+  if (!mapData) return;
+  const wfEl   = document.getElementById('waveform');
+  const canvas = document.getElementById('grid-canvas');
+  const W = wfEl.offsetWidth;
+  const H = wfEl.offsetHeight || 120;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx   = canvas.getContext('2d');
+  const range = visibleEnd - visibleStart;
+
+  // 1 — segment color fills
+  mapData.segments.forEach(seg => {
+    const x1 = ((Math.max(seg.start, visibleStart) - visibleStart) / range) * W;
+    const x2 = ((Math.min(seg.end,   visibleEnd)   - visibleStart) / range) * W;
+    if (x2 <= x1) return;
+    ctx.fillStyle = segColor(seg.label) + '55';
+    ctx.fillRect(x1, 0, x2 - x1, H);
+  });
+
+  // 2 — sub-beat lines (16th / 8th) at high zoom
+  if (zoomLevel >= 4) {
+    const beatDur = 60 / bpm;
+    const subDiv  = zoomLevel >= 8 ? 4 : 2;
+    beats.forEach(t => {
+      for (let s = 1; s < subDiv; s++) {
+        const st = t + (s / subDiv) * beatDur;
+        if (st < visibleStart || st > visibleEnd) return;
+        const x = ((st - visibleStart) / range) * W;
+        ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+        ctx.lineWidth   = 0.5;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+    });
+  }
+
+  // 3 — beat lines
+  beats.forEach(t => {
+    if (t < visibleStart || t > visibleEnd) return;
+    const x      = ((t - visibleStart) / range) * W;
+    const isBar  = downbeatSet.has(Math.round(t * 1000));
+    ctx.strokeStyle = isBar ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.06)';
+    ctx.lineWidth   = isBar ? 1.2 : 0.6;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  });
+
+  // 4 — segment boundary lines (bright)
+  mapData.segments.forEach((seg, i) => {
+    if (i === 0) return;
+    const x = ((seg.start - visibleStart) / range) * W;
+    if (x < 0 || x > W) return;
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  });
+}
+
+// ── Segment lane ──────────────────────────────────────────────────────────────
+function renderSegLane() {
+  if (!mapData) return;
+  const lane  = document.getElementById('seg-lane');
+  lane.innerHTML = '';
+  const range = visibleEnd - visibleStart;
+
+  mapData.segments.forEach((seg, i) => {
+    const color = segColor(seg.label);
+    const visL  = Math.max(visibleStart, seg.start);
+    const visR  = Math.min(visibleEnd,   seg.end);
+    if (visR <= visL) return;
+
+    const leftPct  = ((visL - visibleStart) / range) * 100;
+    const widthPct = ((visR - visL)         / range) * 100;
+    const label    = (seg.label + (seg.index != null ? ' ' + seg.index : '')).toUpperCase();
+
+    const block = document.createElement('div');
+    block.className   = 'seg-block';
+    block.dataset.idx = i;
+    block.style.left  = leftPct  + '%';
+    block.style.width = widthPct + '%';
+    block.style.background = color + 'bb';
+    block.style.color = '#fff';
+    block.textContent = label;
+    block.title = `${label}  ${fmtTime(seg.start)} → ${fmtTime(seg.end)}`;
+    // click block → set playhead to segment start
+    block.addEventListener('click', () => setPlayhead(seg.start));
+    lane.appendChild(block);
+  });
+
+  // ── boundary handles: one per unique boundary ────────────────
+  // boundaries: [seg0.start, seg0.end=seg1.start, ..., segN.end]
+  // We expose handles for seg[i].end = seg[i+1].start for all i
+  // Plus seg[0].start if > 0 (first segment doesn't start at 0)
+  const dur = ws.getDuration();
+
+  // internal boundaries (between segments)
+  for (let i = 0; i < mapData.segments.length - 1; i++) {
+    const t = mapData.segments[i].end; // = mapData.segments[i+1].start
+    if (t < visibleStart || t > visibleEnd) continue;
+    const handle = document.createElement('div');
+    handle.className  = 'seg-handle';
+    handle.style.left = (((t - visibleStart) / range) * 100) + '%';
+    makeHandleDraggable(handle, i, i + 1); // left seg idx, right seg idx
+    lane.appendChild(handle);
+  }
+
+  // first segment's left boundary — always show so intro start can be trimmed
+  if (mapData.segments.length > 0) {
+    const t = mapData.segments[0].start;
+    if (t >= visibleStart && t <= visibleEnd) {
+      const leftPctHandle = ((t - visibleStart) / range) * 100;
+      const handle = document.createElement('div');
+      handle.className  = 'seg-handle';
+      // don't translateX(-50%) at left edge — shift right instead so it's grabbable
+      handle.style.cssText = `
+        position: absolute; top: 0; bottom: 0; width: 12px;
+        left: ${Math.max(0, leftPctHandle)}%;
+        transform: ${leftPctHandle < 1 ? 'none' : 'translateX(-50%)'};
+        cursor: col-resize; z-index: 10;
+        display: flex; align-items: center; justify-content: center;
+      `;
+      const bar = document.createElement('div');
+      bar.style.cssText = 'width:2px;height:100%;background:rgba(255,255,255,0.4);border-radius:1px;';
+      handle.appendChild(bar);
+      makeHandleDraggable(handle, -1, 0); // no left seg, clamps to 0
+      lane.appendChild(handle);
+    }
+  }
+}
+
+// ── Handle drag ───────────────────────────────────────────────────────────────
+function makeHandleDraggable(handle, leftIdx, rightIdx) {
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    handle.classList.add('dragging');
+    const lane     = document.getElementById('seg-lane');
+    const laneRect = lane.getBoundingClientRect();
+    // capture window at mousedown — prevents stale visibleStart/End bugs during drag
+    const vs    = visibleStart;
+    const ve    = visibleEnd;
+    const range = ve - vs;
+
+    function onMove(e) {
+      let x = e.clientX - laneRect.left;
+      x = Math.max(0, Math.min(x, laneRect.width));
+      let t = vs + (x / laneRect.width) * range;
+
+      if (document.getElementById('snap-toggle').checked) t = snapToBeat(t);
+
+      // clamp: don't invert adjacent segments
+      const minT = leftIdx  >= 0 ? mapData.segments[leftIdx].start  + 0.01 : 0;
+      const maxT = rightIdx >= 0 ? mapData.segments[rightIdx].end   - 0.01 : ws.getDuration();
+      t = Math.max(minT, Math.min(maxT, t));
+
+      if (leftIdx  >= 0) mapData.segments[leftIdx].end    = +t.toFixed(4);
+      if (rightIdx >= 0) mapData.segments[rightIdx].start = +t.toFixed(4);
+
+      handle.style.left = (((t - vs) / range) * 100) + '%';
+
+      // update adjacent blocks using same captured vs/ve/range
+      const blocks = lane.querySelectorAll('.seg-block');
+      const updateBlock = (idx, seg) => {
+        const b = [...blocks].find(b => +b.dataset.idx === idx);
+        if (!b) return;
+        const visL = Math.max(vs, seg.start);
+        const visR = Math.min(ve, seg.end);
+        b.style.left  = (((visL - vs) / range) * 100) + '%';
+        b.style.width = (((visR - visL) / range) * 100) + '%';
+      };
+      if (leftIdx  >= 0) updateBlock(leftIdx,  mapData.segments[leftIdx]);
+      if (rightIdx >= 0) updateBlock(rightIdx, mapData.segments[rightIdx]);
+
+      drawGrid();
+      if (leftIdx  >= 0) updateSegmentRow(leftIdx);
+      if (rightIdx >= 0) updateSegmentRow(rightIdx);
+    }
+
+    function onUp() {
+      handle.classList.remove('dragging');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+}
+
+// ── Segment list ──────────────────────────────────────────────────────────────
+function renderSegList() {
+  const list = document.getElementById('segment-list');
+  list.innerHTML = '';
+  mapData.segments.forEach((seg, i) => {
+    const color = segColor(seg.label);
+    const row   = document.createElement('div');
+    row.className = 'seg-row';
+    row.id = `row-${i}`;
+    row.style.setProperty('--color', color);
+    row.innerHTML = `
+      <span class="seg-label-cell">${seg.label}${seg.index != null ? ' ' + seg.index : ''}</span>
+      <input class="seg-input" id="start-${i}" value="${seg.start}" onchange="updateFromInput(${i})">
+      <input class="seg-input" id="end-${i}"   value="${seg.end}"   onchange="updateFromInput(${i})">
+      <span class="seg-dur"    id="dur-${i}">${(seg.end-seg.start).toFixed(2)}s</span>
+      <span></span>
+      <button class="seg-play" onclick="seekToSegment(${i})">▶</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function seekToSegment(i) {
+  setPlayhead(mapData.segments[i].start);
+}
+
+function updateSegmentRow(i) {
+  const seg = mapData.segments[i];
+  const s = document.getElementById(`start-${i}`);
+  const e = document.getElementById(`end-${i}`);
+  const d = document.getElementById(`dur-${i}`);
+  if (s) s.value = seg.start;
+  if (e) e.value = seg.end;
+  if (d) d.textContent = (seg.end - seg.start).toFixed(2) + 's';
+}
+
+function updateFromInput(i) {
+  const start = parseFloat(document.getElementById(`start-${i}`).value);
+  const end   = parseFloat(document.getElementById(`end-${i}`).value);
+  if (isNaN(start) || isNaN(end)) return;
+  mapData.segments[i].start = start;
+  mapData.segments[i].end   = end;
+  document.getElementById(`dur-${i}`).textContent = (end - start).toFixed(2) + 's';
+  drawGrid();
+  renderSegLane();
+}
+
+// ── Mini-map ──────────────────────────────────────────────────────────────────
+function renderMiniMap() {
+  if (!mapData) return;
+  const container = document.getElementById('mini-map-segments');
+  container.innerHTML = '';
+  const dur = ws.getDuration();
+  mapData.segments.forEach(seg => {
+    const d = document.createElement('div');
+    d.style.cssText = `
+      position: absolute; top: 0; bottom: 0;
+      left:  ${(seg.start / dur) * 100}%;
+      width: ${((seg.end - seg.start) / dur) * 100}%;
+      background: ${segColor(seg.label)}99;
+    `;
+    container.appendChild(d);
+  });
+  updateMiniMapWindow();
+}
+
+function updateMiniMapWindow() {
+  if (!mapData) return;
+  const dur = ws.getDuration();
+  const win = document.getElementById('mini-map-window');
+  win.style.left  = ((visibleStart / dur) * 100) + '%';
+  win.style.width = (((visibleEnd - visibleStart) / dur) * 100) + '%';
+}
+
+// ── Snap ──────────────────────────────────────────────────────────────────────
+function snapToBeat(t) {
+  if (!beats.length) return t;
+  return beats.reduce((a, b) => Math.abs(b - t) < Math.abs(a - t) ? b : a);
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+async function saveMap() {
+  const json = JSON.stringify(mapData, null, 2);
+  const saveStatus = document.getElementById('save-status');
+
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'map-edited.json',
+        types: [{ description: 'JSON Map', accept: { 'application/json': ['.json'] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      setFileDisplay(handle.name);
+      saveStatus.textContent = '✓ Saved';
+    } catch (err) {
+      if (err.name !== 'AbortError') saveStatus.textContent = 'Save failed: ' + err.message;
+    }
+  } else {
+    // fallback: trigger browser download
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: 'map-edited.json' });
+    a.click();
+    URL.revokeObjectURL(url);
+    saveStatus.textContent = '✓ Downloaded';
+  }
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function fmtTime(t) {
+  if (!t) t = 0;
+  const m = Math.floor(t / 60);
+  const s = (t % 60).toFixed(3).padStart(6, '0');
+  return `${m}:${s}`;
+}
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+function setFileDisplay(path) {
+  currentFile = path;
+  const el = document.getElementById('file-display');
+  el.textContent = path.split('/').pop().split('\\').pop(); // filename only
+  el.title = path; // full path on hover
+}
+</script>
+</body>
+</html>
