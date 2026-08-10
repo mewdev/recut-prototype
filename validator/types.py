@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from compositor import Node
+from nodes import Node
 
 Severity = Literal["error", "warning", "info"]
 

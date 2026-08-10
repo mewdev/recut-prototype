@@ -1,61 +1,37 @@
-from dataclasses import dataclass
-from typing import Optional, Union
 
 import numpy as np
 
 from audio import Audio
 from map_parser import MapParser
+from nodes import Clip, Loop, Node
 from primitives.cut import cut
+from validator import validate
+
+# Re-export so existing callers (`from compositor import Clip, Loop`) keep working
+__all__ = ["Clip", "Loop", "Node", "compose"]
 
 
-@dataclass
-class Clip:
-    """Extract one occurrence of a labeled segment."""
-
-    label: str
-    index: int = 1
-    bars: Optional[float] = None
-    beats: Optional[float] = None
-    offset_bars: Optional[float] = None
-    offset_beats: Optional[float] = None
-    # offset_bars/offset_beats: skip N bars/beats from segment start before cutting.
-    # Use to splice into the middle of a segment, e.g. take only the second half
-    # of a chorus: Clip("chorus", offset_beats=16, beats=16)
-    snap_to_downbeat: bool = False
-    # snap_to_downbeat: use downbeats[0] as start instead of segment["start"].
-    # Fixes pre-roll silence when the structural model draws the section boundary
-    # slightly before the first actual beat (common on intros/pickups).
-    # Don't use when the segment genuinely starts before the first downbeat
-    # (e.g. chorus pickups) — snapping will skip real audio.
-
-
-@dataclass
-class Loop:
-    """Extract a segment and repeat it N times."""
-
-    label: str
-    times: int
-    index: int = 1
-    bars: Optional[float] = None
-    beats: Optional[float] = None
-    offset_bars: Optional[float] = None
-    offset_beats: Optional[float] = None
-    # offset_bars/offset_beats: same as Clip — skip N bars/beats from segment start.
-    snap_to_downbeat: bool = False
-    # snap_to_downbeat: same as Clip — use when looping a segment that has
-    # pre-roll silence before the first beat, so the loop joins cleanly.
-
-
-Node = Union[Clip, Loop]
-
-
-def compose(parser: MapParser, audio_path: str, *nodes: Node) -> Audio:
+def compose(parser: MapParser, audio_path: str, *nodes: Node, skip_validation: bool = False) -> Audio:
     """
     Execute a sequence of edit nodes against an audio file.
+
+    Validates all nodes before rendering. Raises ValueError on any error.
+    Pass skip_validation=True only when you have already validated externally.
 
     Example:
         compose(parser, "song.mp3", Clip("verse"), Loop("chorus", times=2))
     """
+    if not skip_validation:
+        results = validate(parser, *nodes)
+        errors   = [r for r in results if r.severity == "error"]
+        warnings = [r for r in results if r.severity == "warning"]
+        if errors or warnings:
+            msgs = "\n".join(
+                f"  [{r.severity.upper()}] [{r.node.label}] {r.message}"
+                for r in errors + warnings
+            )
+            raise ValueError(f"Composition blocked ({len(errors)} error(s), {len(warnings)} warning(s)):\n{msgs}")
+
     audio = Audio.load(audio_path)
     composition = []
 
@@ -85,9 +61,7 @@ def compose(parser: MapParser, audio_path: str, *nodes: Node) -> Audio:
         clip = cut(start, end)(audio)
 
         if isinstance(node, Loop):
-            loop = [clip] * (node.times)
-            composition.extend(loop)
-
+            composition.extend([clip] * node.times)
         else:
             composition.append(clip)
 

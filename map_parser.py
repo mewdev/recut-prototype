@@ -23,6 +23,16 @@ class MapParser(ABC):
         """Convert beat count to seconds. Default: 1 beat = 60/bpm."""
         return beats * (60.0 / self.get_bpm())
 
+    @abstractmethod
+    def first_segment(self) -> dict:
+        """Return {label, start, end} for the first segment of the song."""
+        ...
+
+    @abstractmethod
+    def last_segment(self) -> dict:
+        """Return {label, start, end} for the last meaningful segment (excluding silence)."""
+        ...
+
 
 class OurMapParser(MapParser):
     """Parser for our JSON map format (map/examples/*.json)."""
@@ -39,6 +49,15 @@ class OurMapParser(MapParser):
         beats_per_bar = int(self._map["time_signature"].split("/")[0])
         seconds_per_beat = 60/self._map["bpm"]
         return bars * beats_per_bar * seconds_per_beat
+
+    def first_segment(self) -> dict:
+        s = self._map["segments"][0]
+        return {"label": s["label"], "start": s["start"], "end": s["end"]}
+
+    def last_segment(self) -> dict:
+        non_silence = [s for s in self._map["segments"] if s["label"] != "silence"]
+        s = non_silence[-1] if non_silence else self._map["segments"][-1]
+        return {"label": s["label"], "start": s["start"], "end": s["end"]}
 
     def get_segment(self, label: str, index: int = 1) -> dict:
 
@@ -82,6 +101,18 @@ class MUFParser(MapParser):
     def bars_to_seconds(self, bars: float) -> float:
         # MUF has no time_signature field — assuming 4/4
         return bars * 4 * (60.0 / self.get_bpm())
+
+    def first_segment(self) -> dict:
+        sections = self._map["structure"]["sections"]
+        s = sections[0]
+        return {"label": "section_1", "start": self._to_seconds(s["start"]),
+                "end": self._to_seconds(s["start"]) + self._to_seconds(s["duration"])}
+
+    def last_segment(self) -> dict:
+        sections = self._map["structure"]["sections"]
+        s = sections[-1]
+        return {"label": f"section_{len(sections)}", "start": self._to_seconds(s["start"]),
+                "end": self._to_seconds(s["start"]) + self._to_seconds(s["duration"])}
 
     def get_segment(self, label: str, index: int = 1) -> dict:
         """Return {start, end} for section at index (label ignored — MUF has no labels)."""
