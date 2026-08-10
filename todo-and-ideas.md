@@ -103,10 +103,17 @@
 
 ## Tooling / GUI
 
-- [ ] **Segment boundary editor GUI** — minimal visual tool for correcting ML segment boundaries.
-      Display: waveform + beat grid + section labels. Controls: play section, drag boundary timestamps, save back to map JSON.
-      Key insight: beat detection is accurate (rhythm model gets timing right), segment labeling is accurate (structural model gets labels right) — but boundary *timestamps* from the structural model can be 20–100ms off from true downbeats.
-      Fix: when user drags a boundary, snap it to nearest downbeat from the beat grid. User picks the right section label, beat grid provides the precise timestamp.
+- [x] **Segment boundary editor GUI** — built (`editor/`). Waveform + beat/bar grid + colored segment lane + draggable boundaries with beat snap + zoom + playhead + save/load JSON.
+
+- [ ] **Segment boundary precision — current workaround: manual UI editing** (2026-08-10)
+      The structural ML model (allin1) draws section boundaries 20–100ms off from true downbeats.
+      This causes audible artefacts at hard cuts (double kicks, early/late transients).
+      **Current fix**: user manually drags boundaries in the editor and snaps to the beat grid — confirmed working (cut v1 sounds clean after manual edit).
+      **Future fix options**:
+      - Auto-snap all boundaries to nearest downbeat as a post-processing step after analysis
+      - Use a more precise structural model trained with beat-aligned boundary supervision
+      - Enhance the map pipeline to force boundary alignment to the downbeat grid at map generation time
+      - Expose boundary confidence score and only auto-snap low-confidence boundaries
       Stack: Gradio or Streamlit — no need for a full DAW.
 
 ## Editing
