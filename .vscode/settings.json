@@ -1,6 +1,7 @@
 {
   "python.analysis.typeCheckingMode": "basic",
-  "python.analysis.ignore": ["**/site-packages/**"],
+  "python.analysis.extraPaths": ["src"],
+  "python.analysis.ignore": ["**/site-packages/**", "archive/**"],
   "python.defaultInterpreterPath": "/Users/michal/miniconda3/envs/recut/bin/python",
   "python-envs.defaultEnvManager": "ms-python.python:conda",
   "python-envs.defaultPackageManager": "ms-python.python:conda",

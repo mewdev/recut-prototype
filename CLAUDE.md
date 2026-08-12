@@ -8,15 +8,21 @@ Analysis pipeline → JSON music map → primitives → LLM orchestration → sp
 Always use `/Users/michal/miniconda3/envs/recut/bin/python` — never `conda run -n recut` (picks up wrong system Python).
 
 ## Before Every Commit
-Run `/Users/michal/miniconda3/envs/recut/bin/ruff check .` — fix all errors before committing.
+Run both — fix all errors before committing:
+```
+/Users/michal/miniconda3/envs/recut/bin/ruff check .
+/Users/michal/miniconda3/envs/recut/bin/python -m pytest src/tests/
+```
 
 ## Key Files
 - `music-cutting-system-plan.md` — architecture plan
 - `CHANGELOG.md` — edit version history + primitives table
 - `docs/use-cases/` — training triplets (music_map + instruction + correct_edit + reasoning)
-- `testing/01/labour-full.json` — merged analysis output for labour.mp3
-- `primitives/` — pure numpy/pedalboard functions: cut, fade, filter_sweep, reverb, delay, xfade_join, chain
-- `modal_pipeline.py` — Modal GPU pipeline for allin1 analysis
+- `src/primitives/` — pure numpy/pedalboard functions: cut, fade, filter_sweep, reverb, delay, xfade_join, chain
+- `src/map/` — map schema, make_map pipeline, chord data, ui-editor
+- `src/validator/` — validation rules + checks
+- `src/compositor.py` — main compose() entry point
+- `src/pipeline.py` — Modal GPU pipeline for analysis
 - `todo-and-ideas.md` — backlog
 
 ## Primitives Interface

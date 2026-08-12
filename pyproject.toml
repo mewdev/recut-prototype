@@ -1,9 +1,9 @@
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 100
-exclude = ["archive/", "primitives_old/"]
+exclude = ["archive"]
 
 [tool.ruff.lint]
 select = [

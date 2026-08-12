@@ -1,5 +1,21 @@
 # Changelog
 
+## [refactor] — 2026-08-12 — src/ layout migration + tooling fixes
+
+Reorganized project into a clean `src/` package layout for better overview.
+
+**Changes:**
+- All source moved into `src/`: `compositor.py`, `audio.py`, `nodes.py`, `map_parser.py`, `primitives/`, `map/`, `validator/`, `tests/`
+- `ui-map-editor/` moved to `src/map/ui-editor/` — co-located with the map subsystem it serves
+- `pyproject.toml`: `pythonpath = ["src"]` — pytest resolves bare imports correctly
+- `.vscode/settings.json`: `python.analysis.extraPaths = ["src"]` — Pylance now agrees with pytest on bare imports, stops auto-prefixing `src.`
+- `archive/` excluded from both ruff and Pylance
+- Test fixtures committed to `src/tests/fixtures/`
+- `StubParser` completed with `first_segment()`/`last_segment()` — gap exposed by `check_sequence_boundaries` rule
+- Pre-commit checklist updated: ruff + pytest both required
+
+---
+
 ## [analysis] — 2026-07-03 — MUF architecture reverse-engineering + map enhancement plan
 
 Fully reverse-engineered Apple's `MusicUnderstanding.framework` (iOS/macOS 27.0) from `.swiftinterface`, `.tbd`, binary strings, CoreML MIL files, and live runtime output.
