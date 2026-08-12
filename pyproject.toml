@@ -1,7 +1,15 @@
 [project]
 name = "recut"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "librosa",
+    "scipy",
+    "pedalboard",
+    "modal",
+    "flask",
+]
 
 [project.scripts]
 recut = "cli:main"
@@ -15,7 +23,7 @@ pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 100
-exclude = ["archive"]
+exclude = ["archive", "src/analysis/models"]
 
 [tool.ruff.lint]
 select = [
