@@ -76,7 +76,7 @@ def cmd_analyze(args) -> None:
     }
 
     out_path.write_text(json.dumps(result, indent=2))
-    print(f"Saved: {out_path}")
+    print(f"Saved: {out_path.resolve()}")
 
 
 def cmd_map(args) -> None:
@@ -97,7 +97,7 @@ def cmd_map(args) -> None:
     result = make_map(str(raw_path), str(audio_path))
 
     out_path.write_text(json.dumps(result, indent=2))
-    print(f"Saved: {out_path}")
+    print(f"Saved: {out_path.resolve()}")
     print(f"  duration={result['duration']:.1f}s  segments={len(result['segments'])}  bars={len(result['bars'])}")
 
 

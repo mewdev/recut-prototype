@@ -24,6 +24,9 @@ pip install -e .
 ```
 
 **3. Set up Modal (for audio analysis)**
+
+Requires a [Modal account](https://modal.com) — free tier is sufficient.
+
 ```bash
 pip install modal
 modal token new   # one-time authentication, saves to ~/.modal.toml
