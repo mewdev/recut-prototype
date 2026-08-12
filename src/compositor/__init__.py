@@ -63,8 +63,11 @@ def compose(
         clip = cut(start, end)(audio)
 
         if isinstance(node, Loop):
-            composition.extend([clip] * node.times)
-        else:
-            composition.append(clip)
+            clip = Audio(np.concatenate([clip.samples] * node.times, axis=-1), audio.sr)
+
+        for effect in node.fx:
+            clip = effect(clip)
+
+        composition.append(clip)
 
     return Audio(np.concatenate([a.samples for a in composition], axis=-1), audio.sr)

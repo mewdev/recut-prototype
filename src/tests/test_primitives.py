@@ -105,3 +105,95 @@ def test_chain_no_transforms():
     audio = make_audio(1.0)
     result = chain(audio)
     assert result.num_samples == audio.num_samples
+
+
+# --- node fx ---------------------------------------------------------------
+
+
+def test_clip_fx_applied_in_order():
+    """fx list runs effects sequentially: first fade silences start, second fade silences end."""
+    from compositor import Clip, compose
+    from map.parser import MapParser
+
+    class StubParser(MapParser):
+        def get_segment(self, label, index=1):
+            return {"start": 0.0, "end": 1.0}
+
+        def get_bpm(self):
+            return 120.0
+
+        def bars_to_seconds(self, bars):
+            return bars * 2.0
+
+        def beats_to_seconds(self, beats):
+            return beats * 0.5
+
+        def first_segment(self):
+            return {"label": "a", "start": 0.0, "end": 1.0}
+
+        def last_segment(self):
+            return {"label": "a", "start": 0.0, "end": 1.0}
+
+    import tempfile
+
+    import soundfile as sf
+
+    audio = make_audio(1.0)
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        sf.write(f.name, audio.samples.T, audio.sr)
+        path = f.name
+
+    result = compose(
+        StubParser(),
+        path,
+        Clip("a", fx=[fade(vol_start=0.0, vol_end=1.0)]),
+        skip_validation=True,
+    )
+    assert result.samples[0, 0] < 0.01   # fade-in: start silent
+    assert result.samples[0, -1] > 0.9   # end loud
+
+
+def test_loop_fx_applies_post_concat():
+    """Loop with times=2 doubles duration before fx — fx sees full looped clip."""
+    from compositor import Loop, compose
+    from map.parser import MapParser
+
+    class StubParser(MapParser):
+        def get_segment(self, label, index=1):
+            return {"start": 0.0, "end": 1.0}
+
+        def get_bpm(self):
+            return 120.0
+
+        def bars_to_seconds(self, bars):
+            return bars * 2.0
+
+        def beats_to_seconds(self, beats):
+            return beats * 0.5
+
+        def first_segment(self):
+            return {"label": "a", "start": 0.0, "end": 1.0}
+
+        def last_segment(self):
+            return {"label": "a", "start": 0.0, "end": 1.0}
+
+    import tempfile
+
+    import soundfile as sf
+
+    audio = make_audio(1.0)
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        sf.write(f.name, audio.samples.T, audio.sr)
+        path = f.name
+
+    result = compose(
+        StubParser(),
+        path,
+        Loop("a", times=2, fx=[fade(vol_start=0.0, vol_end=1.0)]),
+        skip_validation=True,
+    )
+    # duration = 2× original
+    assert result.num_samples == pytest.approx(2 * 44100, abs=4)
+    # fade spans full loop: start silent, end loud
+    assert result.samples[0, 0] < 0.01
+    assert result.samples[0, -1] > 0.9

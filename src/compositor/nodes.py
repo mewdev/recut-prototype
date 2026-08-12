@@ -3,8 +3,8 @@ Compositor node types — kept separate so both compositor and validator
 can import them without a circular dependency.
 """
 
-from dataclasses import dataclass
-from typing import Optional, Union
+from dataclasses import dataclass, field
+from typing import Callable, Optional, Union
 
 
 @dataclass
@@ -26,6 +26,9 @@ class Clip:
     # slightly before the first actual beat (common on intros/pickups).
     # Don't use when the segment genuinely starts before the first downbeat
     # (e.g. chorus pickups) — snapping will skip real audio.
+    fx: list[Callable] = field(default_factory=list)
+    # fx: effects applied to the clip after cutting, in order.
+    # Each effect is a callable: Audio -> Audio (curried primitive).
 
 
 @dataclass
@@ -43,6 +46,8 @@ class Loop:
     snap_to_downbeat: bool = False
     # snap_to_downbeat: same as Clip — use when looping a segment that has
     # pre-roll silence before the first beat, so the loop joins cleanly.
+    fx: list[Callable] = field(default_factory=list)
+    # fx: effects applied to the full looped audio (all reps concatenated) in order.
 
 
 Node = Union[Clip, Loop]
