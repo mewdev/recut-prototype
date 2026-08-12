@@ -35,7 +35,7 @@ import pathlib
 
 import modal
 
-app = modal.App("recut-chordmini")
+app = modal.App("recut-analysis")
 
 # TODO: we should run form one source, no separated local / remote models
 # ── Local model paths ──────────────────────────────────────────────────────────
@@ -138,10 +138,14 @@ structure_image = (
         "\""
     )
     .run_commands(
-        "apt-get install -y -q curl && "
-        "curl -L -o /songformer/src/SongFormer/ckpts/SongFormer.safetensors "
-        "'https://media.githubusercontent.com/media/ptnghia-j/ChordMiniApp/main/SongFormer/src/SongFormer/ckpts/SongFormer.safetensors' && "
-        "echo 'SongFormer checkpoint downloaded OK'"
+        "python -c \""
+        "import requests, pathlib, shutil; "
+        "url = 'https://media.githubusercontent.com/media/ptnghia-j/ChordMiniApp/main/SongFormer/src/SongFormer/ckpts/SongFormer.safetensors'; "
+        "out = pathlib.Path('/songformer/src/SongFormer/ckpts/SongFormer.safetensors'); "
+        "r = requests.get(url, stream=True); r.raise_for_status(); "
+        "out.write_bytes(r.content); "
+        "print('SongFormer checkpoint downloaded OK')"
+        "\""
     )
 )
 
