@@ -1,3 +1,15 @@
+[project]
+name = "recut"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[project.scripts]
+recut = "cli:main"
+
+[tool.recut]
+pipeline = "modal"          # "modal" — more options added as needed
+analysis_output = "temp/analysis"
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 

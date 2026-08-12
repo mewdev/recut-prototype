@@ -1,12 +1,12 @@
 """
-make_map.py — enrich ChordMini JSON into a music map (v3)
+make_map.py — enrich raw analysis JSON into a music map
 
-Input:  <stem>-chordmini.json  (beats, downbeats, segments, chords)
-        <stem>.mp3              (audio, for loudness)
-Output: <stem>-map.json        (enriched, LLM-ready)
+Input:  <stem>-raw.json   (beats, downbeats, segments, chords from analysis pipeline)
+        <stem>.mp3         (audio, for loudness)
+Output: <stem>-map.json   (enriched, LLM-ready)
 
 Usage:
-    python -m map.make_map map/examples/end_of_beginning-chordmini.json mp3/end_of_beginning.mp3
+    python -m map.make_map temp/analysis/raw/track-raw.json mp3/track.mp3
 """
 
 import json
@@ -87,6 +87,6 @@ if __name__ == "__main__":
 
     chordmini_path = sys.argv[1]
     result = run(chordmini_path, sys.argv[2])
-    out_path = chordmini_path.replace("-chordmini.json", "-map-v0_1.json")
+    out_path = chordmini_path.replace("-raw.json", "-map.json")
     Path(out_path).write_text(json.dumps(result, indent=2))
     print(f"Written to {out_path}")
