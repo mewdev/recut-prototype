@@ -37,11 +37,18 @@ import modal
 
 app = modal.App("recut-analysis")
 
-# TODO: we should run form one source, no separated local / remote models
-# ── Local model paths ──────────────────────────────────────────────────────────
-_MODELS_DIR = pathlib.Path(__file__).parent / "models"
-CHORD_MODEL_LOCAL = _MODELS_DIR / "chord-cnn-lstm"
-SONGFORMER_LOCAL  = _MODELS_DIR / "songformer"
+# ── Model licensing ────────────────────────────────────────────────────────────
+# ChordMini   MIT        — commercial OK
+# SongFormer  MIT        — commercial OK
+# MusicFM     MIT        — commercial OK
+# MuQ         CC BY-NC 4.0 — NON-COMMERCIAL ONLY (Tencent AI Lab)
+#   SongFormer uses MuQ as encoder → structure pipeline is non-commercial.
+#   Before shipping commercially: replace MuQ or obtain a commercial license.
+#   Alternatives: MERT (MIT), EnCodec (MIT)
+
+# ── Model sources (cloned at image build time, cached by Modal) ────────────────
+_CHORD_REPO = "https://github.com/ptnghia-j/chord-cnn-lstm-model"
+_SONGFORMER_REPO = "https://github.com/mewdev/ChordMiniApp"
 
 # ── Images ─────────────────────────────────────────────────────────────────────
 _base = (
@@ -60,14 +67,13 @@ _base = (
 )
 
 beats_image = (
-    _base
-    .apt_install("git")
-    .pip_install("setuptools<81")    # madmom needs pkg_resources from setuptools
+    _base.apt_install("git")
+    .pip_install("setuptools<81")  # madmom needs pkg_resources from setuptools
     .run_commands("pip install git+https://github.com/CPJKU/madmom")
 )
 
 chords_image = (
-    _base
+    _base.apt_install("git", "git-lfs")
     .pip_install(
         "h5py>=2.9.0",
         "mir_eval>=0.5",
@@ -78,7 +84,11 @@ chords_image = (
         "pretty_midi>=0.2.9",
         "joblib>=0.13.2",
     )
-    .add_local_dir(str(CHORD_MODEL_LOCAL), remote_path="/chord_model")
+    .run_commands(
+        "git lfs install",
+        f"git clone {_CHORD_REPO} /chord_model",
+        "git -C /chord_model lfs pull",
+    )
 )
 
 _base_cuda = (
@@ -99,8 +109,7 @@ _base_cuda = (
 )
 
 structure_image = (
-    _base_cuda
-    .pip_install(
+    _base_cuda.pip_install(
         "numba==0.60.0",
         "llvmlite==0.43.0",
         "safetensors==0.5.3",
@@ -116,36 +125,44 @@ structure_image = (
         "flask>=3.0",
         "flask-cors>=4.0",
     )
-    .add_local_dir(str(SONGFORMER_LOCAL), remote_path="/songformer", copy=True)
-    # Both MuQ and MusicFM weights are Git LFS pointers locally — download the real
-    # weights from HuggingFace at image build time (result is cached by Modal).
+    .apt_install("git", "git-lfs")
     .run_commands(
-        "python -c \""
+        # sparse-clone only SongFormer/ subfolder from ChordMiniApp (skip LFS — weights downloaded separately)
+        "GIT_LFS_SKIP_SMUDGE=1 git clone --no-checkout --depth 1 --filter=blob:none "
+        f"{_SONGFORMER_REPO} /tmp/chordminiapp",
+        "git -C /tmp/chordminiapp sparse-checkout init --cone",
+        "git -C /tmp/chordminiapp sparse-checkout set SongFormer",
+        "GIT_LFS_SKIP_SMUDGE=1 git -C /tmp/chordminiapp checkout",
+        "mv /tmp/chordminiapp/SongFormer /songformer",
+    )
+    # MuQ and MusicFM weights — download from HuggingFace at image build time.
+    .run_commands(
+        'python -c "'
         "from huggingface_hub import hf_hub_download; "
         "import shutil; "
         "src = hf_hub_download('OpenMuQ/MuQ-large-msd-iter', 'model.safetensors'); "
         "shutil.copy(src, '/songformer/src/SongFormer/ckpts/MuQ/model.safetensors'); "
         "print('MuQ weights downloaded OK')"
-        "\""
+        '"'
     )
     .run_commands(
-        "python -c \""
+        'python -c "'
         "from huggingface_hub import hf_hub_download; "
         "import shutil; "
         "src = hf_hub_download('minzwon/MusicFM', 'pretrained_msd.pt'); "
         "shutil.copy(src, '/songformer/src/SongFormer/ckpts/MusicFM/pretrained_msd.pt'); "
         "print('MusicFM weights downloaded OK')"
-        "\""
+        '"'
     )
     .run_commands(
-        "python -c \""
+        'python -c "'
         "import requests, pathlib, shutil; "
-        "url = 'https://media.githubusercontent.com/media/ptnghia-j/ChordMiniApp/main/SongFormer/src/SongFormer/ckpts/SongFormer.safetensors'; "
+        "url = 'https://media.githubusercontent.com/media/mewdev/ChordMiniApp/main/SongFormer/src/SongFormer/ckpts/SongFormer.safetensors'; "
         "out = pathlib.Path('/songformer/src/SongFormer/ckpts/SongFormer.safetensors'); "
         "r = requests.get(url, stream=True); r.raise_for_status(); "
         "out.write_bytes(r.content); "
         "print('SongFormer checkpoint downloaded OK')"
-        "\""
+        '"'
     )
 )
 
@@ -174,16 +191,16 @@ def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
             median_interval = np.median(np.diff(beat_times))
             bpm = 60.0 / median_interval if median_interval > 0 else 120.0
 
-        downbeats = beat_times[::4]   # assume 4/4; frontend can override
+        downbeats = beat_times[::4]  # assume 4/4; frontend can override
         elapsed = round(time.time() - t0, 2)
         print(f"madmom: {len(beat_times)} beats  bpm={bpm:.1f}  {elapsed}s")
 
         return {
-            "beats":          [round(float(b), 3) for b in beat_times],
-            "downbeats":      [round(float(b), 3) for b in downbeats],
-            "bpm":            round(bpm, 2),
+            "beats": [round(float(b), 3) for b in beat_times],
+            "downbeats": [round(float(b), 3) for b in downbeats],
+            "bpm": round(bpm, 2),
             "time_signature": "4/4",
-            "model":          "madmom",
+            "model": "madmom",
         }
 
 
@@ -215,21 +232,23 @@ def run_chords(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str 
             for line in f:
                 parts = line.strip().split("\t")
                 if len(parts) >= 3:
-                    chords.append({
-                        "start": round(float(parts[0]), 3),
-                        "end":   round(float(parts[1]), 3),
-                        "chord": parts[2],
-                    })
+                    chords.append(
+                        {
+                            "start": round(float(parts[0]), 3),
+                            "end": round(float(parts[1]), 3),
+                            "chord": parts[2],
+                        }
+                    )
 
         elapsed = round(time.time() - t0, 2)
         print(f"chord-cnn-lstm: {len(chords)} chords  dict={chord_dict}  {elapsed}s")
 
         return {
-            "chords":       chords,
+            "chords": chords,
             "total_chords": len(chords),
-            "duration":     chords[-1]["end"] if chords else 0.0,
-            "chord_dict":   chord_dict,
-            "model":        "chord-cnn-lstm",
+            "duration": chords[-1]["end"] if chords else 0.0,
+            "chord_dict": chord_dict,
+            "model": "chord-cnn-lstm",
         }
 
 
@@ -254,18 +273,20 @@ def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         sys.path.insert(0, str(songformer_root))
 
         spec = importlib.util.spec_from_file_location("songformer_app", str(app_path))
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"Could not load spec from {app_path}")
         module = importlib.util.module_from_spec(spec)
         sys.modules["songformer_app"] = module
         # app.py does os.chdir(SONGFORMER_SRC_DIR) at module level — that's fine,
         # all model file paths inside it are relative to that dir.
-        spec.loader.exec_module(module)
+        spec.loader.exec_module(module)  # type: ignore[union-attr]
 
         t0 = time.time()
         module.initialize_models()
 
         msa_output = module.process_audio(str(audio_path))
-        cleaned    = module.rule_post_processing(msa_output)
-        segments   = module.format_as_segments(cleaned)
+        cleaned = module.rule_post_processing(msa_output)
+        segments = module.format_as_segments(cleaned)
 
         elapsed = round(time.time() - t0, 2)
         print(f"songformer: {len(segments)} segments  {elapsed}s")
@@ -273,11 +294,11 @@ def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         # convert start/end strings → floats for consistency
         for seg in segments:
             seg["start"] = float(seg["start"])
-            seg["end"]   = float(seg["end"])
+            seg["end"] = float(seg["end"])
 
         return {
             "segments": segments,
-            "model":    "songformer",
+            "model": "songformer",
         }
 
 
@@ -286,25 +307,25 @@ def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
 def analyze_all(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str = "full") -> dict:
     """Spawn beats + chords + structure in parallel, merge into one JSON."""
     # spawn = fire-and-forget; returns a handle we .get() later
-    beats_call     = run_beats.spawn(audio_bytes, filename)
-    chords_call    = run_chords.spawn(audio_bytes, filename, chord_dict)
+    beats_call = run_beats.spawn(audio_bytes, filename)
+    chords_call = run_chords.spawn(audio_bytes, filename, chord_dict)
     structure_call = run_structure.spawn(audio_bytes, filename)
 
-    beats     = beats_call.get()
-    chords    = chords_call.get()
+    beats = beats_call.get()
+    chords = chords_call.get()
     structure = structure_call.get()
 
     return {
-        "path":           filename,
-        "bpm":            beats["bpm"],
+        "path": filename,
+        "bpm": beats["bpm"],
         "time_signature": beats["time_signature"],
-        "beats":          beats["beats"],
-        "downbeats":      beats["downbeats"],
-        "segments":       structure["segments"],
-        "chords":         chords["chords"],
+        "beats": beats["beats"],
+        "downbeats": beats["downbeats"],
+        "segments": structure["segments"],
+        "chords": chords["chords"],
         "_sources": {
-            "beats":     "madmom",
-            "chords":    f"chord-cnn-lstm ({chord_dict})",
+            "beats": "madmom",
+            "chords": f"chord-cnn-lstm ({chord_dict})",
             "structure": "songformer",
         },
     }
@@ -323,7 +344,9 @@ def main(path: str, chord_dict: str = "full"):
         chord_dict,
     )
 
-    out = audio_path.parent / f"{audio_path.stem}-chordmini.json"
+    out_dir = pathlib.Path(".appdata/maps/raw")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"{audio_path.stem}-raw.json"
     with open(out, "w") as f:
         json.dump(result, f, indent=2)
 

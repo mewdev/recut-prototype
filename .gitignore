@@ -15,6 +15,9 @@ dist/
 *.flac
 *.asd
 
+# Model weights (external, not redistributable)
+src/analysis/models/
+
 # Generated / large model artifacts
 music.map.json
 demix/
@@ -34,6 +37,9 @@ ChordMiniApp/
 
 # Agents
 .claude
+
+# App data (generated files — audio, analysis, maps, output)
+.appdata/
 
 # Temp folders
 chordonomicon

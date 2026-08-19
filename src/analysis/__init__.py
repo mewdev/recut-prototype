@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import cast
 
-from analysis.pipeline import analyze_all
 from map.schema import RawAnalysis
+
+from analysis.pipeline import analyze_all
 
 
 class AnalysisPipeline(ABC):

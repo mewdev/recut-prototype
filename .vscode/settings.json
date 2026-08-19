@@ -1,7 +1,7 @@
 {
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.extraPaths": ["src"],
-  "python.analysis.ignore": ["**/site-packages/**", "archive/**", "src/analysis/models/**", "temp/**"],
+  "python.analysis.ignore": ["**/site-packages/**", "archive/**", "src/analysis/models/**", "temp/**", "src/analysis/pipeline.py"],
   "python.analysis.exclude": ["**/node_modules", "**/__pycache__", "**/.*", "**/site-packages/**", "archive/**", "src/analysis/models/**", "temp/**"],
   "python.analysis.diagnosticMode": "openFilesOnly",
   "python.defaultInterpreterPath": "/Users/michal/miniconda3/envs/recut/bin/python",

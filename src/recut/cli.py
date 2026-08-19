@@ -24,8 +24,8 @@ Commands:
 Run `recut <command> --help` for command-specific usage.
 """
 
-RAW_DIR = pathlib.Path("temp/analysis/raw")
-MAP_DIR = pathlib.Path("temp/analysis/maps")
+RAW_DIR = pathlib.Path(".appdata/maps/raw")
+MAP_DIR = pathlib.Path(".appdata/maps/enriched")
 
 
 def cmd_analyze(args) -> None:
@@ -99,7 +99,7 @@ def cmd_map(args) -> None:
     out_path.write_text(json.dumps(result.model_dump(), indent=2))
     print(f"Saved: {out_path.resolve()}")
     print(
-        f"  duration={result['duration']:.1f}s  segments={len(result['segments'])}  bars={len(result['bars'])}"
+        f"  duration={result.duration:.1f}s  segments={len(result.segments)}  bars={len(result.bars)}"
     )
 
 
