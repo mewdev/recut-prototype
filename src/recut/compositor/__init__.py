@@ -1,13 +1,13 @@
 import numpy as np
 
 from recut.audio import Audio
-from recut.compositor.nodes import Clip, Loop, Node
+from recut.compositor.nodes import Clip, Node
 from recut.map.parser import MapParser
 from recut.primitives.cut import cut
 from recut.validator import validate
 
 # Re-export so existing callers (`from recut.compositor import Clip, Loop`) keep working
-__all__ = ["Clip", "Loop", "Node", "compose"]
+__all__ = ["Clip", "Node", "compose"]
 
 
 def compose(
@@ -28,7 +28,8 @@ def compose(
         warnings = [r for r in results if r.severity == "warning"]
         if errors or warnings:
             msgs = "\n".join(
-                f"  [{r.severity.upper()}] [{r.node.segment_name}] {r.message}" for r in errors + warnings
+                f"  [{r.severity.upper()}] [{r.node.segment_name}] {r.message}"
+                for r in errors + warnings
             )
             raise ValueError(
                 f"Composition blocked ({len(errors)} error(s), {len(warnings)} warning(s)):\n{msgs}"
@@ -55,15 +56,19 @@ def compose(
         if node.bars is not None:
             end = start + parser.bars_to_seconds(node.bars)
             if end > segment["end"]:
-                raise ValueError(f"{node.bars} bars exceeds segment length for {node.segment_name!r}")
+                raise ValueError(
+                    f"{node.bars} bars exceeds segment length for {node.segment_name!r}"
+                )
         elif node.beats is not None:
             end = start + parser.beats_to_seconds(node.beats)
             if end > segment["end"]:
-                raise ValueError(f"{node.beats} beats exceeds segment length for {node.segment_name!r}")
+                raise ValueError(
+                    f"{node.beats} beats exceeds segment length for {node.segment_name!r}"
+                )
         clip = cut(start, end)(audio)
 
-        if isinstance(node, Loop):
-            clip = Audio(np.concatenate([clip.samples] * node.times, axis=-1), audio.sr)
+        if node.loop is not None:
+            clip = Audio(np.concatenate([clip.samples] * node.loop, axis=-1), audio.sr)
 
         for effect in node.fx:
             clip = effect(clip)
