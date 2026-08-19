@@ -3,16 +3,20 @@
 import numpy as np
 import pytest
 
-from audio import Audio
-from primitives.chain import chain
-from primitives.cut import cut
-from primitives.fade import fade
+from recut.audio import Audio
+from recut.compositor import Clip, compose
+from recut.map.parser import parse_recut_map
+from recut.primitives.chain import chain
+from recut.primitives.cut import cut
+from recut.primitives.fade import fade
+
+MAP = "tests/fixtures/end_of_beginning-map-v0_1.json"
+
 
 # --- Helpers ---------------------------------------------------------------
 
 
 def make_audio(duration_s: float = 2.0, sr: int = 44100, channels: int = 2) -> Audio:
-    """Synthetic stereo audio filled with ones."""
     samples = np.ones((channels, int(duration_s * sr)))
     return Audio(samples, sr)
 
@@ -28,8 +32,7 @@ def make_mono(duration_s: float = 2.0, sr: int = 44100) -> Audio:
 def test_cut_output_duration():
     audio = make_audio(2.0)
     result = cut(0.5, 1.5)(audio)
-    expected_samples = int(1.0 * 44100)
-    assert result.num_samples == pytest.approx(expected_samples, abs=2)
+    assert result.num_samples == pytest.approx(int(1.0 * 44100), abs=2)
 
 
 def test_cut_start_zero():
@@ -63,7 +66,6 @@ def test_cut_preserves_sr():
 def test_fade_in_starts_silent():
     audio = make_audio(1.0)
     result = fade(vol_start=0.0, vol_end=1.0)(audio)
-    # first sample should be near 0
     assert result.samples[0, 0] < 0.01
 
 
@@ -98,7 +100,7 @@ def test_chain_multiple_transforms():
     audio = make_audio(2.0)
     result = chain(audio, cut(0.0, 1.0), fade(vol_start=0.0, vol_end=1.0))
     assert result.num_samples == pytest.approx(44100, abs=2)
-    assert result.samples[0, 0] < 0.01  # fade in applied
+    assert result.samples[0, 0] < 0.01
 
 
 def test_chain_no_transforms():
@@ -107,93 +109,39 @@ def test_chain_no_transforms():
     assert result.num_samples == audio.num_samples
 
 
-# --- node fx ---------------------------------------------------------------
+# --- compose fx ------------------------------------------------------------
 
 
-def test_clip_fx_applied_in_order():
-    """fx list runs effects sequentially: first fade silences start, second fade silences end."""
-    from compositor import Clip, compose
-    from map.parser import MapParser
-
-    class StubParser(MapParser):
-        def get_segment(self, label, index=1):
-            return {"start": 0.0, "end": 1.0}
-
-        def get_bpm(self):
-            return 120.0
-
-        def bars_to_seconds(self, bars):
-            return bars * 2.0
-
-        def beats_to_seconds(self, beats):
-            return beats * 0.5
-
-        def first_segment(self):
-            return {"label": "a", "start": 0.0, "end": 1.0}
-
-        def last_segment(self):
-            return {"label": "a", "start": 0.0, "end": 1.0}
-
-    import tempfile
-
-    import soundfile as sf
-
-    audio = make_audio(1.0)
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        sf.write(f.name, audio.samples.T, audio.sr)
-        path = f.name
-
+def test_clip_fx_applied(music_map_fixture):
+    audio = make_audio(4.0)
     result = compose(
-        StubParser(),
-        path,
-        Clip("a", fx=[fade(vol_start=0.0, vol_end=1.0)]),
-        skip_validation=True,
+        music_map_fixture,
+        audio,
+        Clip("intro", fx=[fade(vol_start=0.0, vol_end=1.0)]),
     )
     assert result.samples[0, 0] < 0.01   # fade-in: start silent
     assert result.samples[0, -1] > 0.9   # end loud
 
 
-def test_loop_fx_applies_post_concat():
-    """Loop with times=2 doubles duration before fx — fx sees full looped clip."""
-    from compositor import Loop, compose
-    from map.parser import MapParser
+def test_clip_loop_doubles_duration(music_map_fixture):
+    audio = make_audio(4.0)
+    no_loop = compose(music_map_fixture, audio, Clip("intro"))
+    looped = compose(music_map_fixture, audio, Clip("intro", loop=2))
+    assert looped.num_samples == pytest.approx(no_loop.num_samples * 2, abs=4)
 
-    class StubParser(MapParser):
-        def get_segment(self, label, index=1):
-            return {"start": 0.0, "end": 1.0}
 
-        def get_bpm(self):
-            return 120.0
-
-        def bars_to_seconds(self, bars):
-            return bars * 2.0
-
-        def beats_to_seconds(self, beats):
-            return beats * 0.5
-
-        def first_segment(self):
-            return {"label": "a", "start": 0.0, "end": 1.0}
-
-        def last_segment(self):
-            return {"label": "a", "start": 0.0, "end": 1.0}
-
-    import tempfile
-
-    import soundfile as sf
-
-    audio = make_audio(1.0)
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        sf.write(f.name, audio.samples.T, audio.sr)
-        path = f.name
-
+def test_loop_fx_applies_post_concat(music_map_fixture):
+    """fx sees the full looped clip — fade spans both repetitions."""
+    audio = make_audio(4.0)
     result = compose(
-        StubParser(),
-        path,
-        Loop("a", times=2, fx=[fade(vol_start=0.0, vol_end=1.0)]),
-        skip_validation=True,
+        music_map_fixture,
+        audio,
+        Clip("intro", loop=2, fx=[fade(vol_start=0.0, vol_end=1.0)]),
     )
-    # duration = 2× original
-    assert result.num_samples == pytest.approx(2 * 44100, abs=4)
-    # fade spans full loop: start silent, end loud
     assert result.samples[0, 0] < 0.01
     assert result.samples[0, -1] > 0.9
+
+
+@pytest.fixture
+def music_map_fixture():
+    return parse_recut_map(MAP)
