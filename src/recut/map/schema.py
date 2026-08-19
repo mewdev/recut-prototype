@@ -1,14 +1,15 @@
 """
-schema.py — TypedDicts and type aliases for the music map pipeline (v3)
+schema.py — Types for the music map pipeline (v4)
 
-Analysis pipeline (pipeline.py) is inspired by the ChordMini open-source toolchain:
-beat tracking (BeatNet), chord recognition (Chord-CNN-LSTM), structure (SongFormer).
-RawAnalysis mirrors the JSON output shape that pipeline produces.
+Input types (from analysis pipeline JSON): TypedDict — raw dicts at runtime.
+Output types (MusicMap and friends): Pydantic BaseModel — validation + serialization.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, NewType, Optional, TypedDict
+from typing import Literal, NewType, Optional
+
+from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 # ---------------------------------------------------------------------------
 # CONSTANTS
@@ -41,7 +42,7 @@ def is_valid_chord(s: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# INPUT TYPES  (what ChordMini gives us)
+# INPUT TYPES  (what ChordMini gives us — TypedDicts, plain dicts at runtime)
 # ---------------------------------------------------------------------------
 
 BeatTime = float
@@ -91,18 +92,16 @@ class RawAnalysis(TypedDict):
 
 
 # ---------------------------------------------------------------------------
-# OUTPUT TYPES  (what our map produces)
+# OUTPUT TYPES  (what our map produces — Pydantic BaseModel)
 # ---------------------------------------------------------------------------
 
-
-@dataclass
-class KeySignature:
+# TODO: key detection — needs Krumhansl-Schmuckler or music21
+class KeySignature(BaseModel):
     tonic: str
     mode: str
 
 
-@dataclass
-class EnrichedSegment:
+class EnrichedSegment(BaseModel):
     index: int
     segment_name: SegmentName
     start: float
@@ -118,31 +117,27 @@ class EnrichedSegment:
     loudness_db_end: float
 
 
-@dataclass
-class ModelRef:
+class ModelRef(BaseModel):
     name: str
     version: str
 
 
-@dataclass
-class Sources:
+class Sources(BaseModel):
     beats: ModelRef
     chords: ModelRef
     structure: ModelRef
 
 
-@dataclass
-class Meta:
+class Meta(BaseModel):
     audio_hash: str
     generated_at: str
     map_version: str
 
 
-@dataclass
-class MusicMap:
+class MusicMap(BaseModel):
     path: str
-    bpm: int
-    time_signature: TimeSignature
+    bpm: float
+    time_signature: str
     duration: float
     beats: list[BeatTime]
     bars: list[BeatTime]

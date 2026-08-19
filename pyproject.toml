@@ -9,6 +9,7 @@ dependencies = [
     "pedalboard",
     "modal",
     "flask",
+    "pydantic"
 ]
 
 [project.scripts]

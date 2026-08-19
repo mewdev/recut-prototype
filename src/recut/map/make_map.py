@@ -9,7 +9,7 @@ Usage:
     python -m map.make_map temp/analysis/raw/track-raw.json mp3/track.mp3
 """
 
-import dataclasses
+
 import json
 from datetime import datetime
 from pathlib import Path
@@ -98,5 +98,5 @@ if __name__ == "__main__":
     chordmini_path = sys.argv[1]
     result = run(chordmini_path, sys.argv[2])
     out_path = chordmini_path.replace("-raw.json", "-map.json")
-    Path(out_path).write_text(json.dumps(dataclasses.asdict(result), indent=2))
+    Path(out_path).write_text(json.dumps(result.model_dump(), indent=2))
     print(f"Written to {out_path}")

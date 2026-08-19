@@ -2,69 +2,50 @@ import numpy as np
 
 from recut.audio import Audio
 from recut.compositor.nodes import Clip, Node
-from recut.map.parser import MapParser
+from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment
+from recut.map.schema import MusicMap
 from recut.primitives.cut import cut
-from recut.validator import validate
 
 # Re-export so existing callers (`from recut.compositor import Clip, Loop`) keep working
 __all__ = ["Clip", "Node", "compose"]
 
 
-def compose(
-    parser: MapParser, audio_path: str, *nodes: Node, skip_validation: bool = False
-) -> Audio:
+def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
     """
     Execute a sequence of edit nodes against an audio file.
 
-    Validates all nodes before rendering. Raises ValueError on any error.
-    Pass skip_validation=True only when you have already validated externally.
+    Validate before calling if needed:
+        results = validate(music_map, *nodes)
 
     Example:
-        compose(parser, "song.mp3", Clip("verse"), Loop("chorus", times=2))
+        compose(music_map, audio, Clip("verse"), Clip("chorus", loop=2))
     """
-    if not skip_validation:
-        results = validate(parser, *nodes)
-        errors = [r for r in results if r.severity == "error"]
-        warnings = [r for r in results if r.severity == "warning"]
-        if errors or warnings:
-            msgs = "\n".join(
-                f"  [{r.severity.upper()}] [{r.node.segment_name}] {r.message}"
-                for r in errors + warnings
-            )
-            raise ValueError(
-                f"Composition blocked ({len(errors)} error(s), {len(warnings)} warning(s)):\n{msgs}"
-            )
-
-    audio = Audio.load(audio_path)
     composition = []
 
     for node in nodes:
-        segment = parser.get_segment(node.segment_name, node.index)
+        segment = get_segment(music_map, node.segment_name, node.index)
 
-        if node.snap_to_downbeat and "audio_start" in segment:
-            start = segment["audio_start"]
-            end = segment["audio_end"]
+        if node.snap_to_downbeat and segment.downbeats:
+            start = segment.downbeats[0]
+            end = segment.downbeats[-1]
         else:
-            start = segment["start"]
-            end = segment["end"]
-        # apply offset — shift start forward by N bars/beats
+            start = segment.start
+            end = segment.end
+
         if node.offset_bars is not None:
-            start += parser.bars_to_seconds(node.offset_bars)
+            start += bars_to_seconds(music_map, node.offset_bars)
         elif node.offset_beats is not None:
-            start += parser.beats_to_seconds(node.offset_beats)
+            start += beats_to_seconds(music_map, node.offset_beats)
 
         if node.bars is not None:
-            end = start + parser.bars_to_seconds(node.bars)
-            if end > segment["end"]:
-                raise ValueError(
-                    f"{node.bars} bars exceeds segment length for {node.segment_name!r}"
-                )
+            end = start + bars_to_seconds(music_map, node.bars)
+            if end > segment.end:
+                raise ValueError(f"{node.bars} bars exceeds segment length for {node.segment_name!r}")
         elif node.beats is not None:
-            end = start + parser.beats_to_seconds(node.beats)
-            if end > segment["end"]:
-                raise ValueError(
-                    f"{node.beats} beats exceeds segment length for {node.segment_name!r}"
-                )
+            end = start + beats_to_seconds(music_map, node.beats)
+            if end > segment.end:
+                raise ValueError(f"{node.beats} beats exceeds segment length for {node.segment_name!r}")
+
         clip = cut(start, end)(audio)
 
         if node.loop is not None:
