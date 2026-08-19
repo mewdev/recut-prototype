@@ -15,9 +15,6 @@ dist/
 *.flac
 *.asd
 
-# Model weights (external, not redistributable)
-src/analysis/models/
-
 # Generated / large model artifacts
 music.map.json
 demix/
