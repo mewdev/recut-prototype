@@ -19,6 +19,12 @@
     "**/temp/**": true
   },
   "explorer.excludeGitIgnore": false,
+  "files.exclude": {
+    "**/archive": true,
+    "**/__pycache__": true,
+    "**/*.egg-info": true,
+    "**/src/analysis/models": true
+  },
   "[python]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
