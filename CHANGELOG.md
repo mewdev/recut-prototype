@@ -1,5 +1,36 @@
 # Changelog
 
+## [chore] — 2026-08-19 — Pipeline remote cloning, test restructure, README, cleanup
+
+**Analysis pipeline — remote model cloning**
+- Removed `add_local_dir` — models no longer bundled or pushed from local disk
+- `chords_image`: clones `ptnghia-j/chord-cnn-lstm-model` via `git lfs` at Modal deploy time
+- `structure_image`: sparse-checkout of `SongFormer/` from `mewdev/ChordMiniApp` fork; weights downloaded from HuggingFace at image build time (`GIT_LFS_SKIP_SMUDGE=1` to avoid LFS bandwidth limits)
+- Pipeline output path updated: `.appdata/maps/raw/<stem>-raw.json`
+- License comment block added to `pipeline.py` — MuQ is CC BY-NC 4.0 (non-commercial only)
+
+**Models removed from repo**
+- `src/analysis/models/` deleted and untracked — no longer needed, cloned remotely
+- `.gitignore` entry for `src/analysis/models/` removed (folder gone permanently)
+
+**Test structure**
+- Tests reorganised into subdirectories mirroring `src/recut/`: `tests/map/`, `tests/validator/`, `tests/primitives/`
+- Real song fixture (`end_of_beginning-map-v0_1.json`) replaced with synthetic `sample-map.json` — 120 BPM, clean round numbers, no real song data
+- Test assertions updated to match synthetic fixture values
+
+**README**
+- CLI paths updated to `.appdata/maps/`
+- Compositor code example added (fabricated track, real API)
+- Validation section added — purpose, code snippet
+- Third-party attributions table with repo links and licenses
+- Music map format hidden under `<details>` — replaced with one-line description
+- Modal deploy note: models clone automatically, no manual setup
+
+**`.appdata/` convention**
+- All app-generated files (raw JSON, enriched maps) go to `.appdata/` — git-ignored
+
+---
+
 ## [refactor] — 2026-08-19 — Refactor: namespace package + Pydantic schema + plain-function pipeline
 
 Implemented colleague code review feedback (2026-08-18). Full structural overhaul across 5 steps.
@@ -148,12 +179,12 @@ Two-layer ending with BPM-synced delay tail extending 5s past cut end.
 
 ## Primitives developed this prototype phase
 
-| Primitive | Description |
-|-----------|-------------|
-| `cut` | hard slice [start, end] in seconds |
-| `fade` | linear volume envelope |
-| `filter_sweep` | DJ-style low-pass sweep, direction + curve |
-| `reverb` | pedalboard Reverb, room/hall/plate presets |
-| `delay` | pedalboard Delay, BPM-syncable |
-| `xfade_join` | equal-power crossfade join between two segments |
-| `chain` | compose effects: `chain(audio, sr, (fn, kwargs), ...)` |
+| Primitive | Signature | Description |
+|-----------|-----------|-------------|
+| `cut` | `cut(start, end)(audio)` | hard slice [start, end] in seconds |
+| `fade` | `fade(vol_start, vol_end, curve)(audio)` | volume envelope, curves: linear/log/exp/qsin |
+| `filter_sweep` | `filter_sweep(...)(audio)` | DJ-style low-pass sweep, direction + curve |
+| `reverb` | `reverb(...)(audio)` | pedalboard Reverb, room/hall/plate presets |
+| `delay` | `delay(...)(audio)` | pedalboard Delay, BPM-syncable |
+| `xfade` | `xfade(xfade_ms)(a, b)` | equal-power crossfade join between two Audio clips |
+| `chain` | `chain(audio, *transforms)` | compose curried primitives in sequence |
