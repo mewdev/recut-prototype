@@ -10,7 +10,7 @@ from recut.primitives.chain import chain
 from recut.primitives.cut import cut
 from recut.primitives.fade import fade
 
-MAP = "tests/fixtures/end_of_beginning-map-v0_1.json"
+MAP = "tests/fixtures/sample-map.json"
 
 
 # --- Helpers ---------------------------------------------------------------

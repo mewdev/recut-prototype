@@ -1,0 +1,126 @@
+{
+  "path": "sample.mp3",
+  "bpm": 120.0,
+  "time_signature": "4/4",
+  "duration": 56.0,
+  "beats": [
+    0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5,
+    4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5,
+    8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5,
+    12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5,
+    16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5,
+    20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5,
+    24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5,
+    28.0, 28.5, 29.0, 29.5, 30.0, 30.5, 31.0, 31.5,
+    32.0, 32.5, 33.0, 33.5, 34.0, 34.5, 35.0, 35.5,
+    36.0, 36.5, 37.0, 37.5, 38.0, 38.5, 39.0, 39.5,
+    40.0, 40.5, 41.0, 41.5, 42.0, 42.5, 43.0, 43.5,
+    44.0, 44.5, 45.0, 45.5, 46.0, 46.5, 47.0, 47.5,
+    48.0, 48.5, 49.0, 49.5, 50.0, 50.5, 51.0, 51.5,
+    52.0, 52.5, 53.0, 53.5, 54.0, 54.5, 55.0, 55.5
+  ],
+  "bars": [
+    0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0,
+    16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0,
+    32.0, 34.0, 36.0, 38.0, 40.0, 42.0, 44.0, 46.0,
+    48.0, 50.0, 52.0, 54.0
+  ],
+  "segments": [
+    {
+      "index": 0,
+      "segment_name": "intro",
+      "start": 0.0,
+      "end": 4.0,
+      "duration": 4.0,
+      "bars": 2,
+      "downbeats": [0.0, 2.0],
+      "phrases": [0.0],
+      "chords": [
+        { "start": 0.0, "end": 4.0, "chord": "N" }
+      ],
+      "loudness_db": -18.0,
+      "loudness_db_start": -20.0,
+      "loudness_db_end": -16.0
+    },
+    {
+      "index": 1,
+      "segment_name": "verse",
+      "start": 4.0,
+      "end": 20.0,
+      "duration": 16.0,
+      "bars": 8,
+      "downbeats": [4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0],
+      "phrases": [4.0, 8.0, 12.0, 16.0],
+      "chords": [
+        { "start": 4.0,  "end": 12.0, "chord": "C:maj" },
+        { "start": 12.0, "end": 20.0, "chord": "G:maj" }
+      ],
+      "loudness_db": -14.0,
+      "loudness_db_start": -15.0,
+      "loudness_db_end": -13.0
+    },
+    {
+      "index": 2,
+      "segment_name": "chorus",
+      "start": 20.0,
+      "end": 36.0,
+      "duration": 16.0,
+      "bars": 8,
+      "downbeats": [20.0, 22.0, 24.0, 26.0, 28.0, 30.0, 32.0, 34.0],
+      "phrases": [20.0, 24.0, 28.0, 32.0],
+      "chords": [
+        { "start": 20.0, "end": 24.0, "chord": "F:maj" },
+        { "start": 24.0, "end": 28.0, "chord": "C:maj" },
+        { "start": 28.0, "end": 32.0, "chord": "G:maj" },
+        { "start": 32.0, "end": 36.0, "chord": "A:min" }
+      ],
+      "loudness_db": -10.0,
+      "loudness_db_start": -11.0,
+      "loudness_db_end": -10.0
+    },
+    {
+      "index": 3,
+      "segment_name": "verse",
+      "start": 36.0,
+      "end": 52.0,
+      "duration": 16.0,
+      "bars": 8,
+      "downbeats": [36.0, 38.0, 40.0, 42.0, 44.0, 46.0, 48.0, 50.0],
+      "phrases": [36.0, 40.0, 44.0, 48.0],
+      "chords": [
+        { "start": 36.0, "end": 44.0, "chord": "C:maj" },
+        { "start": 44.0, "end": 52.0, "chord": "G:maj" }
+      ],
+      "loudness_db": -13.0,
+      "loudness_db_start": -14.0,
+      "loudness_db_end": -12.0
+    },
+    {
+      "index": 4,
+      "segment_name": "outro",
+      "start": 52.0,
+      "end": 56.0,
+      "duration": 4.0,
+      "bars": 2,
+      "downbeats": [52.0, 54.0],
+      "phrases": [52.0],
+      "chords": [
+        { "start": 52.0, "end": 56.0, "chord": "C:maj" }
+      ],
+      "loudness_db": -16.0,
+      "loudness_db_start": -14.0,
+      "loudness_db_end": -24.0
+    }
+  ],
+  "sources": {
+    "beats":     { "name": "madmom",         "version": "0.16.1" },
+    "chords":    { "name": "chord-cnn-lstm", "version": "1.0.0"  },
+    "structure": { "name": "songformer",     "version": "1.0.0"  }
+  },
+  "meta": {
+    "audio_hash":    "abc123",
+    "generated_at":  "2026-01-01T00:00:00",
+    "map_version":   "0.1"
+  },
+  "key": null
+}
