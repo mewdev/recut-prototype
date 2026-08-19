@@ -1,4 +1,4 @@
-from audio import Audio
+from recut.audio import Audio
 
 
 def chain(audio: Audio, *transforms) -> Audio:

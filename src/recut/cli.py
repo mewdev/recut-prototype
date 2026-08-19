@@ -7,7 +7,7 @@ import time
 
 from modal import Function
 
-from map.make_map import run as make_map
+from recut.map.make_map import run as make_map
 
 _APP = "recut-analysis"
 
@@ -98,7 +98,9 @@ def cmd_map(args) -> None:
 
     out_path.write_text(json.dumps(result, indent=2))
     print(f"Saved: {out_path.resolve()}")
-    print(f"  duration={result['duration']:.1f}s  segments={len(result['segments'])}  bars={len(result['bars'])}")
+    print(
+        f"  duration={result['duration']:.1f}s  segments={len(result['segments'])}  bars={len(result['bars'])}"
+    )
 
 
 def main() -> None:

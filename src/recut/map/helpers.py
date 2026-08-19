@@ -6,7 +6,7 @@ import hashlib
 
 import numpy as np
 
-from map.schema import BeatTime, ChordEntry
+from recut.map.schema import BeatTime, ChordEntry
 
 
 # TODO: understand chunked hashing algo better

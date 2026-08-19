@@ -1,6 +1,6 @@
 from pedalboard import Delay, Pedalboard  # type: ignore
 
-from audio import Audio
+from recut.audio import Audio
 
 
 def delay(

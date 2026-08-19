@@ -2,7 +2,7 @@ from typing import Literal
 
 from pedalboard import Pedalboard, Reverb  # type: ignore
 
-from audio import Audio
+from recut.audio import Audio
 
 ReverbType = Literal["room", "hall", "plate"]
 

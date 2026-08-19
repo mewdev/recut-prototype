@@ -1,8 +1,8 @@
 from typing import Optional
 
-from compositor.nodes import Node
-from map.parser import MapParser
-from validator.types import ValidationResult
+from recut.compositor.nodes import Node
+from recut.map.parser import MapParser
+from recut.validator.types import ValidationResult
 
 
 def check_label_exists(

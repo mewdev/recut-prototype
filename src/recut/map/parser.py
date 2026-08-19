@@ -11,7 +11,7 @@ class MapParser(ABC):
 
     @abstractmethod
     def get_bpm(self) -> float:
-        """Return BPM from map."""
+        """Return BPM from recut.map."""
         ...
 
     @abstractmethod
@@ -39,6 +39,7 @@ class OurMapParser(MapParser):
 
     def __init__(self, map_path: str):
         import json
+
         with open(map_path) as f:
             self._map = json.load(f)
 
@@ -47,7 +48,7 @@ class OurMapParser(MapParser):
 
     def bars_to_seconds(self, bars: float) -> float:
         beats_per_bar = int(self._map["time_signature"].split("/")[0])
-        seconds_per_beat = 60/self._map["bpm"]
+        seconds_per_beat = 60 / self._map["bpm"]
         return bars * beats_per_bar * seconds_per_beat
 
     def first_segment(self) -> dict:
@@ -64,10 +65,10 @@ class OurMapParser(MapParser):
         segments = [segment for segment in self._map["segments"] if segment["label"] == label]
 
         if len(segments) < index:
-            raise ValueError(f"No {label!r} segment at index {index}") 
-        
+            raise ValueError(f"No {label!r} segment at index {index}")
+
         segment = segments[index - 1]
-        
+
         result = {"start": segment["start"], "end": segment["end"]}
         if "downbeats" in segment:
             result["downbeats"] = segment["downbeats"]
@@ -88,6 +89,7 @@ class MUFParser(MapParser):
 
     def __init__(self, muf_path: str):
         import json
+
         with open(muf_path) as f:
             self._map = json.load(f)
 
@@ -105,25 +107,31 @@ class MUFParser(MapParser):
     def first_segment(self) -> dict:
         sections = self._map["structure"]["sections"]
         s = sections[0]
-        return {"label": "section_1", "start": self._to_seconds(s["start"]),
-                "end": self._to_seconds(s["start"]) + self._to_seconds(s["duration"])}
+        return {
+            "label": "section_1",
+            "start": self._to_seconds(s["start"]),
+            "end": self._to_seconds(s["start"]) + self._to_seconds(s["duration"]),
+        }
 
     def last_segment(self) -> dict:
         sections = self._map["structure"]["sections"]
         s = sections[-1]
-        return {"label": f"section_{len(sections)}", "start": self._to_seconds(s["start"]),
-                "end": self._to_seconds(s["start"]) + self._to_seconds(s["duration"])}
+        return {
+            "label": f"section_{len(sections)}",
+            "start": self._to_seconds(s["start"]),
+            "end": self._to_seconds(s["start"]) + self._to_seconds(s["duration"]),
+        }
 
     def get_segment(self, label: str, index: int = 1) -> dict:
         """Return {start, end} for section at index (label ignored — MUF has no labels)."""
         sections = self._map["structure"]["sections"]
 
         if len(sections) < index:
-                    raise ValueError(f"No section at index {index}") 
+            raise ValueError(f"No section at index {index}")
 
         section = sections[index - 1]
 
         return {
             "start": self._to_seconds(section["start"]),
-            "end": self._to_seconds(section["start"]) + self._to_seconds(section["duration"])
+            "end": self._to_seconds(section["start"]) + self._to_seconds(section["duration"]),
         }

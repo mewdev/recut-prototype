@@ -1,7 +1,7 @@
-from compositor.nodes import Node
-from map.parser import MapParser
-from validator.rules import RULES, SEQUENCE_RULES
-from validator.types import ValidationResult
+from recut.compositor.nodes import Node
+from recut.map.parser import MapParser
+from recut.validator.rules import RULES, SEQUENCE_RULES
+from recut.validator.types import ValidationResult
 
 
 def validate(parser: MapParser, *nodes: Node) -> list[ValidationResult]:

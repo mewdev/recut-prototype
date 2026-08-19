@@ -1,12 +1,12 @@
 import numpy as np
 
-from audio import Audio
-from compositor.nodes import Clip, Loop, Node
-from map.parser import MapParser
-from primitives.cut import cut
-from validator import validate
+from recut.audio import Audio
+from recut.compositor.nodes import Clip, Loop, Node
+from recut.map.parser import MapParser
+from recut.primitives.cut import cut
+from recut.validator import validate
 
-# Re-export so existing callers (`from compositor import Clip, Loop`) keep working
+# Re-export so existing callers (`from recut.compositor import Clip, Loop`) keep working
 __all__ = ["Clip", "Loop", "Node", "compose"]
 
 

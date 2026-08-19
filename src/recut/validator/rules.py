@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-from compositor.nodes import Node
-from map.parser import MapParser
-from validator.checks import (
+from recut.compositor.nodes import Node
+from recut.map.parser import MapParser
+from recut.validator.checks import (
     check_duration_exceeds,
     check_label_exists,
     check_sequence_boundaries,
 )
-from validator.types import ValidationResult
+from recut.validator.types import ValidationResult
 
 
 @dataclass

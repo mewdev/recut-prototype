@@ -1,4 +1,4 @@
-from audio import Audio
+from recut.audio import Audio
 
 
 def cut(start: float, end: float):
