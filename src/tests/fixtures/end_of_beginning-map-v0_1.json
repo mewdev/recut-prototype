@@ -278,7 +278,7 @@
   "segments": [
     {
       "index": 0,
-      "label": "intro",
+      "segment_name": "intro",
       "start": 0.0,
       "end": 3.12,
       "duration": 3.12,
@@ -303,7 +303,7 @@
     },
     {
       "index": 1,
-      "label": "verse",
+      "segment_name": "verse",
       "start": 3.12,
       "end": 36.12,
       "duration": 33.0,
@@ -382,7 +382,7 @@
     },
     {
       "index": 2,
-      "label": "chorus",
+      "segment_name": "chorus",
       "start": 36.12,
       "end": 60.12,
       "duration": 24.0,
@@ -461,7 +461,7 @@
     },
     {
       "index": 3,
-      "label": "verse",
+      "segment_name": "verse",
       "start": 60.12,
       "end": 72.48,
       "duration": 12.360000000000007,
@@ -504,7 +504,7 @@
     },
     {
       "index": 4,
-      "label": "verse",
+      "segment_name": "verse",
       "start": 72.48,
       "end": 88.56,
       "duration": 16.08,
@@ -548,7 +548,7 @@
     },
     {
       "index": 5,
-      "label": "chorus",
+      "segment_name": "chorus",
       "start": 88.56,
       "end": 112.56,
       "duration": 24.0,
@@ -627,7 +627,7 @@
     },
     {
       "index": 6,
-      "label": "bridge",
+      "segment_name": "bridge",
       "start": 112.56,
       "end": 133.69,
       "duration": 21.129999999999995,
@@ -690,7 +690,7 @@
     },
     {
       "index": 7,
-      "label": "chorus",
+      "segment_name": "chorus",
       "start": 133.69,
       "end": 157.21,
       "duration": 23.52000000000001,
@@ -774,7 +774,7 @@
     },
     {
       "index": 8,
-      "label": "silence",
+      "segment_name": "silence",
       "start": 157.21,
       "end": 159.25,
       "duration": 2.039999999999992,

@@ -6,12 +6,14 @@ can import them without a circular dependency.
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Union
 
+from recut.map.schema import SegmentName
+
 
 @dataclass
 class Clip:
     """Extract one occurrence of a labeled segment."""
 
-    label: str
+    segment_name: SegmentName
     index: int = 1
     bars: Optional[float] = None
     beats: Optional[float] = None
@@ -35,7 +37,7 @@ class Clip:
 class Loop:
     """Extract a segment and repeat it N times."""
 
-    label: str
+    segment_name: SegmentName
     times: int
     index: int = 1
     bars: Optional[float] = None

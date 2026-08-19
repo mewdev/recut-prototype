@@ -28,7 +28,7 @@ def compose(
         warnings = [r for r in results if r.severity == "warning"]
         if errors or warnings:
             msgs = "\n".join(
-                f"  [{r.severity.upper()}] [{r.node.label}] {r.message}" for r in errors + warnings
+                f"  [{r.severity.upper()}] [{r.node.segment_name}] {r.message}" for r in errors + warnings
             )
             raise ValueError(
                 f"Composition blocked ({len(errors)} error(s), {len(warnings)} warning(s)):\n{msgs}"
@@ -38,7 +38,7 @@ def compose(
     composition = []
 
     for node in nodes:
-        segment = parser.get_segment(node.label, node.index)
+        segment = parser.get_segment(node.segment_name, node.index)
 
         if node.snap_to_downbeat and "audio_start" in segment:
             start = segment["audio_start"]
@@ -55,11 +55,11 @@ def compose(
         if node.bars is not None:
             end = start + parser.bars_to_seconds(node.bars)
             if end > segment["end"]:
-                raise ValueError(f"{node.bars} bars exceeds segment length for {node.label!r}")
+                raise ValueError(f"{node.bars} bars exceeds segment length for {node.segment_name!r}")
         elif node.beats is not None:
             end = start + parser.beats_to_seconds(node.beats)
             if end > segment["end"]:
-                raise ValueError(f"{node.beats} beats exceeds segment length for {node.label!r}")
+                raise ValueError(f"{node.beats} beats exceeds segment length for {node.segment_name!r}")
         clip = cut(start, end)(audio)
 
         if isinstance(node, Loop):

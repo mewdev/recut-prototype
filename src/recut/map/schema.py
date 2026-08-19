@@ -6,6 +6,7 @@ beat tracking (BeatNet), chord recognition (Chord-CNN-LSTM), structure (SongForm
 RawAnalysis mirrors the JSON output shape that pipeline produces.
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, NewType, Optional, TypedDict
 
@@ -34,6 +35,7 @@ VALID_CHORDS = _load_chord_vocab("full")
 
 ChordStr = NewType("ChordStr", str)
 
+
 def is_valid_chord(s: str) -> bool:
     return s in VALID_CHORDS
 
@@ -45,26 +47,37 @@ def is_valid_chord(s: str) -> bool:
 BeatTime = float
 TimeSignature = Literal["4/4"]
 
-SegmentLabel = Literal[
-    "intro", "verse", "pre-chorus", "chorus",
-    "bridge", "inst", "outro", "silence",
-    "interlude", "ending"
+SegmentName = Literal[
+    "intro",
+    "verse",
+    "pre-chorus",
+    "chorus",
+    "bridge",
+    "inst",
+    "outro",
+    "silence",
+    "interlude",
+    "ending",
 ]
+
 
 class ChordEntry(TypedDict):
     start: float
     end: float
     chord: ChordStr
 
+
 class RawSegment(TypedDict):
     start: float
     end: float
-    label: SegmentLabel
+    label: SegmentName
+
 
 class AnalysisSources(TypedDict):
     beats: str
     chords: str
     structure: str
+
 
 class RawAnalysis(TypedDict):
     path: str
@@ -81,14 +94,17 @@ class RawAnalysis(TypedDict):
 # OUTPUT TYPES  (what our map produces)
 # ---------------------------------------------------------------------------
 
-# TODO: key detection — needs Krumhansl-Schmuckler or music21 (frequency heuristic unreliable)
-class KeySignature(TypedDict):
+
+@dataclass
+class KeySignature:
     tonic: str
     mode: str
 
-class EnrichedSegment(TypedDict):
+
+@dataclass
+class EnrichedSegment:
     index: int
-    label: SegmentLabel
+    segment_name: SegmentName
     start: float
     end: float
     duration: float
@@ -101,24 +117,31 @@ class EnrichedSegment(TypedDict):
     loudness_db_start: float
     loudness_db_end: float
 
-class ModelRef(TypedDict):
+
+@dataclass
+class ModelRef:
     name: str
     version: str
 
-class Sources(TypedDict):
+
+@dataclass
+class Sources:
     beats: ModelRef
     chords: ModelRef
     structure: ModelRef
 
-class Meta(TypedDict):
+
+@dataclass
+class Meta:
     audio_hash: str
     generated_at: str
     map_version: str
 
-class MusicMap(TypedDict):
+
+@dataclass
+class MusicMap:
     path: str
     bpm: int
-    key: Optional[KeySignature]  # TODO: implement via music21
     time_signature: TimeSignature
     duration: float
     beats: list[BeatTime]
@@ -126,3 +149,4 @@ class MusicMap(TypedDict):
     segments: list[EnrichedSegment]
     sources: Sources
     meta: Meta
+    key: Optional[KeySignature] = None  # TODO: implement via music21

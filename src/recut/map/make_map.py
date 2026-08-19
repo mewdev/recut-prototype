@@ -9,6 +9,7 @@ Usage:
     python -m map.make_map temp/analysis/raw/track-raw.json mp3/track.mp3
 """
 
+import dataclasses
 import json
 from datetime import datetime
 from pathlib import Path
@@ -21,9 +22,12 @@ from recut.map.schema import (
     BeatTime,
     ChordEntry,
     EnrichedSegment,
+    Meta,
+    ModelRef,
     MusicMap,
     RawAnalysis,
     RawSegment,
+    Sources,
 )
 
 
@@ -38,20 +42,20 @@ def build_segment(
 ) -> EnrichedSegment:
     seg_downbeats = downbeats_in(all_downbeats, segment["start"], segment["end"])
     seg_audio = audio[int(segment["start"] * sample_rate) : int(segment["end"] * sample_rate)]
-    return {
-        "index": index,
-        "label": segment["label"],
-        "start": segment["start"],
-        "end": segment["end"],
-        "duration": segment["end"] - segment["start"],
-        "bars": len(seg_downbeats),
-        "downbeats": seg_downbeats,
-        "phrases": [p for p in all_phrases if segment["start"] <= p < segment["end"]],
-        "chords": chords_in(all_chords, segment["start"], segment["end"]),
-        "loudness_db": loudness_rms_db(seg_audio),
-        "loudness_db_start": loudness_rms_db(seg_audio[: int(0.5 * sample_rate)]),
-        "loudness_db_end": loudness_rms_db(seg_audio[-int(0.5 * sample_rate) :]),
-    }
+    return EnrichedSegment(
+        index=index,
+        segment_name=segment["label"],
+        start=segment["start"],
+        end=segment["end"],
+        duration=segment["end"] - segment["start"],
+        bars=len(seg_downbeats),
+        downbeats=seg_downbeats,
+        phrases=[p for p in all_phrases if segment["start"] <= p < segment["end"]],
+        chords=chords_in(all_chords, segment["start"], segment["end"]),
+        loudness_db=loudness_rms_db(seg_audio),
+        loudness_db_start=loudness_rms_db(seg_audio[: int(0.5 * sample_rate)]),
+        loudness_db_end=loudness_rms_db(seg_audio[-int(0.5 * sample_rate) :]),
+    )
 
 
 def run(chordmini_path: str, audio_path: str) -> MusicMap:
@@ -66,27 +70,26 @@ def run(chordmini_path: str, audio_path: str) -> MusicMap:
         for index, segment in enumerate(data["segments"])
     ]
 
-    return {
-        "path": audio_path,
-        "bpm": data["bpm"],
-        "key": None,  # TODO: implement via music21
-        "time_signature": data["time_signature"],
-        "duration": len(audio) / sr,
-        "beats": data["beats"],
-        "bars": data["downbeats"],
-        "segments": segments,
-        "sources": {
+    return MusicMap(
+        path=audio_path,
+        bpm=data["bpm"],
+        time_signature=data["time_signature"],
+        duration=len(audio) / sr,
+        beats=data["beats"],
+        bars=data["downbeats"],
+        segments=segments,
+        sources=Sources(
             # TODO: add proper model versions
-            "beats": {"name": "chordmini", "version": "1.0"},
-            "chords": {"name": "chordmini", "version": "1.0"},
-            "structure": {"name": "chordmini", "version": "1.0"},
-        },
-        "meta": {
-            "audio_hash": hash_file(audio_path),
-            "generated_at": datetime.utcnow().isoformat(),
-            "map_version": "0.1",
-        },
-    }
+            beats=ModelRef(name="chordmini", version="1.0"),
+            chords=ModelRef(name="chordmini", version="1.0"),
+            structure=ModelRef(name="chordmini", version="1.0"),
+        ),
+        meta=Meta(
+            audio_hash=hash_file(audio_path),
+            generated_at=datetime.utcnow().isoformat(),
+            map_version="0.1",
+        ),
+    )
 
 
 if __name__ == "__main__":
@@ -95,5 +98,5 @@ if __name__ == "__main__":
     chordmini_path = sys.argv[1]
     result = run(chordmini_path, sys.argv[2])
     out_path = chordmini_path.replace("-raw.json", "-map.json")
-    Path(out_path).write_text(json.dumps(result, indent=2))
+    Path(out_path).write_text(json.dumps(dataclasses.asdict(result), indent=2))
     print(f"Written to {out_path}")

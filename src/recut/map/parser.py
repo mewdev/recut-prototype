@@ -53,16 +53,16 @@ class OurMapParser(MapParser):
 
     def first_segment(self) -> dict:
         s = self._map["segments"][0]
-        return {"label": s["label"], "start": s["start"], "end": s["end"]}
+        return {"label": s["segment_name"], "start": s["start"], "end": s["end"]}
 
     def last_segment(self) -> dict:
-        non_silence = [s for s in self._map["segments"] if s["label"] != "silence"]
+        non_silence = [s for s in self._map["segments"] if s["segment_name"] != "silence"]
         s = non_silence[-1] if non_silence else self._map["segments"][-1]
-        return {"label": s["label"], "start": s["start"], "end": s["end"]}
+        return {"label": s["segment_name"], "start": s["start"], "end": s["end"]}
 
     def get_segment(self, label: str, index: int = 1) -> dict:
 
-        segments = [segment for segment in self._map["segments"] if segment["label"] == label]
+        segments = [segment for segment in self._map["segments"] if segment["segment_name"] == label]
 
         if len(segments) < index:
             raise ValueError(f"No {label!r} segment at index {index}")

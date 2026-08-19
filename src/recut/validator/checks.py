@@ -10,7 +10,7 @@ def check_label_exists(
     parser: MapParser,
 ) -> Optional[ValidationResult]:
     try:
-        parser.get_segment(node.label, node.index)
+        parser.get_segment(node.segment_name, node.index)
     except ValueError as error:
         return ValidationResult(severity="error", message=str(error), node=node)
     return None
@@ -18,7 +18,7 @@ def check_label_exists(
 
 def check_duration_exceeds(node: Node, parser: MapParser) -> Optional[ValidationResult]:
     try:
-        segment = parser.get_segment(node.label, node.index)
+        segment = parser.get_segment(node.segment_name, node.index)
     except ValueError:
         return None
     if node.bars is not None:
@@ -27,7 +27,7 @@ def check_duration_exceeds(node: Node, parser: MapParser) -> Optional[Validation
         if segment["start"] + requested_s > segment["end"]:
             return ValidationResult(
                 severity="error",
-                message=f"{node.bars} bars ({requested_s:.2f}s) exceeds '{node.label}' segment duration ({segment_duration_s:.2f}s)",
+                message=f"{node.bars} bars ({requested_s:.2f}s) exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
                 node=node,
             )
     elif node.beats is not None:
@@ -36,7 +36,7 @@ def check_duration_exceeds(node: Node, parser: MapParser) -> Optional[Validation
         if segment["start"] + requested_s > segment["end"]:
             return ValidationResult(
                 severity="error",
-                message=f"{node.beats} beats ({requested_s:.2f}s) exceeds '{node.label}' segment duration ({segment_duration_s:.2f}s)",
+                message=f"{node.beats} beats ({requested_s:.2f}s) exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
                 node=node,
             )
     return None
@@ -58,13 +58,13 @@ def check_sequence_boundaries(nodes: list[Node], parser: MapParser) -> list[Vali
     # check first node
     first_node = nodes[0]
     try:
-        seg = parser.get_segment(first_node.label, first_node.index)
+        seg = parser.get_segment(first_node.segment_name, first_node.index)
         if abs(seg["start"] - first_song_seg["start"]) > 0.1:
             results.append(
                 ValidationResult(
                     severity="warning",
                     message=(
-                        f"Cut starts at {first_node.label!r} (t={seg['start']:.2f}s) "
+                        f"Cut starts at {first_node.segment_name!r} (t={seg['start']:.2f}s) "
                         f"but song begins at {first_song_seg['label']!r} (t={first_song_seg['start']:.2f}s). "
                         "Hard cut at start will sound abrupt — apply an effect (e.g. fade-in, reverb tail) to smooth the entry."
                     ),
@@ -77,13 +77,13 @@ def check_sequence_boundaries(nodes: list[Node], parser: MapParser) -> list[Vali
     # check last node
     last_node = nodes[-1]
     try:
-        seg = parser.get_segment(last_node.label, last_node.index)
+        seg = parser.get_segment(last_node.segment_name, last_node.index)
         if abs(seg["end"] - last_song_seg["end"]) > 0.1:
             results.append(
                 ValidationResult(
                     severity="warning",
                     message=(
-                        f"Cut ends at {last_node.label!r} (t={seg['end']:.2f}s) "
+                        f"Cut ends at {last_node.segment_name!r} (t={seg['end']:.2f}s) "
                         f"but song ends at {last_song_seg['label']!r} (t={last_song_seg['end']:.2f}s). "
                         "Hard cut at end will sound abrupt — apply an effect (e.g. fade-out, reverb tail) to smooth the exit."
                     ),

@@ -1,6 +1,7 @@
 """recut CLI — music cutting system"""
 
 import argparse
+import dataclasses
 import json
 import pathlib
 import time
@@ -96,7 +97,7 @@ def cmd_map(args) -> None:
     print(f"Building music map for {audio_path.name}...")
     result = make_map(str(raw_path), str(audio_path))
 
-    out_path.write_text(json.dumps(result, indent=2))
+    out_path.write_text(json.dumps(dataclasses.asdict(result), indent=2))
     print(f"Saved: {out_path.resolve()}")
     print(
         f"  duration={result['duration']:.1f}s  segments={len(result['segments'])}  bars={len(result['bars'])}"
