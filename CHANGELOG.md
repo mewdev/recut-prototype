@@ -1,5 +1,38 @@
 # Changelog
 
+## [refactor] — 2026-08-19 — Refactor: namespace package + Pydantic schema + plain-function pipeline
+
+Implemented colleague code review feedback (2026-08-18). Full structural overhaul across 5 steps.
+
+**Step 1 — `src/recut/` namespace package**
+- All source moved from `src/` into `src/recut/` — prevents shadowing third-party packages
+- All imports rewritten from bare (`from audio import`) to namespaced (`from recut.audio import`)
+- `Loop` class merged into `Clip(loop=N)` — simpler API, `Node = Clip`
+- `SegmentLabel`/`label` renamed to `SegmentName`/`segment_name` throughout (including map JSON)
+
+**Step 2 — Schema: TypedDict → Pydantic BaseModel**
+- All output types (`EnrichedSegment`, `MusicMap`, `Sources`, `Meta`, `ModelRef`, `KeySignature`) converted to `BaseModel`
+- Input types (`ChordEntry`, `RawSegment`, `RawAnalysis`) kept as `TypedDict` — raw dicts at runtime
+- `typing_extensions.TypedDict` required for Pydantic v2 on Python < 3.12
+- `make_map.py` updated: constructors replace `dataclasses.asdict()`, `result.model_dump()` for JSON serialization
+
+**Step 3 — Parser: ABC + classes → plain functions**
+- `OurMapParser` class + `MapParser` ABC deleted
+- `parse_recut_map(path)`, `parse_recut_map_dict(src)` — trivial one-liners (Pydantic handles validation)
+- `parse_muf_map`, `parse_muf_map_dict` — stubbed with `NotImplementedError`
+- 5 pure MusicMap helpers added: `get_segment`, `bars_to_seconds`, `beats_to_seconds`, `first_segment`, `last_segment`
+
+**Step 4 — Validator: `MapParser` → `MusicMap`**
+- `validate(music_map, *nodes)` — no parser dependency
+- All checks use free functions from parser; dict access replaced with attribute access
+
+**Step 5 — Compositor: `MapParser + path` → `MusicMap + Audio`**
+- `compose(music_map, audio, *nodes)` — no parser, no `audio_path` string, no `skip_validation`
+- Downbeat snap: `"audio_start" in segment` → `segment.downbeats` (truthy check on list)
+- `pyproject.toml` script entry fixed: `"cli:main"` → `"recut.cli:main"`
+
+---
+
 ## [refactor] — 2026-08-12 — src/ layout migration + tooling fixes
 
 Reorganized project into a clean `src/` package layout for better overview.

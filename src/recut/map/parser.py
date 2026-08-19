@@ -34,10 +34,11 @@ def parse_recut_map_dict(src: dict) -> MusicMap:
 
 
 def parse_muf_map(muf_path: str) -> MusicMap:
-    raise NotImplementedError(
-        "MUF parser not yet implemented — MUF format lacks segment labels "
-        "and enriched data required by MusicMap. See todo-and-ideas.md."
-    )
+    raise NotImplementedError("MUF parser not yet implemented")
+
+
+def parse_muf_map_dict(src: dict) -> MusicMap:
+    raise NotImplementedError("MUF parser not yet implemented")
 
 
 def get_segment(music_map: MusicMap, segment_name: SegmentName, index: int = 1) -> EnrichedSegment:

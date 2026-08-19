@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-recut = "cli:main"
+recut = "recut.cli:main"
 
 [tool.recut]
 pipeline = "modal"          # "modal" — more options added as needed
