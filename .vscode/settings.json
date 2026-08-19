@@ -1,11 +1,24 @@
 {
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.extraPaths": ["src"],
-  "python.analysis.ignore": ["**/site-packages/**", "archive/**", "src/analysis/models/**"],
+  "python.analysis.ignore": ["**/site-packages/**", "archive/**", "src/analysis/models/**", "temp/**"],
   "python.defaultInterpreterPath": "/Users/michal/miniconda3/envs/recut/bin/python",
   "python-envs.defaultEnvManager": "ms-python.python:conda",
   "python-envs.defaultPackageManager": "ms-python.python:conda",
-  // "explorer.excludeGitIgnore": true
+  "files.watcherExclude": {
+    "**/archive/**": true,
+    "**/src/analysis/models/**": true,
+    "**/__pycache__/**": true,
+    "**/*.egg-info/**": true,
+    "**/temp/**": true
+  },
+  "search.exclude": {
+    "**/archive/**": true,
+    "**/src/analysis/models/**": true,
+    "**/__pycache__/**": true,
+    "**/temp/**": true
+  },
+  "explorer.excludeGitIgnore": false,
   "[python]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
