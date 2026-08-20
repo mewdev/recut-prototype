@@ -1,7 +1,7 @@
 # recut-prototype — Claude Instructions
 
 ## Project
-Music cutting system ("Remotion for audio"). See `music-cutting-system-plan.md` for full architecture.
+Music cutting system ("Remotion for audio").
 Analysis pipeline → JSON music map → primitives → LLM orchestration → specialized cutting model.
 
 ## Python Environment
@@ -11,19 +11,20 @@ Always use `/Users/michal/miniconda3/envs/recut/bin/python` — never `conda run
 Run both — fix all errors before committing:
 ```
 /Users/michal/miniconda3/envs/recut/bin/ruff check .
-/Users/michal/miniconda3/envs/recut/bin/python -m pytest src/tests/
+/Users/michal/miniconda3/envs/recut/bin/python -m pytest tests/
 ```
 
 ## Key Files
-- `music-cutting-system-plan.md` — architecture plan
-- `CHANGELOG.md` — edit version history + primitives table
-- `docs/use-cases/` — training triplets (music_map + instruction + correct_edit + reasoning)
-- `src/primitives/` — pure numpy/pedalboard functions: cut, fade, filter_sweep, reverb, delay, xfade_join, chain
-- `src/map/` — map schema, make_map pipeline, chord data, ui-editor
-- `src/validator/` — validation rules + checks
-- `src/compositor.py` — main compose() entry point
-- `src/pipeline.py` — Modal GPU pipeline for analysis
-- `todo-and-ideas.md` — backlog
+- `CHANGELOG.md` — version history + primitives table
+- `src/recut/primitives/` — pure numpy/pedalboard functions: cut, fade, filter_sweep, reverb, delay, xfade, chain
+- `src/recut/map/` — map schema, make_map pipeline, chord data, ui-editor
+- `src/recut/map/schema.py` — MusicMap dataclass + section/beat types
+- `src/recut/map/parser.py` — JSON → MusicMap
+- `src/recut/map/make_map.py` — analysis output → MusicMap
+- `src/recut/validator/` — validation rules + checks
+- `src/recut/compositor/` — compose() entry point, node types
+- `src/analysis/pipeline.py` — Modal GPU pipeline for analysis
+- `tests/` — map, primitives, validator test suites
 
 ## Primitives Interface
 All primitives: `fn(audio: np.ndarray, sr: int, ...) → np.ndarray`

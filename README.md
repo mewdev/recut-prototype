@@ -58,7 +58,7 @@ Output is saved to `.appdata/maps/`:
 Given an analyzed track, build a cut in code:
 
 ```python
-import json
+import soundfile as sf
 from recut.audio import Audio
 from recut.map.parser import parse_recut_map
 from recut.compositor import Clip, compose
@@ -66,7 +66,7 @@ from recut.primitives.fade import fade
 
 # Load music map and audio
 music_map = parse_recut_map(".appdata/maps/enriched/midnight_run-map.json")
-audio = Audio.from_file("midnight_run.mp3")
+audio = Audio.load("midnight_run.mp3")
 
 # Build the edit: intro → verse → chorus × 2 (with fade out)
 result = compose(
@@ -77,7 +77,7 @@ result = compose(
     Clip("chorus", loop=2, fx=[fade(vol_start=1.0, vol_end=0.0)]),
 )
 
-result.save("midnight_run-cut.mp3")
+sf.write("midnight_run-cut.mp3", result.samples.T, result.sr)
 ```
 
 **Validation** — a linter for music cuts. Before rendering, validates that all nodes are musically coherent: segment labels exist in the map, requested bars/beats don't exceed the segment duration, and the cut doesn't start or end abruptly mid-song. The goal is to grow this into a richer rule set that catches musical issues automatically — wrong key transitions, energy drops, rhythmic misalignments — so the system can eventually guide or automate cut decisions.
@@ -93,7 +93,7 @@ The analysis extracts tempo, time signature, song structure, beats, chords, and 
 
 ## Third-Party Models
 
-All models are cloned automatically when you run `modal deploy`. No manual setup required.
+recut currently uses third-party open-source models for music analysis. All models are cloned automatically when you run `modal deploy`. No manual setup required.
 
 | Component | Source | License |
 |-----------|--------|---------|
