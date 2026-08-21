@@ -3,11 +3,14 @@
 import argparse
 import json
 import pathlib
+import shutil
 import time
 
 from modal import Function
 
 from recut.map.make_map import run as make_map
+from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR
+from recut.project import load_project_sources
 
 _APP = "recut-analysis"
 
@@ -19,13 +22,11 @@ recut renders it.
 
 Commands:
   analyze   Analyze an audio file via Modal pipeline → raw JSON
-  map       Build an enriched music map from raw analysis output
+  map       Build enriched maps for all sources that need it
+  status    Show registry state for all sources in .appdata
 
 Run `recut <command> --help` for command-specific usage.
 """
-
-RAW_DIR = pathlib.Path(".appdata/maps/raw")
-MAP_DIR = pathlib.Path(".appdata/maps/enriched")
 
 
 def cmd_analyze(args) -> None:
@@ -35,7 +36,7 @@ def cmd_analyze(args) -> None:
         return
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = RAW_DIR / f"{audio_path.stem}-raw.json"
+    out_path = RAW_DIR / f"{audio_path.stem}.json"
 
     audio_bytes = audio_path.read_bytes()
     filename = audio_path.name
@@ -78,29 +79,40 @@ def cmd_analyze(args) -> None:
     out_path.write_text(json.dumps(result, indent=2))
     print(f"Saved: {out_path.resolve()}")
 
+    AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(audio_path, AUDIO_DIR)
+    print(f"Copied audio → {(AUDIO_DIR / audio_path.name).resolve()}")
+
 
 def cmd_map(args) -> None:
-    audio_path = pathlib.Path(args.audio)
-    raw_path = pathlib.Path(args.raw)
+    """Build enriched maps for all sources with status=needs_map."""
+    sources = load_project_sources()
+    pending = {k: v for k, v in sources.items() if v.status == "needs_map"}
 
-    if not audio_path.exists():
-        print(f"Error: audio file not found: {audio_path}")
-        return
-    if not raw_path.exists():
-        print(f"Error: raw JSON not found: {raw_path}")
+    if not pending:
+        print("Nothing to map — all sources are up to date.")
         return
 
     MAP_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = MAP_DIR / f"{audio_path.stem}-map.json"
 
-    print(f"Building music map for {audio_path.name}...")
-    result = make_map(str(raw_path), str(audio_path))
+    for stem, source in pending.items():
+        raw_path = RAW_DIR / f"{stem}.json"
+        audio_path = source.audio_path
+        map_path = MAP_DIR / f"{stem}.json"
 
-    out_path.write_text(json.dumps(result.model_dump(), indent=2))
-    print(f"Saved: {out_path.resolve()}")
-    print(
-        f"  duration={result.duration:.1f}s  segments={len(result.segments)}  bars={len(result.bars)}"
-    )
+        result = make_map(raw_path, audio_path)
+        map_path.write_text(json.dumps(result.model_dump(), indent=2))
+        print(f"  ✓ {stem}  duration={result.duration:.1f}s  segments={len(result.segments)}")
+
+
+def cmd_status(args) -> None:
+    """Show registry state for all sources in .appdata."""
+    sources = load_project_sources()
+    if not sources:
+        print("No sources found in .appdata/audio/")
+        return
+    for source in sorted(sources.values(), key=lambda s: s.status):
+        print(f"{source.name}: {source.status}")
 
 
 def main() -> None:
@@ -116,10 +128,11 @@ def main() -> None:
     analyze.add_argument("audio", help="path to audio file (mp3, wav, ...)")
     analyze.set_defaults(func=cmd_analyze)
 
-    map_cmd = sub.add_parser("map", help="Build music map from raw analysis JSON")
-    map_cmd.add_argument("audio", help="path to audio file (mp3, wav, ...)")
-    map_cmd.add_argument("raw", help="path to raw analysis JSON (-raw.json)")
+    map_cmd = sub.add_parser("map", help="Build enriched maps for all needs_map sources")
     map_cmd.set_defaults(func=cmd_map)
+
+    status_cmd = sub.add_parser("status", help="Show registry state for all sources")
+    status_cmd.set_defaults(func=cmd_status)
 
     args = parser.parse_args()
 

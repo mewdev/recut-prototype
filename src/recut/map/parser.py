@@ -23,7 +23,7 @@ from recut.map.schema import EnrichedSegment, MusicMap, SegmentName
 # ---------------------------------------------------------------------------
 
 
-def parse_recut_map(map_path: str) -> MusicMap:
+def parse_recut_map(map_path: str | Path) -> MusicMap:
     """Parse our enriched JSON map format. Pydantic validates structure automatically."""
     return MusicMap.model_validate_json(Path(map_path).read_text())
 

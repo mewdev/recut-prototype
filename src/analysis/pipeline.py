@@ -346,7 +346,7 @@ def main(path: str, chord_dict: str = "full"):
 
     out_dir = pathlib.Path(".appdata/maps/raw")
     out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / f"{audio_path.stem}-raw.json"
+    out = out_dir / f"{audio_path.stem}.json"
     with open(out, "w") as f:
         json.dump(result, f, indent=2)
 

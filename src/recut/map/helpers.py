@@ -3,6 +3,7 @@ helpers.py — pure helper functions for map enrichment
 """
 
 import hashlib
+from pathlib import Path
 
 import numpy as np
 
@@ -10,7 +11,7 @@ from recut.map.schema import BeatTime, ChordEntry
 
 
 # TODO: understand chunked hashing algo better
-def hash_file(filepath: str, block_size: int = 65536) -> str:
+def hash_file(filepath: str | Path, block_size: int = 65536) -> str:
     sha256 = hashlib.sha256()
     with open(filepath, "rb") as f:
         for block in iter(lambda: f.read(block_size), b""):

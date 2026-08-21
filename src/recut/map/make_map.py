@@ -1,9 +1,9 @@
 """
 make_map.py — enrich raw analysis JSON into a music map
 
-Input:  <stem>-raw.json   (beats, downbeats, segments, chords from analysis pipeline)
-        <stem>.mp3         (audio, for loudness)
-Output: <stem>-map.json   (enriched, LLM-ready)
+Input:  .appdata/maps/raw/<stem>.json   (beats, downbeats, segments, chords from analysis pipeline)
+        .appdata/audio/<stem>.mp3       (audio, for loudness)
+Output: .appdata/maps/enriched/<stem>.json
 
 Usage:
     python -m map.make_map temp/analysis/raw/track-raw.json mp3/track.mp3
@@ -58,8 +58,8 @@ def build_segment(
     )
 
 
-def run(chordmini_path: str, audio_path: str) -> MusicMap:
-    data: RawAnalysis = json.loads(Path(chordmini_path).read_text())
+def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
+    data: RawAnalysis = json.loads(Path(raw_path).read_text())
     audio, sr = librosa.load(audio_path, sr=None)
     sr = int(sr)
 
@@ -71,7 +71,7 @@ def run(chordmini_path: str, audio_path: str) -> MusicMap:
     ]
 
     return MusicMap(
-        path=audio_path,
+        path=str(audio_path),
         bpm=data["bpm"],
         time_signature=data["time_signature"],
         duration=len(audio) / sr,
@@ -79,10 +79,10 @@ def run(chordmini_path: str, audio_path: str) -> MusicMap:
         bars=data["downbeats"],
         segments=segments,
         sources=Sources(
-            # TODO: add proper model versions
-            beats=ModelRef(name="chordmini", version="1.0"),
-            chords=ModelRef(name="chordmini", version="1.0"),
-            structure=ModelRef(name="chordmini", version="1.0"),
+            # TODO: pin Modal image to specific git commits and propagate versions here
+            beats=ModelRef(name=data["_sources"]["beats"], version="unknown"),
+            chords=ModelRef(name=data["_sources"]["chords"], version="unknown"),
+            structure=ModelRef(name=data["_sources"]["structure"], version="unknown"),
         ),
         meta=Meta(
             audio_hash=hash_file(audio_path),
@@ -95,8 +95,10 @@ def run(chordmini_path: str, audio_path: str) -> MusicMap:
 if __name__ == "__main__":
     import sys
 
-    chordmini_path = sys.argv[1]
-    result = run(chordmini_path, sys.argv[2])
-    out_path = chordmini_path.replace("-raw.json", "-map.json")
-    Path(out_path).write_text(json.dumps(result.model_dump(), indent=2))
+    raw_path = Path(sys.argv[1])
+    audio_path = Path(sys.argv[2])
+    result = run(raw_path, audio_path)
+    out_path = Path(sys.argv[3]) if len(sys.argv) > 3 else raw_path.parent.parent / "enriched" / f"{raw_path.stem}.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(result.model_dump(), indent=2))
     print(f"Written to {out_path}")
