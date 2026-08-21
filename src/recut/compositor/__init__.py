@@ -66,7 +66,9 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
             if not composition:
                 raise ValueError("XFade cannot be first node — nothing to crossfade into")
             prev = composition.pop()
-            clip = xfade(pending_xfade.ms, pending_xfade.curve)(prev, clip)
+            ms = (beats_to_seconds(music_map, pending_xfade.beats) * 1000
+                  if pending_xfade.beats is not None else pending_xfade.ms)
+            clip = xfade(ms, pending_xfade.curve)(prev, clip)
             pending_xfade = None
 
         composition.append(clip)

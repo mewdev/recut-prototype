@@ -46,6 +46,8 @@ class XFade:
 
     ms: float = 500.0
     curve: Curve = "qsin"
+    beats: Optional[float] = None
+    # beats: if set, compositor resolves duration from map BPM instead of using ms.
 
 
 AudioNode = Clip
