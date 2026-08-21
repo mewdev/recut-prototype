@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-from recut.compositor.nodes import Node
+from recut.compositor.nodes import AudioNode
 from recut.map.schema import MusicMap
 from recut.validator.checks import (
     check_duration_exceeds,
@@ -14,7 +14,7 @@ from recut.validator.types import ValidationResult
 @dataclass
 class Rule:
     name: str
-    check: Callable[[Node, MusicMap], Optional[ValidationResult]]
+    check: Callable[[AudioNode, MusicMap], Optional[ValidationResult]]
 
 
 @dataclass
@@ -22,7 +22,7 @@ class SequenceRule:
     """Check that runs against the full node list, not a single node."""
 
     name: str
-    check: Callable[[list[Node], MusicMap], list[ValidationResult]]
+    check: Callable[[list[AudioNode], MusicMap], list[ValidationResult]]
 
 
 RULES: list[Rule] = [

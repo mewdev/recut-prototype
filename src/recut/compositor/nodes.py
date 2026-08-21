@@ -4,9 +4,10 @@ can import them without a circular dependency.
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 from recut.map.schema import SegmentName
+from recut.primitives.curves import Curve
 
 
 @dataclass
@@ -34,4 +35,18 @@ class Clip:
     # Each effect is a callable: Audio -> Audio (curried primitive).
 
 
-Node = Clip
+@dataclass
+class XFade:
+    """Crossfade directive — place between two audio nodes to join them with a crossfade.
+
+    ms    : crossfade duration in milliseconds
+    curve : fade shape — "linear" | "log" | "exp" | "qsin"
+              qsin gives equal-power crossfade — best default for music
+    """
+
+    ms: float = 500.0
+    curve: Curve = "qsin"
+
+
+AudioNode = Clip
+Node = Union[Clip, XFade]

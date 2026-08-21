@@ -1,13 +1,14 @@
 import numpy as np
 
 from recut.audio import Audio
-from recut.compositor.nodes import Clip, Node
+from recut.compositor.nodes import Clip, Node, XFade
 from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment
 from recut.map.schema import MusicMap
 from recut.primitives.cut import cut
+from recut.primitives.xfade import xfade
 
-# Re-export so existing callers (`from recut.compositor import Clip, Loop`) keep working
-__all__ = ["Clip", "Node", "compose"]
+# Re-export so existing callers (`from recut.compositor import Clip, XFade`) keep working
+__all__ = ["Clip", "XFade", "Node", "compose"]
 
 
 def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
@@ -21,8 +22,15 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
         compose(music_map, audio, Clip("verse"), Clip("chorus", loop=2))
     """
     composition = []
+    pending_xfade = None  # set when an XFade node is encountered, consumed on next clip
 
     for node in nodes:
+        if isinstance(node, XFade):
+            if pending_xfade is not None:
+                raise ValueError("Two XFades cannot be next to each other")
+            pending_xfade = node
+            continue
+
         segment = get_segment(music_map, node.segment_name, node.index)
 
         if node.snap_to_downbeat and segment.downbeats:
@@ -54,6 +62,16 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
         for effect in node.fx:
             clip = effect(clip)
 
+        if pending_xfade is not None:
+            if not composition:
+                raise ValueError("XFade cannot be first node — nothing to crossfade into")
+            prev = composition.pop()
+            clip = xfade(pending_xfade.ms, pending_xfade.curve)(prev, clip)
+            pending_xfade = None
+
         composition.append(clip)
+
+    if pending_xfade is not None:
+        raise ValueError("XFade cannot be last node — nothing to crossfade into")
 
     return Audio(np.concatenate([a.samples for a in composition], axis=-1), audio.sr)

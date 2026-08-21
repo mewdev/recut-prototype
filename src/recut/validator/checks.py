@@ -1,6 +1,6 @@
 from typing import Optional
 
-from recut.compositor.nodes import Node
+from recut.compositor.nodes import AudioNode, XFade
 from recut.map.parser import (
     bars_to_seconds,
     beats_to_seconds,
@@ -12,7 +12,7 @@ from recut.map.schema import MusicMap
 from recut.validator.types import ValidationResult
 
 
-def check_label_exists(node: Node, music_map: MusicMap) -> Optional[ValidationResult]:
+def check_label_exists(node: AudioNode, music_map: MusicMap) -> Optional[ValidationResult]:
     try:
         get_segment(music_map, node.segment_name, node.index)
     except ValueError as error:
@@ -20,7 +20,7 @@ def check_label_exists(node: Node, music_map: MusicMap) -> Optional[ValidationRe
     return None
 
 
-def check_duration_exceeds(node: Node, music_map: MusicMap) -> Optional[ValidationResult]:
+def check_duration_exceeds(node: AudioNode, music_map: MusicMap) -> Optional[ValidationResult]:
     try:
         segment = get_segment(music_map, node.segment_name, node.index)
     except ValueError:
@@ -46,13 +46,16 @@ def check_duration_exceeds(node: Node, music_map: MusicMap) -> Optional[Validati
     return None
 
 
-def check_sequence_boundaries(nodes: list[Node], music_map: MusicMap) -> list[ValidationResult]:
-    if not nodes:
-        return []
+def check_sequence_boundaries(nodes: list[AudioNode], music_map: MusicMap) -> list[ValidationResult]:
     results: list[ValidationResult] = []
     first_song_seg = first_segment(music_map)
     last_song_seg = last_segment(music_map)
-    first_node = nodes[0]
+
+    audio_nodes = [node for node in nodes if not isinstance(node, XFade)]
+    if not audio_nodes:
+        return []
+
+    first_node = audio_nodes[0]
 
     try:
         seg = get_segment(music_map, first_node.segment_name, first_node.index)
@@ -70,7 +73,7 @@ def check_sequence_boundaries(nodes: list[Node], music_map: MusicMap) -> list[Va
             )
     except ValueError:
         pass
-    last_node = nodes[-1]
+    last_node = audio_nodes[-1]
     try:
         seg = get_segment(music_map, last_node.segment_name, last_node.index)
         if abs(seg.end - last_song_seg.end) > 0.1:

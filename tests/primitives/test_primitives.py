@@ -7,8 +7,10 @@ from recut.audio import Audio
 from recut.compositor import Clip, compose
 from recut.map.parser import parse_recut_map
 from recut.primitives.chain import chain
+from recut.primitives.curves import make_envelope
 from recut.primitives.cut import cut
 from recut.primitives.fade import fade
+from recut.primitives.xfade import xfade
 
 MAP = "tests/fixtures/sample-map.json"
 
@@ -140,6 +142,78 @@ def test_loop_fx_applies_post_concat(music_map_fixture):
     )
     assert result.samples[0, 0] < 0.01
     assert result.samples[0, -1] > 0.9
+
+
+# --- xfade ----------------------------------------------------------------
+
+
+def test_xfade_output_length():
+    a = make_audio(2.0)
+    b = make_audio(2.0)
+    xfade_ms = 500
+    result = xfade(xfade_ms)(a, b)
+    xfade_samples = int(xfade_ms * a.sr / 1000)
+    expected = a.num_samples + b.num_samples - xfade_samples
+    assert result.num_samples == expected
+
+
+def test_xfade_sr_mismatch_raises():
+    a = make_audio(2.0, sr=44100)
+    b = make_audio(2.0, sr=48000)
+    with pytest.raises(ValueError, match="sample rates"):
+        xfade(500)(a, b)
+
+
+def test_xfade_too_long_raises():
+    a = make_audio(1.0)  # 44100 samples
+    b = make_audio(1.0)
+    with pytest.raises(ValueError):
+        xfade(1000)(a, b)  # 1000ms == full clip length, should reject
+
+
+def test_xfade_channel_mismatch_raises():
+    a = make_audio(2.0, channels=2)
+    b = make_mono(2.0)
+    with pytest.raises(ValueError, match="channel"):
+        xfade(500)(a, b)
+
+
+def test_xfade_preserves_sr():
+    a = make_audio(2.0, sr=44100)
+    b = make_audio(2.0, sr=44100)
+    result = xfade(500)(a, b)
+    assert result.sr == 44100
+
+
+def test_xfade_mono():
+    a = make_mono(2.0)
+    b = make_mono(2.0)
+    result = xfade(500)(a, b)
+    assert result.is_mono
+
+
+# --- curves ---------------------------------------------------------------
+
+
+def test_make_envelope_log_raises_on_zero():
+    with pytest.raises(ValueError, match="log curve"):
+        make_envelope(0.0, 1.0, 100, "log")
+
+
+def test_make_envelope_log_raises_on_negative():
+    with pytest.raises(ValueError, match="log curve"):
+        make_envelope(-0.5, 1.0, 100, "log")
+
+
+def test_make_envelope_unknown_curve_raises():
+    with pytest.raises(ValueError, match="Unknown curve"):
+        make_envelope(0.0, 1.0, 100, "banana")  # type: ignore
+
+
+def test_make_envelope_linear_endpoints():
+    env = make_envelope(0.0, 1.0, 100, "linear")
+    assert env[0] == pytest.approx(0.0, abs=1e-6)
+    assert env[-1] == pytest.approx(1.0, abs=1e-6)
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from recut.compositor.nodes import Node
+from recut.compositor.nodes import AudioNode
 
 Severity = Literal["error", "warning", "info"]
 
@@ -10,4 +10,4 @@ Severity = Literal["error", "warning", "info"]
 class ValidationResult:
     severity: Severity
     message: str
-    node: Node
+    node: AudioNode

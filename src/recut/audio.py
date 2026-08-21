@@ -1,11 +1,11 @@
-#TODO: make sure you understand this code more in depth (classes, self...)
+# TODO: make sure you understand this code more in depth (classes, self...)
 
 import numpy as np
 from librosa import load
 
 
 class Audio:
-    def __init__(self, samples: np.ndarray, sr:int) -> None:
+    def __init__(self, samples: np.ndarray, sr: int) -> None:
         self.samples = samples
         self.sr = sr
 
@@ -23,7 +23,11 @@ class Audio:
 
         return Audio(np.stack([fn(self.samples[i]) for i in range(self.samples.shape[0])]), self.sr)
 
+    @property
+    def num_channels(self) -> int:
+        return 1 if self.is_mono else self.samples.shape[0]
+
     @classmethod
-    def load(cls, path:str) -> "Audio":
+    def load(cls, path: str) -> "Audio":
         samples, sr = load(path, sr=None, mono=False)
         return cls(samples, int(sr))
