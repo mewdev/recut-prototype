@@ -10,7 +10,7 @@ from modal import Function
 
 from recut.map.make_map import run as make_map
 from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR
-from recut.project import load_project_sources
+from recut.project import load_compositions, load_project_sources
 
 _APP = "recut-analysis"
 
@@ -24,6 +24,7 @@ Commands:
   analyze   Analyze an audio file via Modal pipeline → raw JSON
   map       Build enriched maps for all sources that need it
   status    Show registry state for all sources in .appdata
+  compositions  List saved compositions in .appdata/compositions
 
 Run `recut <command> --help` for command-specific usage.
 """
@@ -115,6 +116,16 @@ def cmd_status(args) -> None:
         print(f"{source.name}: {source.status}")
 
 
+def cmd_compositions(args) -> None:
+    """List saved compositions in .appdata/compositions"""
+    compositions = load_compositions()
+    if not compositions:
+        print("No compositions found in .appdata/compositions/")
+        return
+    for composition in sorted(compositions.values(), key=lambda s: s.created):
+        print(f"{composition.name} (created: {composition.created})")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="recut",
@@ -133,6 +144,9 @@ def main() -> None:
 
     status_cmd = sub.add_parser("status", help="Show registry state for all sources")
     status_cmd.set_defaults(func=cmd_status)
+
+    composition_cmd = sub.add_parser("compositions", help="Show compositions")
+    composition_cmd.set_defaults(func=cmd_compositions)
 
     args = parser.parse_args()
 

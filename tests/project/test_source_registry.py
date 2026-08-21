@@ -1,7 +1,6 @@
 """Tests for load_project_sources() and verify_source_hash()."""
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest

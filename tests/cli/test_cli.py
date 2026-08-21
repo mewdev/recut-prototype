@@ -5,9 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from recut.cli import cmd_analyze, cmd_map, cmd_status
+from recut.cli import cmd_analyze, cmd_compositions, cmd_map, cmd_status
 
 FIXTURE_MAP = Path(__file__).parent.parent / "fixtures" / "sample-map.json"
 
@@ -157,3 +155,34 @@ def test_status_empty_registry(capsys):
         cmd_status(_args())
 
     assert "No sources" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# cmd_compositions
+# ---------------------------------------------------------------------------
+
+
+def test_compositions_lists_by_created(capsys):
+    from datetime import datetime
+
+    from recut.project import Composition
+
+    comps = {
+        "edit_b": Composition(name="edit_b", sources=["track_a"], nodes=[], created=datetime(2026, 8, 21, 12, 0)),
+        "edit_a": Composition(name="edit_a", sources=[], nodes=[], created=datetime(2026, 8, 20, 10, 0)),
+    }
+
+    with patch("recut.cli.load_compositions", return_value=comps):
+        cmd_compositions(_args())
+
+    out = capsys.readouterr().out
+    assert "edit_a" in out
+    assert "edit_b" in out
+    assert out.index("edit_a") < out.index("edit_b")
+
+
+def test_compositions_empty(capsys):
+    with patch("recut.cli.load_compositions", return_value={}):
+        cmd_compositions(_args())
+
+    assert "No compositions" in capsys.readouterr().out

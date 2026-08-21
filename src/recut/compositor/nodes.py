@@ -55,4 +55,5 @@ class XFade:
 
 
 AudioNode = Clip
+
 Node = Union[Clip, XFade]
