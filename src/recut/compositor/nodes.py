@@ -16,6 +16,10 @@ class Clip:
 
     segment_name: SegmentName
     index: int = 1
+    source: Optional[str] = None
+    # source: key into the sources dict passed to compose().
+    # None = use the single default source (backward compatible).
+    # Named sources enable multi-file compositions (two songs, parallel tracks, etc.)
     bars: Optional[float] = None
     beats: Optional[float] = None
     offset_bars: Optional[float] = None
