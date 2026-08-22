@@ -38,20 +38,28 @@ Models are cloned automatically at deploy time — no manual download needed.
 ## CLI
 
 ```bash
-# Analyze an audio file → raw JSON
+# Analyze an audio file → raw JSON (also copies the audio into .appdata/audio/)
 recut analyze path/to/track.mp3
 
-# Build music map from raw analysis output
-recut map path/to/track.mp3 .appdata/maps/raw/track-raw.json
+# Build enriched music maps for all sources that need one
+recut map
+
+# Registry state for all sources (ready / needs_map / needs_analysis / hash_mismatch)
+recut status
+
+# List saved compositions
+recut compositions
 
 # Help
 recut --help
 recut analyze --help
 ```
 
-Output is saved to `.appdata/maps/`:
+Everything recut generates lives in `.appdata/` (git-ignored):
+- `.appdata/audio/<stem>.mp3` — source audio, copied in by `analyze`
 - `.appdata/maps/raw/<stem>-raw.json` — raw model output (beats, chords, structure)
 - `.appdata/maps/enriched/<stem>-map.json` — enriched music map
+- `.appdata/compositions/<name>.json` — saved edit plans
 
 ## Code Example
 

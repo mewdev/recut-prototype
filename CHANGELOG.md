@@ -1,5 +1,42 @@
 # Changelog
 
+## [feat] — 2026-08-21 — Project registries, multi-source prep, xfade curve/beats
+
+**Source registry** (`src/recut/project.py`, new `src/recut/paths.py`)
+- Scans `.appdata/audio/` for audio files, classifies each stem: `ready / needs_map / needs_analysis / hash_mismatch`
+- `hash_mismatch`: audio hash verified against map's `meta.audio_hash` — stale maps detected
+- `verify_source_hash()` helper
+
+**Composition registry (#40)**
+- Save/load/list named edit plans → `.appdata/compositions/<name>.json`
+- `Composition` dataclass: name, sources, nodes, created
+- Clip/XFade node JSON serialization round-trip; fx skipped on purpose for now
+- `create_composition()`, `save_composition()`, `load_compositions()`
+
+**CLI**
+- `map` — now argless batch command: builds enriched maps for all sources with status `needs_map`
+- New `status` command — registry state for all sources in `.appdata`
+- New `compositions` command — lists saved compositions
+- `analyze` copies the audio file into `.appdata/audio/`
+
+**Multi-source prep (arch)**
+- `Clip.source: Optional[str]` — key into the sources dict passed to `compose()`; `None` = default single source (backward compatible); enables multi-file compositions
+- `ValidationResult.source: Optional[str]` — which source a validation result refers to
+- `Rule.domain` / `SequenceRule.domain = "song_reshape"` — rules tagged by domain for future rule sets
+
+**XFade**
+- New shared module `primitives/curves.py`: `Curve` type + `make_envelope(vol_start, vol_end, n, curve)` — linear/log/exp/qsin, used by fade and xfade (dedup)
+- `xfade(xfade_ms=500, curve="qsin")` — curve param replaces hardcoded sqrt ramps; qsin quarter-sine = equal-power default
+- `XFade.beats: Optional[float]` — if set, compositor resolves duration from map BPM (`beats_to_seconds × 1000`) instead of `ms`
+- Guards: sample-rate mismatch, channel-layout mismatch, stricter length check (`>=`)
+- `Audio.num_channels` property
+- Validator checks/rules updated to match
+
+**Tests**
+- New `tests/primitives/test_primitives.py`, `tests/cli/test_cli.py`, `tests/project/` (source + composition registry)
+
+---
+
 ## [chore] — 2026-08-19 — Pipeline remote cloning, test restructure, README, cleanup
 
 **Analysis pipeline — remote model cloning**

@@ -16,19 +16,21 @@ Run both — fix all errors before committing:
 
 ## Key Files
 - `CHANGELOG.md` — version history + primitives table
-- `src/recut/primitives/` — pure numpy/pedalboard functions: cut, fade, filter_sweep, reverb, delay, xfade, chain
+- `src/recut/primitives/` — pure numpy/pedalboard functions: cut, fade, filter_sweep, reverb, delay, xfade, chain; shared envelope curves in `curves.py`
 - `src/recut/map/` — map schema, make_map pipeline, chord data, ui-editor
-- `src/recut/map/schema.py` — MusicMap dataclass + section/beat types
+- `src/recut/map/schema.py` — MusicMap (Pydantic BaseModel) + section/beat types
 - `src/recut/map/parser.py` — JSON → MusicMap
 - `src/recut/map/make_map.py` — analysis output → MusicMap
 - `src/recut/validator/` — validation rules + checks
 - `src/recut/compositor/` — compose() entry point, node types
+- `src/recut/project.py` — source registry (.appdata scan, status classification, hash verify) + composition registry (save/load/list edit plans)
+- `src/recut/paths.py` — `.appdata/` layout: audio/, maps/raw/, maps/enriched/, compositions/
 - `src/analysis/pipeline.py` — Modal GPU pipeline for analysis
-- `tests/` — map, primitives, validator test suites
+- `tests/` — map, primitives, validator, cli, project test suites
 
 ## Primitives Interface
 All primitives: `fn(audio: np.ndarray, sr: int, ...) → np.ndarray`
-Use `chain(audio, sr, (fn, kwargs), ...)` to compose.
+Primitives are curried — use `chain(audio, fade(0.0, 1.0), reverb(...), ...)` to compose.
 
 ## Session Summaries
 At the end of each working session (or when asked to wrap up), create `.claude/sessions/YYYY-MM-DD.md` covering:
