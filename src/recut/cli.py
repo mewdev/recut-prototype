@@ -42,16 +42,18 @@ def cmd_analyze(args) -> None:
     audio_bytes = audio_path.read_bytes()
     filename = audio_path.name
 
-    print(f"Sending {filename} → Modal (beats + chords + structure)...")
+    print(f"Sending {filename} → Modal (beats + chords + structure + key)...")
     t0 = time.time()
 
     run_beats = Function.from_name(_APP, "run_beats")
     run_chords = Function.from_name(_APP, "run_chords")
     run_structure = Function.from_name(_APP, "run_structure")
+    run_key = Function.from_name(_APP, "run_key")
 
     beats_call = run_beats.spawn(audio_bytes, filename)
     chords_call = run_chords.spawn(audio_bytes, filename)
     structure_call = run_structure.spawn(audio_bytes, filename)
+    key_call = run_key.spawn(audio_bytes, filename)
 
     beats = beats_call.get()
     print(f"  ✓ beats      bpm={beats['bpm']}  ({time.time() - t0:.0f}s)")
@@ -62,18 +64,23 @@ def cmd_analyze(args) -> None:
     structure = structure_call.get()
     print(f"  ✓ structure  {len(structure['segments'])} segments  ({time.time() - t0:.0f}s)")
 
+    key = key_call.get()
+    print(f"  ✓ key        {key['key']}  ({time.time() - t0:.0f}s)")
+
     result = {
         "path": filename,
         "bpm": beats["bpm"],
-        "time_signature": beats["time_signature"],
+        "beats_per_bar": beats["beats_per_bar"],
         "beats": beats["beats"],
         "downbeats": beats["downbeats"],
         "segments": structure["segments"],
         "chords": chords["chords"],
+        "key": key["key"],
         "_sources": {
             "beats": "madmom",
             "chords": "chord-cnn-lstm (full)",
             "structure": "songformer",
+            "key": "essentia-key-extractor",
         },
     }
 

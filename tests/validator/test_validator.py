@@ -32,7 +32,7 @@ def stub_map() -> MusicMap:
         {
             "path": "test.mp3",
             "bpm": 80.0,
-            "time_signature": "4/4",
+            "beats_per_bar": 4,
             "duration": 60.1,
             "beats": [],
             "bars": [],

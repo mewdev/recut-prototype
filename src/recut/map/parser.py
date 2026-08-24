@@ -55,8 +55,7 @@ def get_bpm(music_map: MusicMap) -> float:
 
 
 def bars_to_seconds(music_map: MusicMap, bars: float) -> float:
-    beats_per_bar = int(music_map.time_signature.split("/")[0])
-    return bars * beats_per_bar * (60 / music_map.bpm)
+    return bars * music_map.beats_per_bar * (60 / music_map.bpm)
 
 
 def beats_to_seconds(music_map: MusicMap, beats: float) -> float:

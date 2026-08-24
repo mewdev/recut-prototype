@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from recut.map.schema import BeatTime, ChordEntry
+from recut.map.schema import BeatTime, ChordEntry, KeySignature
 
 
 # TODO: understand chunked hashing algo better
@@ -40,6 +40,13 @@ def chords_in(
 
 def downbeats_in(downbeats: list[BeatTime], start: float, end: float) -> list[BeatTime]:
     return [d for d in downbeats if start <= d <= end]
+
+
+def parse_key(label: str) -> KeySignature:
+    # "F# minor" -> KeySignature(tonic="F#", mode="minor") — matches madmom's
+    # key_prediction_to_label() output format (KEY_LABELS in madmom.features.key)
+    tonic, mode = label.rsplit(" ", 1)
+    return KeySignature(tonic=tonic, mode=mode)
 
 
 def loudness_rms_db(audio: np.ndarray) -> float:

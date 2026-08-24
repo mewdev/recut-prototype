@@ -5,8 +5,9 @@ Replicates what chordmini.me does when you upload a track:
   1. Beats    — madmom (RNN + DBN beat tracking)
   2. Chords   — Chord-CNN-LSTM (5-model ensemble → .lab → JSON)
   3. Structure — SongFormer (MuQ + MusicFM embeddings → section labels)
+  4. Key      — Essentia (KeyExtractor: HPCP + key-profile correlation)
 
-All three run in parallel Modal containers, then merge into one JSON.
+All four run in parallel Modal containers, then merge into one JSON.
 
 Usage:
     modal deploy modal_chordmini.py
@@ -21,12 +22,16 @@ Output: <stem>-chordmini.json
     {
       "path": "track.mp3",
       "bpm": 117.5,
-      "time_signature": "4/4",
+      "beats_per_bar": 4,
       "beats": [0.51, 1.02, ...],
       "downbeats": [0.51, 2.55, ...],
       "segments": [{"start": "0.0", "end": "12.5", "label": "intro"}, ...],
       "chords": [{"start": 0.0, "end": 2.3, "chord": "F#:min", "confidence": 1.0}, ...],
-      "_sources": { "beats": "madmom", "chords": "chord-cnn-lstm (full)", "structure": "songformer" }
+      "key": "F# minor",
+      "_sources": {
+        "beats": "madmom", "chords": "chord-cnn-lstm (full)",
+        "structure": "songformer", "key": "essentia-key-extractor"
+      }
     }
 """
 
@@ -71,6 +76,8 @@ beats_image = (
     .pip_install("setuptools<81")  # madmom needs pkg_resources from setuptools
     .run_commands("pip install git+https://github.com/CPJKU/madmom")
 )
+
+key_image = _base.pip_install("essentia==2.1b6.dev1389")
 
 chords_image = (
     _base.apt_install("git", "git-lfs")
@@ -181,27 +188,56 @@ def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         audio_path.write_bytes(audio_bytes)
 
         t0 = time.time()
-        from madmom.features.beats import DBNBeatTrackingProcessor, RNNBeatProcessor
+        from madmom.features.downbeats import DBNDownBeatTrackingProcessor, RNNDownBeatProcessor
+        from madmom.features.tempo import TempoEstimationProcessor
 
-        beat_activation = RNNBeatProcessor()(str(audio_path))
-        beat_times = DBNBeatTrackingProcessor(fps=100)(beat_activation)
+        activation = RNNDownBeatProcessor()(str(audio_path))
+        # joint beat+downbeat DBN — tests beats_per_bar hypotheses, picks best fit
+        result = DBNDownBeatTrackingProcessor(beats_per_bar=[3, 4], fps=100)(activation)
 
-        bpm = 120.0
-        if len(beat_times) > 1:
-            median_interval = np.median(np.diff(beat_times))
-            bpm = 60.0 / median_interval if median_interval > 0 else 120.0
+        beat_times = result[:, 0] if len(result) else np.array([])
+        downbeats = result[result[:, 1] == 1][:, 0] if len(result) else np.array([])
+        beats_per_bar = int(result[:, 1].max()) if len(result) else 4
 
-        downbeats = beat_times[::4]  # assume 4/4; frontend can override
+        # activation[:, 0] is the beat-activation column — reuse it for madmom's
+        # own tempo estimator instead of deriving bpm from beat-interval spacing.
+        tempi = TempoEstimationProcessor(fps=100)(activation[:, 0])
+        bpm = float(tempi[0, 0]) if len(tempi) else 120.0
+
         elapsed = round(time.time() - t0, 2)
-        print(f"madmom: {len(beat_times)} beats  bpm={bpm:.1f}  {elapsed}s")
+        print(f"madmom: {len(beat_times)} beats  bpm={bpm:.1f}  beats_per_bar={beats_per_bar}  {elapsed}s")
 
         return {
             "beats": [round(float(b), 3) for b in beat_times],
             "downbeats": [round(float(b), 3) for b in downbeats],
             "bpm": round(bpm, 2),
-            "time_signature": "4/4",
+            "beats_per_bar": beats_per_bar,
             "model": "madmom",
         }
+
+
+# ── 1b. Key detection ──────────────────────────────────────────────────────────
+@app.function(image=key_image, timeout=180, memory=4096)
+def run_key(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
+    """Essentia KeyExtractor (HPCP + key-profile correlation) → global key label (e.g. "F major")."""
+    import tempfile
+    import time
+
+    with tempfile.TemporaryDirectory() as tmp:
+        audio_path = pathlib.Path(tmp) / filename
+        audio_path.write_bytes(audio_bytes)
+
+        t0 = time.time()
+        import essentia.standard as es
+
+        audio = es.MonoLoader(filename=str(audio_path))()
+        tonic, scale, strength = es.KeyExtractor()(audio)
+        key = f"{tonic} {scale}"
+
+        elapsed = round(time.time() - t0, 2)
+        print(f"essentia: key={key}  strength={strength:.3f}  {elapsed}s")
+
+        return {"key": key, "strength": round(float(strength), 3), "model": "essentia-key-extractor"}
 
 
 # ── 2. Chord recognition ───────────────────────────────────────────────────────
@@ -302,31 +338,35 @@ def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         }
 
 
-# ── Orchestrator: run all three in parallel ────────────────────────────────────
+# ── Orchestrator: run all four in parallel ─────────────────────────────────────
 @app.function(image=_base, timeout=1200)
 def analyze_all(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str = "full") -> dict:
-    """Spawn beats + chords + structure in parallel, merge into one JSON."""
+    """Spawn beats + chords + structure + key in parallel, merge into one JSON."""
     # spawn = fire-and-forget; returns a handle we .get() later
     beats_call = run_beats.spawn(audio_bytes, filename)
     chords_call = run_chords.spawn(audio_bytes, filename, chord_dict)
     structure_call = run_structure.spawn(audio_bytes, filename)
+    key_call = run_key.spawn(audio_bytes, filename)
 
     beats = beats_call.get()
     chords = chords_call.get()
     structure = structure_call.get()
+    key = key_call.get()
 
     return {
         "path": filename,
         "bpm": beats["bpm"],
-        "time_signature": beats["time_signature"],
+        "beats_per_bar": beats["beats_per_bar"],
         "beats": beats["beats"],
         "downbeats": beats["downbeats"],
         "segments": structure["segments"],
         "chords": chords["chords"],
+        "key": key["key"],
         "_sources": {
             "beats": "madmom",
             "chords": f"chord-cnn-lstm ({chord_dict})",
             "structure": "songformer",
+            "key": "essentia-key-extractor",
         },
     }
 
@@ -351,7 +391,7 @@ def main(path: str, chord_dict: str = "full"):
         json.dump(result, f, indent=2)
 
     print(f"\nSaved: {out}")
-    print(f"  bpm={result['bpm']}  time_sig={result['time_signature']}")
+    print(f"  bpm={result['bpm']}  beats_per_bar={result['beats_per_bar']}  key={result['key']}")
     print(f"  beats={len(result['beats'])}  downbeats={len(result['downbeats'])}")
     print(f"  segments={len(result['segments'])}  chords={len(result['chords'])}")
     print()

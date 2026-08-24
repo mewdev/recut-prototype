@@ -20,15 +20,21 @@ def _args(**kwargs):
     return argparse.Namespace(**kwargs)
 
 
-def _mock_modal(beats=None, chords=None, structure=None):
+def _mock_modal(beats=None, chords=None, structure=None, key=None):
     """Return a patcher for modal.Function.from_name that yields canned results."""
-    beats = beats or {"bpm": 120.0, "time_signature": "4/4", "beats": [0.5, 1.0], "downbeats": [0.5]}
+    beats = beats or {
+        "bpm": 120.0,
+        "beats_per_bar": 4,
+        "beats": [0.5, 1.0],
+        "downbeats": [0.5],
+    }
     chords = chords or {"chords": [{"start": 0.0, "end": 2.0, "chord": "C:maj", "confidence": 1.0}]}
     structure = structure or {"segments": [{"start": 0.0, "end": 10.0, "label": "verse"}]}
+    key = key or {"key": "C major"}
 
     def _from_name(_app, name):
         mock_fn = MagicMock()
-        results = {"run_beats": beats, "run_chords": chords, "run_structure": structure}
+        results = {"run_beats": beats, "run_chords": chords, "run_structure": structure, "run_key": key}
         mock_fn.spawn.return_value.get.return_value = results[name]
         return mock_fn
 
@@ -56,7 +62,8 @@ def test_analyze_writes_raw_json(tmp_path, monkeypatch):
     assert out.exists()
     data = json.loads(out.read_text())
     assert data["bpm"] == 120.0
-    assert data["time_signature"] == "4/4"
+    assert data["beats_per_bar"] == 4
+    assert data["key"] == "C major"
     assert "_sources" in data
 
 

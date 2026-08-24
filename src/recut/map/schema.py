@@ -46,7 +46,7 @@ def is_valid_chord(s: str) -> bool:
 # ---------------------------------------------------------------------------
 
 BeatTime = float
-TimeSignature = Literal["4/4"]
+BeatsPerBar = int  # what madmom's DBN actually detects
 
 SegmentName = Literal[
     "intro",
@@ -78,16 +78,18 @@ class AnalysisSources(TypedDict):
     beats: str
     chords: str
     structure: str
+    key: str
 
 
 class RawAnalysis(TypedDict):
     path: str
     bpm: int
-    time_signature: TimeSignature
+    beats_per_bar: BeatsPerBar
     beats: list[BeatTime]
     downbeats: list[BeatTime]
     segments: list[RawSegment]
     chords: list[ChordEntry]
+    key: str  # e.g. "F# minor" — madmom's key_prediction_to_label() format
     _sources: AnalysisSources
 
 
@@ -95,7 +97,6 @@ class RawAnalysis(TypedDict):
 # OUTPUT TYPES  (what our map produces — Pydantic BaseModel)
 # ---------------------------------------------------------------------------
 
-# TODO: key detection — needs Krumhansl-Schmuckler or music21
 class KeySignature(BaseModel):
     tonic: str
     mode: str
@@ -126,6 +127,7 @@ class Sources(BaseModel):
     beats: ModelRef
     chords: ModelRef
     structure: ModelRef
+    key: Optional[ModelRef] = None  # None for maps predating key detection
 
 
 class Meta(BaseModel):
@@ -137,11 +139,11 @@ class Meta(BaseModel):
 class MusicMap(BaseModel):
     path: str
     bpm: float
-    time_signature: str
+    beats_per_bar: int
     duration: float
     beats: list[BeatTime]
     bars: list[BeatTime]
     segments: list[EnrichedSegment]
     sources: Sources
     meta: Meta
-    key: Optional[KeySignature] = None  # TODO: implement via music21
+    key: Optional[KeySignature] = None  # None for maps predating key detection

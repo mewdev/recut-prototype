@@ -39,6 +39,13 @@ def test_bars_to_seconds_half_bar(music_map):
     assert bars_to_seconds(music_map, 0.5) == pytest.approx(1.0)
 
 
+def test_bars_to_seconds_three_four_time(music_map):
+    # non-4/4 map — was previously unreachable, schema forbade anything but "4/4"
+    waltz_map = music_map.model_copy(update={"beats_per_bar": 3, "bpm": 120.0})
+    # 3 beats * (60/120) = 1.5s
+    assert bars_to_seconds(waltz_map, 1) == pytest.approx(1.5)
+
+
 # --- beats_to_seconds ------------------------------------------------------
 
 

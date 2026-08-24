@@ -17,7 +17,14 @@ from pathlib import Path
 import librosa
 import numpy as np
 
-from recut.map.helpers import chords_in, downbeats_in, hash_file, loudness_rms_db, phrase_in
+from recut.map.helpers import (
+    chords_in,
+    downbeats_in,
+    hash_file,
+    loudness_rms_db,
+    parse_key,
+    phrase_in,
+)
 from recut.map.schema import (
     BeatTime,
     ChordEntry,
@@ -70,19 +77,25 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
         for index, segment in enumerate(data["segments"])
     ]
 
+    raw_key = data.get("key")
+    sources = data["_sources"]
+    raw_key_source = sources.get("key")
+
     return MusicMap(
         path=str(audio_path),
         bpm=data["bpm"],
-        time_signature=data["time_signature"],
+        beats_per_bar=data["beats_per_bar"],
         duration=len(audio) / sr,
         beats=data["beats"],
         bars=data["downbeats"],
         segments=segments,
+        key=parse_key(raw_key) if raw_key else None,
         sources=Sources(
             # TODO: pin Modal image to specific git commits and propagate versions here
-            beats=ModelRef(name=data["_sources"]["beats"], version="unknown"),
-            chords=ModelRef(name=data["_sources"]["chords"], version="unknown"),
-            structure=ModelRef(name=data["_sources"]["structure"], version="unknown"),
+            beats=ModelRef(name=sources["beats"], version="unknown"),
+            chords=ModelRef(name=sources["chords"], version="unknown"),
+            structure=ModelRef(name=sources["structure"], version="unknown"),
+            key=ModelRef(name=raw_key_source, version="unknown") if raw_key_source else None,
         ),
         meta=Meta(
             audio_hash=hash_file(audio_path),
