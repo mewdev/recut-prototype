@@ -5,6 +5,7 @@ import pytest
 
 from recut.audio import Audio
 from recut.compositor import Clip, compose
+from recut.compositor.effects import Fade
 from recut.map.parser import parse_recut_map
 from recut.primitives.chain import chain
 from recut.primitives.curves import make_envelope
@@ -119,10 +120,10 @@ def test_clip_fx_applied(music_map_fixture):
     result = compose(
         music_map_fixture,
         audio,
-        Clip("intro", fx=[fade(vol_start=0.0, vol_end=1.0)]),
+        Clip("intro", fx=[Fade(vol_start=0.0, vol_end=1.0)]),
     )
-    assert result.samples[0, 0] < 0.01   # fade-in: start silent
-    assert result.samples[0, -1] > 0.9   # end loud
+    assert result.samples[0, 0] < 0.01  # fade-in: start silent
+    assert result.samples[0, -1] > 0.9  # end loud
 
 
 def test_clip_loop_doubles_duration(music_map_fixture):
@@ -138,7 +139,7 @@ def test_loop_fx_applies_post_concat(music_map_fixture):
     result = compose(
         music_map_fixture,
         audio,
-        Clip("intro", loop=2, fx=[fade(vol_start=0.0, vol_end=1.0)]),
+        Clip("intro", loop=2, fx=[Fade(vol_start=0.0, vol_end=1.0)]),
     )
     assert result.samples[0, 0] < 0.01
     assert result.samples[0, -1] > 0.9

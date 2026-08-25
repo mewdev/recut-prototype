@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
 
+from recut.compositor.effects import effect_from_json
 from recut.compositor.nodes import Clip, Node, XFade
 from recut.map.helpers import hash_file
 from recut.map.parser import parse_recut_map
@@ -72,7 +73,7 @@ def verify_source_hash(source: Source) -> bool:
 
 
 def _nodes_to_json(nodes: list[Node]) -> list[dict]:
-    """Serialize Clip/XFade node list to JSON-safe dicts. Fx skipped for now on purpose."""
+    """Serialize Clip/XFade node list to JSON-safe dicts."""
     result = []
     for node in nodes:
         if isinstance(node, Clip):
@@ -88,7 +89,7 @@ def _nodes_to_json(nodes: list[Node]) -> list[dict]:
                     "offset_beats": node.offset_beats,
                     "snap_to_downbeat": node.snap_to_downbeat,
                     "loop": node.loop,
-                    # fx skipped on purpose
+                    "fx": [effect.to_json() for effect in node.fx],
                 }
             )
 
@@ -107,6 +108,7 @@ def _nodes_from_json(node_json: list[dict]) -> list[Node]:
         fields = {k: v for k, v in node.items() if k != "type"}
 
         if node["type"] == "clip":
+            fields["fx"] = [effect_from_json(effect_json) for effect_json in fields["fx"]]
             result.append(Clip(**fields))
         if node["type"] == "xfade":
             result.append(XFade(**fields))

@@ -4,8 +4,9 @@ can import them without a circular dependency.
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Union
+from typing import Optional, Union
 
+from recut.compositor.effects import Effect
 from recut.map.schema import SegmentName
 from recut.primitives.curves import Curve
 
@@ -34,9 +35,7 @@ class Clip:
     # Don't use when the segment genuinely starts before the first downbeat
     # (e.g. chorus pickups) — snapping will skip real audio.
     loop: Optional[int] = None
-    fx: list[Callable] = field(default_factory=list)
-    # fx: effects applied to the clip after cutting, in order.
-    # Each effect is a callable: Audio -> Audio (curried primitive).
+    fx: list[Effect] = field(default_factory=list)
 
 
 @dataclass

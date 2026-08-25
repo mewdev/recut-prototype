@@ -48,11 +48,15 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
         if node.bars is not None:
             end = start + bars_to_seconds(music_map, node.bars)
             if end > segment.end:
-                raise ValueError(f"{node.bars} bars exceeds segment length for {node.segment_name!r}")
+                raise ValueError(
+                    f"{node.bars} bars exceeds segment length for {node.segment_name!r}"
+                )
         elif node.beats is not None:
             end = start + beats_to_seconds(music_map, node.beats)
             if end > segment.end:
-                raise ValueError(f"{node.beats} beats exceeds segment length for {node.segment_name!r}")
+                raise ValueError(
+                    f"{node.beats} beats exceeds segment length for {node.segment_name!r}"
+                )
 
         clip = cut(start, end)(audio)
 
@@ -60,14 +64,17 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
             clip = Audio(np.concatenate([clip.samples] * node.loop, axis=-1), audio.sr)
 
         for effect in node.fx:
-            clip = effect(clip)
+            clip = effect.to_fn()(clip)
 
         if pending_xfade is not None:
             if not composition:
                 raise ValueError("XFade cannot be first node — nothing to crossfade into")
             prev = composition.pop()
-            ms = (beats_to_seconds(music_map, pending_xfade.beats) * 1000
-                  if pending_xfade.beats is not None else pending_xfade.ms)
+            ms = (
+                beats_to_seconds(music_map, pending_xfade.beats) * 1000
+                if pending_xfade.beats is not None
+                else pending_xfade.ms
+            )
             clip = xfade(ms, pending_xfade.curve)(prev, clip)
             pending_xfade = None
 

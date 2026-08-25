@@ -4,7 +4,8 @@ from datetime import datetime
 
 import pytest
 
-from recut.compositor.nodes import Clip, XFade
+from recut.compositor.effects import Fade, Reverb
+from recut.compositor.nodes import Clip, Node, XFade
 from recut.project import (
     _nodes_from_json,
     _nodes_to_json,
@@ -63,7 +64,7 @@ def test_nodes_to_json_clip():
     assert d["index"] == 2
     assert d["source"] == "track_a"
     assert d["bars"] == 8
-    assert "fx" not in d
+    assert d["fx"] == []
 
 
 def test_nodes_to_json_xfade():
@@ -89,6 +90,20 @@ def test_nodes_from_json_roundtrip():
     assert restored[0].bars == 4
     assert restored[1].ms == 500.0
     assert restored[1].beats == 2
+
+
+def test_nodes_from_json_roundtrip_with_fx():
+    fade = Fade(vol_start=0.0, vol_end=1.0, curve="linear")
+    reverb = Reverb(wetness=0.3, reverb_type="room")
+    nodes: list[Node] = [Clip("verse", fx=[fade, reverb])]
+    serialized = _nodes_to_json(nodes)
+    restored = _nodes_from_json(serialized)
+
+    assert len(restored) == 1
+    assert isinstance(restored[0], Clip)
+    restored_fx = restored[0].fx
+    assert restored_fx == [fade, reverb]
+    assert restored_fx[0].to_fn()  # rebuilt into a real, usable Effect, not a dict
 
 
 # ---------------------------------------------------------------------------
