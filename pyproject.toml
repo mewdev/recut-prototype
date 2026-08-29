@@ -8,7 +8,8 @@ dependencies = [
     "scipy",
     "pedalboard",
     "modal",
-    "flask",
+    "fastapi",
+    "uvicorn",
     "pydantic"
 ]
 
