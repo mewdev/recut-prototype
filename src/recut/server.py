@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from recut.map.schema import MusicMap
+from recut.paths import MAP_DIR
 from recut.project import Source, load_project_sources
 
 app = FastAPI(title="recut API", version="1.0.0")
@@ -24,6 +25,16 @@ app = FastAPI(title="recut API", version="1.0.0")
 class SourceSummary(BaseModel):
     name: str
     status: str
+
+
+class SegmentBoundaryUpdate(BaseModel):
+    index: int
+    start: float
+    end: float
+
+
+class SaveMapRequest(BaseModel):
+    segments: list[SegmentBoundaryUpdate]
 
 
 def _ready_source(name: str) -> Source:
@@ -43,6 +54,22 @@ def load_sources():
 def load_map(name: str):
     source = _ready_source(name)
     assert source.music_map is not None
+    return source.music_map
+
+
+@app.patch("/map/{name}", response_model=MusicMap)
+def save_map(name: str, body: SaveMapRequest):
+    source = _ready_source(name)
+    assert source.music_map is not None
+
+    updates = {u.index: u for u in body.segments}
+    for segment in source.music_map.segments:
+        update = updates.get(segment.index)
+        if update is not None:
+            segment.start = update.start
+            segment.end = update.end
+
+    (MAP_DIR / f"{name}.json").write_text(source.music_map.model_dump_json(indent=2))
     return source.music_map
 
 

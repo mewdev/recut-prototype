@@ -35,7 +35,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Save Map */
+        patch: operations["save_map_map__name__patch"];
         trace?: never;
     };
     "/audio/{name}": {
@@ -146,6 +147,20 @@ export interface components {
             meta: components["schemas"]["Meta"];
             key?: components["schemas"]["KeySignature"] | null;
         };
+        /** SaveMapRequest */
+        SaveMapRequest: {
+            /** Segments */
+            segments: components["schemas"]["SegmentBoundaryUpdate"][];
+        };
+        /** SegmentBoundaryUpdate */
+        SegmentBoundaryUpdate: {
+            /** Index */
+            index: number;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+        };
         /** SourceSummary */
         SourceSummary: {
             /** Name */
@@ -212,6 +227,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MusicMap"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_map_map__name__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMapRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
