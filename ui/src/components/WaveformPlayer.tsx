@@ -9,6 +9,13 @@ interface WaveformPlayerProps {
   height?: number;
   plugins?: WaveSurferOptions["plugins"];
   onReady?: (wavesurfer: WaveSurfer) => void;
+  /**
+   * Sample rate wavesurfer decodes into (doesn't affect playback — see
+   * wavesurfer.js's own doc comment on this option). Defaults to 8000
+   * upstream, which is fine for drawing peaks but not for anything reading
+   * getDecodedData() as real audio (e.g. cropAudio.ts). 44100 = CD quality.
+   */
+  sampleRate?: number;
 }
 
 export default function WaveformPlayer({
@@ -16,6 +23,7 @@ export default function WaveformPlayer({
   height = 80,
   plugins,
   onReady,
+  sampleRate = 44100,
 }: WaveformPlayerProps) {
   const [wavesurfer, setWavesurfer] = useState<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -40,13 +48,11 @@ export default function WaveformPlayer({
         url={url}
         height={height}
         plugins={plugins}
+        sampleRate={sampleRate}
         onReady={handleReady}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         normalize
-        barWidth={2}
-        barGap={1}
-        barHeight={1.3}
         onLoading={(_wavesurfer, percent) => setLoadPercent(percent)}
       />
       <Button onClick={onPlayPause}>{isPlaying ? "Pause" : "Play"}</Button>

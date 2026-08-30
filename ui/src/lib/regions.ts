@@ -8,6 +8,7 @@ export const randomColor = () =>
 export const regionsFromSegments = (musicMap: MusicMap) =>
   musicMap.segments.map((segment: Segment) => {
     return {
+      id: String(segment.index),
       start: segment.start,
       end: segment.end,
       content: segment.segment_name,
