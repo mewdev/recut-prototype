@@ -1,5 +1,7 @@
 # recut-prototype — Claude Instructions
 
+@.claude/AGENT.md
+
 ## Project
 Music cutting system ("Remotion for audio").
 Analysis pipeline → JSON music map → primitives → LLM orchestration → specialized cutting model.
