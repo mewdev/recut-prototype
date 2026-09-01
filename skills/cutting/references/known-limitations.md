@@ -15,7 +15,7 @@ at all; `FilterSweep`'s `duration` param looks like it should give this but does
 it **truncates** the clip to `duration` rather than sweeping then holding at `freq_end`
 for the remainder (tested: 4.0s input, `duration=1.0` → 1.0s output, not 4.0s).
 
-**Current workaround, used throughout `CUTTING_PLAN.md`:** split into two `Clip()` calls
+**Current workaround:** split into two `Clip()` calls
 on the same `segment_name`/`index` — one dry with `bars=N`, one effected with
 `offset_bars=N` and no `bars` cap. Real cost, not just verbosity: the complementary
 `offset_bars`/`bars` arithmetic is exactly what produces the fp-boundary trap (`offset_bars

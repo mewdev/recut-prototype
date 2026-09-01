@@ -33,13 +33,18 @@ The `MusicMap` (`src/recut/map/schema.py`) tells you **structure**. It does not 
 | `pre-chorus` / `bridge` | Transitional — good candidates for an `XFade` join point |
 | `silence` | Literal gap — don't build a `Clip` around it expecting audio |
 
+## What the map misses
+
+- **Phrase-level detail below `phrases`**: `phrases` gives sub-segment timestamps, but nothing marks "this phrase is a literal repeat of the previous one." If the user says "cut when it repeats," that's still a judgment call between `phrases` entries — ask which repeat they mean if ambiguous.
+- **No per-instrument/stem activity.** The map describes the full mix. It cannot tell you which instrument is carrying a section, or when a specific instrument enters/exits within it — see `known-limitations.md`. `loudness_db` is your only quantitative signal for "this section is dense/sparse."
+
 ## Verify `bpm` before using `bars=`/`beats=`/`offset_bars=`
 
 `bars_to_seconds()`/`beats_to_seconds()` (`src/recut/map/parser.py`) compute purely
 from the `bpm` field — they never look at the map's own `bars`/`beats` timestamp
 arrays. If `bpm` is a stale or octave-wrong estimate (a real, apparently common
-analysis-pipeline failure mode — found on `summer-party`, where `bpm` was exactly half
-the tempo implied by the song's own downbeat grid), every `bars=`/`beats=`/
+analysis-pipeline failure mode — found on a real song's map, where `bpm` was exactly
+half the tempo implied by the song's own downbeat grid), every `bars=`/`beats=`/
 `offset_bars=` value silently resolves to the wrong number of real seconds, with no
 error — `validate()` still passes, `compose()` still runs, it's just wrong.
 
@@ -52,10 +57,10 @@ real_bar_spacing = music_map.bars[1] - music_map.bars[0]
 print(bars_to_seconds(music_map, 1), "vs", real_bar_spacing)  # should match closely
 ```
 
-If they disagree, `bpm` is wrong — either fix it at the source (derive a corrected value
-from `music_map.bars`, e.g. the mean bar-to-bar spacing, and patch the map JSON — cheap,
-gitignored, reversible) or account for the ratio in every `bars=`/`beats=` value you
-write, which is much more error-prone and not recommended.
+If they disagree, the bpm field is wrong — either fix it at the source (derive a
+corrected value from `music_map.bars`, e.g. the mean bar-to-bar spacing, and patch the
+map JSON — cheap, gitignored, reversible) or account for the ratio in every
+`bars=`/`beats=` value you write, which is much more error-prone and not recommended.
 
 ## `bars=`/`offset_bars=` summing to exactly a segment's end can false-positive an error
 
@@ -70,11 +75,6 @@ bar-count math looks exact on paper, tripping `validate()`'s strict `>` check
 where N bars visually *should* fit. **Fix: drop the `bars=`/`beats=` cap on the tail
 clip and let it run to the segment's natural end instead of computing a value meant to
 land exactly there.**
-
-## What the map misses
-
-- **Phrase-level detail below `phrases`**: `phrases` gives sub-segment timestamps, but nothing marks "this phrase is a literal repeat of the previous one." If the user says "cut when it repeats," that's still a judgment call between `phrases` entries — ask which repeat they mean if ambiguous.
-- **No per-instrument/stem activity.** The map describes the full mix. It cannot tell you which instrument is carrying a section, or when a specific instrument enters/exits within it — see `known-limitations.md`. `loudness_db` is your only quantitative signal for "this section is dense/sparse."
 
 ## Practical workflow
 
