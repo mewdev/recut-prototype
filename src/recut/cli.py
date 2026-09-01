@@ -6,11 +6,15 @@ import pathlib
 import shutil
 import time
 
+import soundfile as sf
 from modal import Function
 
+from recut.audio import Audio
+from recut.compositor import compose
 from recut.map.make_map import run as make_map
-from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR
-from recut.project import load_compositions, load_project_sources
+from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR, RENDERS_DIR
+from recut.project import Composition, Source, load_compositions, load_project_sources
+from recut.validator import validate
 
 _APP = "recut-analysis"
 
@@ -25,6 +29,8 @@ Commands:
   map       Build enriched maps for all sources that need it
   status    Show registry state for all sources in .appdata
   compositions  List saved compositions in .appdata/compositions
+  validate  Validate a saved composition against its music map
+  render    Validate and render a saved composition to audio
 
 Run `recut <command> --help` for command-specific usage.
 """
@@ -123,6 +129,70 @@ def cmd_status(args) -> None:
         print(f"{source.name}: {source.status}")
 
 
+def _resolve_composition(name: str) -> Composition:
+    compositions = load_compositions()
+    if name not in compositions:
+        print(f"Error: composition not found: {name}")
+        raise SystemExit(1)
+    return compositions[name]
+
+
+def _resolve_source(composition: Composition) -> Source:
+    if not composition.sources:
+        print(f"Error: composition {composition.name!r} has no sources")
+        raise SystemExit(1)
+
+    sources = load_project_sources()
+    name = composition.sources[0]
+    source = sources.get(name)
+    if source is None or source.music_map is None:
+        print(f"Error: source {name!r} not ready — run `recut map` first")
+        raise SystemExit(1)
+    return source
+
+
+def cmd_validate(args) -> None:
+    """Validate a saved composition against its source's music map."""
+    composition = _resolve_composition(args.name)
+    source = _resolve_source(composition)
+
+    issues = validate(source.music_map, *composition.nodes)
+    for issue in issues:
+        print(f"{issue.severity}: {issue.message}")
+
+    if not issues:
+        print("OK — no issues")
+    if any(issue.severity == "error" for issue in issues):
+        raise SystemExit(1)
+
+
+def cmd_render(args) -> None:
+    """Validate a saved composition, then render it to audio.
+
+    `_resolve_composition`/`_resolve_source` above already give you the
+    Composition and its Source (source.audio_path, source.music_map).
+    """
+    composition = _resolve_composition(args.name)
+    source = _resolve_source(composition)
+
+    issues = validate(source.music_map, *composition.nodes)
+    for issue in issues:
+        print(f"{issue.severity}: {issue.message}")
+
+    has_errors = any(issue.severity == "error" for issue in issues)
+    if has_errors and not args.force:
+        print("Aborting render — fix the errors above, or pass --force.")
+        raise SystemExit(1)
+
+    audio = Audio.load(str(source.audio_path))
+    result = compose(source.music_map, audio, *composition.nodes)
+
+    RENDERS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = pathlib.Path(args.out) if args.out else RENDERS_DIR / f"{composition.name}.mp3"
+    sf.write(out_path, result.samples.T, result.sr)
+    print(f"Rendered: {out_path.resolve()}")
+
+
 def cmd_compositions(args) -> None:
     """List saved compositions in .appdata/compositions"""
     compositions = load_compositions()
@@ -154,6 +224,18 @@ def main() -> None:
 
     composition_cmd = sub.add_parser("compositions", help="Show compositions")
     composition_cmd.set_defaults(func=cmd_compositions)
+
+    validate_cmd = sub.add_parser("validate", help="Validate a saved composition")
+    validate_cmd.add_argument("name", help="composition name")
+    validate_cmd.set_defaults(func=cmd_validate)
+
+    render_cmd = sub.add_parser("render", help="Validate and render a saved composition")
+    render_cmd.add_argument("name", help="composition name")
+    render_cmd.add_argument("--out", help="output audio path (default: .appdata/renders/<name>.mp3)")
+    render_cmd.add_argument(
+        "--force", action="store_true", help="render despite error-severity validation issues"
+    )
+    render_cmd.set_defaults(func=cmd_render)
 
     args = parser.parse_args()
 

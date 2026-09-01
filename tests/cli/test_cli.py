@@ -5,7 +5,9 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from recut.cli import cmd_analyze, cmd_compositions, cmd_map, cmd_status
+import pytest
+
+from recut.cli import cmd_analyze, cmd_compositions, cmd_map, cmd_render, cmd_status, cmd_validate
 
 FIXTURE_MAP = Path(__file__).parent.parent / "fixtures" / "sample-map.json"
 
@@ -193,3 +195,93 @@ def test_compositions_empty(capsys):
         cmd_compositions(_args())
 
     assert "No compositions" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# cmd_validate / cmd_render
+# ---------------------------------------------------------------------------
+
+
+def _source_with_map(tmp_path, sr=22050, duration_s=5.0):
+    import numpy as np
+    import soundfile as sf
+
+    from recut.map.parser import parse_recut_map
+    from recut.project import Source
+
+    audio_path = tmp_path / "song.wav"
+    sf.write(audio_path, np.zeros(int(sr * duration_s)), sr)
+    return Source(
+        name="song", audio_path=audio_path, music_map=parse_recut_map(FIXTURE_MAP), status="ready"
+    )
+
+
+def _patch_registries(composition, source):
+    return (
+        patch("recut.cli.load_compositions", return_value={composition.name: composition}),
+        patch("recut.cli.load_project_sources", return_value={"song": source}),
+    )
+
+
+def test_validate_ok_composition(tmp_path, capsys):
+    from recut.compositor.nodes import Clip
+    from recut.project import Composition
+
+    source = _source_with_map(tmp_path)
+    composition = Composition(name="edit", sources=["song"], nodes=[Clip("intro")], created=None)
+
+    p1, p2 = _patch_registries(composition, source)
+    with p1, p2:
+        cmd_validate(_args(name="edit"))  # does not raise SystemExit — no error-severity issues
+
+    assert "error" not in capsys.readouterr().out
+
+
+def test_validate_bad_composition_exits(tmp_path, capsys):
+    from recut.compositor.nodes import Clip
+    from recut.project import Composition
+
+    source = _source_with_map(tmp_path)
+    composition = Composition(
+        name="edit", sources=["song"], nodes=[Clip("chorus", bars=100)], created=None
+    )
+
+    p1, p2 = _patch_registries(composition, source)
+    with pytest.raises(SystemExit):
+        with p1, p2:
+            cmd_validate(_args(name="edit"))
+
+    assert "error" in capsys.readouterr().out
+
+
+def test_render_writes_output_file(tmp_path, capsys, monkeypatch):
+    from recut.compositor.nodes import Clip
+    from recut.project import Composition
+
+    monkeypatch.setattr("recut.cli.RENDERS_DIR", tmp_path / "renders")
+
+    source = _source_with_map(tmp_path)
+    composition = Composition(name="edit", sources=["song"], nodes=[Clip("intro")], created=None)
+
+    out_path = tmp_path / "out.wav"
+    p1, p2 = _patch_registries(composition, source)
+    with p1, p2:
+        cmd_render(_args(name="edit", out=str(out_path), force=False))
+
+    assert out_path.exists()
+    assert "Rendered" in capsys.readouterr().out
+
+
+def test_render_aborts_on_error_without_force(tmp_path):
+    from recut.compositor.nodes import Clip
+    from recut.project import Composition
+
+    source = _source_with_map(tmp_path)
+    composition = Composition(
+        name="edit", sources=["song"], nodes=[Clip("chorus", bars=100)], created=None
+    )
+
+    p1, p2 = _patch_registries(composition, source)
+    with pytest.raises(SystemExit):
+        with p1, p2:
+            cmd_render(_args(name="edit", out=None, force=False))
