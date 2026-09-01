@@ -8,8 +8,6 @@ dependencies = [
     "scipy",
     "pedalboard",
     "modal",
-    "fastapi",
-    "uvicorn",
     "pydantic"
 ]
 
@@ -26,7 +24,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-exclude = ["archive", "src/analysis/models"]
+exclude = ["src/analysis/models"]
 
 [tool.ruff.lint]
 select = [
