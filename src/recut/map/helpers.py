@@ -40,7 +40,11 @@ def chords_in(
 
 
 def downbeats_in(downbeats: list[BeatTime], start: float, end: float) -> list[BeatTime]:
-    return [d for d in downbeats if start <= d <= end]
+    # Half-open [start, end): the shared boundary downbeat belongs to the
+    # next segment. Exception: the song's last downbeat has no next segment
+    # to claim it, so it must stay in whichever segment ends there.
+    is_song_end = bool(downbeats) and end >= downbeats[-1]
+    return [d for d in downbeats if start <= d < end or (is_song_end and d == end)]
 
 
 # Segment boundaries come from a structure model (SongFormer) independent of

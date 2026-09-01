@@ -9,7 +9,6 @@ Usage:
     python -m map.make_map temp/analysis/raw/track-raw.json mp3/track.mp3
 """
 
-
 import json
 from datetime import datetime
 from pathlib import Path
@@ -114,7 +113,11 @@ if __name__ == "__main__":
     raw_path = Path(sys.argv[1])
     audio_path = Path(sys.argv[2])
     result = run(raw_path, audio_path)
-    out_path = Path(sys.argv[3]) if len(sys.argv) > 3 else raw_path.parent.parent / "enriched" / f"{raw_path.stem}.json"
+    out_path = (
+        Path(sys.argv[3])
+        if len(sys.argv) > 3
+        else raw_path.parent.parent / "enriched" / f"{raw_path.stem}.json"
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result.model_dump(), indent=2))
     print(f"Written to {out_path}")
