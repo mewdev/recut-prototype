@@ -15,7 +15,6 @@ from recut.validator.types import ValidationResult
 class Rule:
     name: str
     check: Callable[[AudioNode, MusicMap], Optional[ValidationResult]]
-    domain: str = "song_reshape"
 
 
 @dataclass
@@ -24,7 +23,6 @@ class SequenceRule:
 
     name: str
     check: Callable[[list[AudioNode], MusicMap], list[ValidationResult]]
-    domain: str = "song_reshape"
 
 
 RULES: list[Rule] = [

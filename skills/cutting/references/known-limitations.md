@@ -32,7 +32,7 @@ repeatedly this session. See issue [#53](https://github.com/mewdev/recut-prototy
 
 ## Validator is 3 rules, not a musical linter
 
-See `validation-workflow.md` — `label_exists`, `duration_exceeds`, `sequence_boundaries` only. No key/energy/rhythm-aware checks exist yet (`Rule.domain`/`SequenceRule.domain` fields exist to support future rule sets, per `CHANGELOG.md`, but no additional domains are implemented).
+See `validation-workflow.md` — `label_exists`, `duration_exceeds`, `sequence_boundaries` only. No key/energy/rhythm-aware checks exist yet.
 
 ## No map generation or DAW/notation concerns here
 
