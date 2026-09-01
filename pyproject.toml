@@ -1,0 +1,37 @@
+[project]
+name = "recut"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "librosa",
+    "scipy",
+    "pedalboard",
+    "modal",
+    "pydantic"
+]
+
+[project.scripts]
+recut = "recut.cli:main"
+
+[tool.recut]
+pipeline = "modal"          # "modal" — more options added as needed
+analysis_output = "temp/analysis"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+exclude = ["src/analysis/models"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering)
+]
+ignore = [
+    "E501",  # line too long — handled by formatter
+]

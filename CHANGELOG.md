@@ -1,5 +1,122 @@
 # Changelog
-n
+
+## [feat] — 2026-08-21 — Project registries, multi-source prep, xfade curve/beats
+
+**Source registry** (`src/recut/project.py`, new `src/recut/paths.py`)
+- Scans `.appdata/audio/` for audio files, classifies each stem: `ready / needs_map / needs_analysis / hash_mismatch`
+- `hash_mismatch`: audio hash verified against map's `meta.audio_hash` — stale maps detected
+- `verify_source_hash()` helper
+
+**Composition registry (#40)**
+- Save/load/list named edit plans → `.appdata/compositions/<name>.json`
+- `Composition` dataclass: name, sources, nodes, created
+- Clip/XFade node JSON serialization round-trip; fx skipped on purpose for now
+- `create_composition()`, `save_composition()`, `load_compositions()`
+
+**CLI**
+- `map` — now argless batch command: builds enriched maps for all sources with status `needs_map`
+- New `status` command — registry state for all sources in `.appdata`
+- New `compositions` command — lists saved compositions
+- `analyze` copies the audio file into `.appdata/audio/`
+
+**Multi-source prep (arch)**
+- `Clip.source: Optional[str]` — key into the sources dict passed to `compose()`; `None` = default single source (backward compatible); enables multi-file compositions
+- `ValidationResult.source: Optional[str]` — which source a validation result refers to
+- `Rule.domain` / `SequenceRule.domain = "song_reshape"` — rules tagged by domain for future rule sets
+
+**XFade**
+- New shared module `primitives/curves.py`: `Curve` type + `make_envelope(vol_start, vol_end, n, curve)` — linear/log/exp/qsin, used by fade and xfade (dedup)
+- `xfade(xfade_ms=500, curve="qsin")` — curve param replaces hardcoded sqrt ramps; qsin quarter-sine = equal-power default
+- `XFade.beats: Optional[float]` — if set, compositor resolves duration from map BPM (`beats_to_seconds × 1000`) instead of `ms`
+- Guards: sample-rate mismatch, channel-layout mismatch, stricter length check (`>=`)
+- `Audio.num_channels` property
+- Validator checks/rules updated to match
+
+**Tests**
+- New `tests/primitives/test_primitives.py`, `tests/cli/test_cli.py`, `tests/project/` (source + composition registry)
+
+---
+
+## [chore] — 2026-08-19 — Pipeline remote cloning, test restructure, README, cleanup
+
+**Analysis pipeline — remote model cloning**
+- Removed `add_local_dir` — models no longer bundled or pushed from local disk
+- `chords_image`: clones `ptnghia-j/chord-cnn-lstm-model` via `git lfs` at Modal deploy time
+- `structure_image`: sparse-checkout of `SongFormer/` from `mewdev/ChordMiniApp` fork; weights downloaded from HuggingFace at image build time (`GIT_LFS_SKIP_SMUDGE=1` to avoid LFS bandwidth limits)
+- Pipeline output path updated: `.appdata/maps/raw/<stem>-raw.json`
+- License comment block added to `pipeline.py` — MuQ is CC BY-NC 4.0 (non-commercial only)
+
+**Models removed from repo**
+- `src/analysis/models/` deleted and untracked — no longer needed, cloned remotely
+- `.gitignore` entry for `src/analysis/models/` removed (folder gone permanently)
+
+**Test structure**
+- Tests reorganised into subdirectories mirroring `src/recut/`: `tests/map/`, `tests/validator/`, `tests/primitives/`
+- Real song fixture (`end_of_beginning-map-v0_1.json`) replaced with synthetic `sample-map.json` — 120 BPM, clean round numbers, no real song data
+- Test assertions updated to match synthetic fixture values
+
+**README**
+- CLI paths updated to `.appdata/maps/`
+- Compositor code example added (fabricated track, real API)
+- Validation section added — purpose, code snippet
+- Third-party attributions table with repo links and licenses
+- Music map format hidden under `<details>` — replaced with one-line description
+- Modal deploy note: models clone automatically, no manual setup
+
+**`.appdata/` convention**
+- All app-generated files (raw JSON, enriched maps) go to `.appdata/` — git-ignored
+
+---
+
+## [refactor] — 2026-08-19 — Refactor: namespace package + Pydantic schema + plain-function pipeline
+
+Implemented colleague code review feedback (2026-08-18). Full structural overhaul across 5 steps.
+
+**Step 1 — `src/recut/` namespace package**
+- All source moved from `src/` into `src/recut/` — prevents shadowing third-party packages
+- All imports rewritten from bare (`from audio import`) to namespaced (`from recut.audio import`)
+- `Loop` class merged into `Clip(loop=N)` — simpler API, `Node = Clip`
+- `SegmentLabel`/`label` renamed to `SegmentName`/`segment_name` throughout (including map JSON)
+
+**Step 2 — Schema: TypedDict → Pydantic BaseModel**
+- All output types (`EnrichedSegment`, `MusicMap`, `Sources`, `Meta`, `ModelRef`, `KeySignature`) converted to `BaseModel`
+- Input types (`ChordEntry`, `RawSegment`, `RawAnalysis`) kept as `TypedDict` — raw dicts at runtime
+- `typing_extensions.TypedDict` required for Pydantic v2 on Python < 3.12
+- `make_map.py` updated: constructors replace `dataclasses.asdict()`, `result.model_dump()` for JSON serialization
+
+**Step 3 — Parser: ABC + classes → plain functions**
+- `OurMapParser` class + `MapParser` ABC deleted
+- `parse_recut_map(path)`, `parse_recut_map_dict(src)` — trivial one-liners (Pydantic handles validation)
+- `parse_muf_map`, `parse_muf_map_dict` — stubbed with `NotImplementedError`
+- 5 pure MusicMap helpers added: `get_segment`, `bars_to_seconds`, `beats_to_seconds`, `first_segment`, `last_segment`
+
+**Step 4 — Validator: `MapParser` → `MusicMap`**
+- `validate(music_map, *nodes)` — no parser dependency
+- All checks use free functions from parser; dict access replaced with attribute access
+
+**Step 5 — Compositor: `MapParser + path` → `MusicMap + Audio`**
+- `compose(music_map, audio, *nodes)` — no parser, no `audio_path` string, no `skip_validation`
+- Downbeat snap: `"audio_start" in segment` → `segment.downbeats` (truthy check on list)
+- `pyproject.toml` script entry fixed: `"cli:main"` → `"recut.cli:main"`
+
+---
+
+## [refactor] — 2026-08-12 — src/ layout migration + tooling fixes
+
+Reorganized project into a clean `src/` package layout for better overview.
+
+**Changes:**
+- All source moved into `src/`: `compositor.py`, `audio.py`, `nodes.py`, `map_parser.py`, `primitives/`, `map/`, `validator/`, `tests/`
+- `ui-map-editor/` moved to `src/map/ui-editor/` — co-located with the map subsystem it serves
+- `pyproject.toml`: `pythonpath = ["src"]` — pytest resolves bare imports correctly
+- `.vscode/settings.json`: `python.analysis.extraPaths = ["src"]` — Pylance now agrees with pytest on bare imports, stops auto-prefixing `src.`
+- `archive/` excluded from both ruff and Pylance
+- Test fixtures committed to `src/tests/fixtures/`
+- `StubParser` completed with `first_segment()`/`last_segment()` — gap exposed by `check_sequence_boundaries` rule
+- Pre-commit checklist updated: ruff + pytest both required
+
+---
+
 ## [analysis] — 2026-07-03 — MUF architecture reverse-engineering + map enhancement plan
 
 Fully reverse-engineered Apple's `MusicUnderstanding.framework` (iOS/macOS 27.0) from `.swiftinterface`, `.tbd`, binary strings, CoreML MIL files, and live runtime output.
@@ -99,12 +216,12 @@ Two-layer ending with BPM-synced delay tail extending 5s past cut end.
 
 ## Primitives developed this prototype phase
 
-| Primitive | Description |
-|-----------|-------------|
-| `cut` | hard slice [start, end] in seconds |
-| `fade` | linear volume envelope |
-| `filter_sweep` | DJ-style low-pass sweep, direction + curve |
-| `reverb` | pedalboard Reverb, room/hall/plate presets |
-| `delay` | pedalboard Delay, BPM-syncable |
-| `xfade_join` | equal-power crossfade join between two segments |
-| `chain` | compose effects: `chain(audio, sr, (fn, kwargs), ...)` |
+| Primitive | Signature | Description |
+|-----------|-----------|-------------|
+| `cut` | `cut(start, end)(audio)` | hard slice [start, end] in seconds |
+| `fade` | `fade(vol_start, vol_end, curve)(audio)` | volume envelope, curves: linear/log/exp/qsin |
+| `filter_sweep` | `filter_sweep(...)(audio)` | DJ-style low-pass sweep, direction + curve |
+| `reverb` | `reverb(...)(audio)` | pedalboard Reverb, room/hall/plate presets |
+| `delay` | `delay(...)(audio)` | pedalboard Delay, BPM-syncable |
+| `xfade` | `xfade(xfade_ms)(a, b)` | equal-power crossfade join between two Audio clips |
+| `chain` | `chain(audio, *transforms)` | compose curried primitives in sequence |

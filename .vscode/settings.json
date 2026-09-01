@@ -1,5 +1,64 @@
 {
-  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.extraPaths": ["src"],
+  "python.analysis.ignore": ["**/site-packages/**", "src/analysis/models/**", "temp/**", "src/analysis/pipeline.py"],
+  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", "**/.*", "**/site-packages/**", "src/analysis/models/**", "temp/**"],
+  "python.analysis.diagnosticMode": "openFilesOnly",
+  "python.defaultInterpreterPath": "/Users/michal/miniconda3/envs/recut/bin/python",
   "python-envs.defaultEnvManager": "ms-python.python:conda",
-  "python-envs.defaultPackageManager": "ms-python.python:conda"
+  "python-envs.defaultPackageManager": "ms-python.python:conda",
+  "files.watcherExclude": {
+    "**/src/analysis/models/**": true,
+    "**/__pycache__/**": true,
+    "**/*.egg-info/**": true
+  },
+  "search.exclude": {
+    "**/src/analysis/models/**": true,
+    "**/__pycache__/**": true
+  },
+  "explorer.excludeGitIgnore": false,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.egg-info": true,
+    "**/src/analysis/models": true
+  },
+  "terminal.integrated.env.osx": {
+    "PATH": "/Users/michal/miniconda3/bin:/Users/michal/miniconda3/condabin:${env:PATH}"
+  },
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.profiles.osx": {
+    "zsh": {
+      "path": "/bin/zsh",
+      "args": ["-l", "-i"]
+    }
+  },
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  },
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.oxc": "explicit"
+    }
+  }
 }

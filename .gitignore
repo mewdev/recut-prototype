@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .env
+.ruff_cache
+.pytest_cache
 
 # Node
 node_modules/
@@ -15,16 +17,8 @@ dist/
 *.flac
 *.asd
 
-# Generated / large model artifacts
-music.map.json
-demix/
-spec/
-*.mid
-*-allin1.json
-labour-allin1.json
-
-# Cloned external repos (too large to commit)
-ChordMiniApp/
+# ...except the deliberately-committed example bundle
+!examples/**/*.mp3
 
 # OS
 .DS_Store
@@ -32,16 +26,8 @@ ChordMiniApp/
 # Conda
 .conda/
 
-# Agents
+# Agents (skills live at top-level skills/, not under .claude/)
 .claude
 
-# Temp folders
-chordonomicon
-h1zero
-lead-sheet-dataset
-modern-classic
-older
-testing
-skills
-mp3
-learning
+# App data (generated files — audio, analysis, maps, output)
+.appdata/
