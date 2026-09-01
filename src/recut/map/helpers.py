@@ -2,6 +2,7 @@
 helpers.py — pure helper functions for map enrichment
 """
 
+import bisect
 import hashlib
 from pathlib import Path
 
@@ -40,6 +41,23 @@ def chords_in(
 
 def downbeats_in(downbeats: list[BeatTime], start: float, end: float) -> list[BeatTime]:
     return [d for d in downbeats if start <= d <= end]
+
+
+# Segment boundaries come from a structure model (SongFormer) independent of
+# the beat tracker, so raw start/end can land tens to hundreds of ms off the
+# nearest bar line. Segments are musically sections, which start on downbeats
+# — so replace the structure model's fuzzy timestamp with the beat tracker's
+# precise one, same approach as Apple MUF's shouldSnapToBars.
+def snap_to_downbeat(downbeats: list[BeatTime], time: float) -> BeatTime:
+    if not downbeats:
+        raise ValueError("Cannot snap: downbeat list is empty")
+    index = bisect.bisect_left(downbeats, time)
+    if index == 0:
+        return downbeats[0]
+    if index == len(downbeats):
+        return downbeats[-1]
+    before, after = downbeats[index - 1], downbeats[index]
+    return before if time - before < after - time else after
 
 
 def parse_key(label: str) -> KeySignature:

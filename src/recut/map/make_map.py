@@ -24,6 +24,7 @@ from recut.map.helpers import (
     loudness_rms_db,
     parse_key,
     phrase_in,
+    snap_to_downbeat,
 )
 from recut.map.schema import (
     BeatTime,
@@ -47,18 +48,20 @@ def build_segment(
     audio: np.ndarray,
     sample_rate: int,
 ) -> EnrichedSegment:
-    seg_downbeats = downbeats_in(all_downbeats, segment["start"], segment["end"])
-    seg_audio = audio[int(segment["start"] * sample_rate) : int(segment["end"] * sample_rate)]
+    start = snap_to_downbeat(all_downbeats, segment["start"])
+    end = snap_to_downbeat(all_downbeats, segment["end"])
+    seg_downbeats = downbeats_in(all_downbeats, start, end)
+    seg_audio = audio[int(start * sample_rate) : int(end * sample_rate)]
     return EnrichedSegment(
         index=index,
         segment_name=segment["label"],
-        start=segment["start"],
-        end=segment["end"],
-        duration=segment["end"] - segment["start"],
+        start=start,
+        end=end,
+        duration=end - start,
         bars=len(seg_downbeats),
         downbeats=seg_downbeats,
-        phrases=[p for p in all_phrases if segment["start"] <= p < segment["end"]],
-        chords=chords_in(all_chords, segment["start"], segment["end"]),
+        phrases=[p for p in all_phrases if start <= p < end],
+        chords=chords_in(all_chords, start, end),
         loudness_db=loudness_rms_db(seg_audio),
         loudness_db_start=loudness_rms_db(seg_audio[: int(0.5 * sample_rate)]),
         loudness_db_end=loudness_rms_db(seg_audio[-int(0.5 * sample_rate) :]),
