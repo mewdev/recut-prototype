@@ -50,6 +50,12 @@ recut status
 # List saved compositions
 recut compositions
 
+# Validate a saved composition against its music map
+recut validate <name>
+
+# Validate, then render a saved composition to audio (--force skips validation errors, --out sets the path)
+recut render <name>
+
 # Help
 recut --help
 recut analyze --help
@@ -57,36 +63,49 @@ recut analyze --help
 
 Everything recut generates lives in `.appdata/` (git-ignored):
 - `.appdata/audio/<stem>.mp3` — source audio, copied in by `analyze`
-- `.appdata/maps/raw/<stem>-raw.json` — raw model output (beats, chords, structure)
-- `.appdata/maps/enriched/<stem>-map.json` — enriched music map
+- `.appdata/maps/raw/<stem>.json` — raw model output (beats, chords, structure)
+- `.appdata/maps/enriched/<stem>.json` — enriched music map
 - `.appdata/compositions/<name>.json` — saved edit plans
+- `.appdata/renders/<name>.mp3` — rendered output from `recut render`
+
+**Try it without your own Modal deploy**: `examples/summer-party/` has a
+pre-analyzed track (audio + enriched map) — copy it into `.appdata/` per that
+folder's README and skip straight to the code example below.
 
 ## Code Example
 
-Given an analyzed track, build a cut in code:
+Given an analyzed track (the bundled `examples/summer-party/` works here — see Setup
+above), build a cut in code:
 
 ```python
 import soundfile as sf
 from recut.audio import Audio
 from recut.map.parser import parse_recut_map
 from recut.compositor import Clip, compose
-from recut.primitives.fade import fade
+from recut.compositor.effects import Fade
 
 # Load music map and audio
-music_map = parse_recut_map(".appdata/maps/enriched/midnight_run-map.json")
-audio = Audio.load("midnight_run.mp3")
+music_map = parse_recut_map(".appdata/maps/enriched/summer-party.json")
+audio = Audio.load(".appdata/audio/summer-party.mp3")
 
-# Build the edit: intro → verse → chorus × 2 (with fade out)
+# Build the edit: chorus (hook) → intro → verse → inst, fading out over the last bars
 result = compose(
     music_map,
     audio,
+    Clip("chorus"),
     Clip("intro"),
     Clip("verse"),
-    Clip("chorus", loop=2, fx=[fade(vol_start=1.0, vol_end=0.0)]),
+    Clip("inst", bars=7),
+    Clip("inst", offset_bars=7, fx=[Fade(vol_start=1.0, vol_end=0.0, curve="qsin")]),
 )
 
-sf.write("midnight_run-cut.mp3", result.samples.T, result.sr)
+sf.write("summer-party-cut.mp3", result.samples.T, result.sr)
 ```
+
+`Clip.fx` takes typed `Effect` objects (`Fade`, `Reverb`, `Delay`, `FilterSweep`,
+`ReverbSweep` — `recut.compositor.effects`), not the bare curried primitives
+(`recut.primitives.fade.fade` etc.) — those are the lower-level building blocks
+`Effect.to_fn()` wraps, not what `Clip.fx` expects directly.
 
 **Validation** — a linter for music cuts. Before rendering, validates that all nodes are musically coherent: segment labels exist in the map, requested bars/beats don't exceed the segment duration, and the cut doesn't start or end abruptly mid-song. The goal is to grow this into a richer rule set that catches musical issues automatically — wrong key transitions, energy drops, rhythmic misalignments — so the system can eventually guide or automate cut decisions.
 
@@ -98,6 +117,19 @@ issues = validate(music_map, Clip("intro"), Clip("verse"), Clip("chorus", loop=2
 ```
 
 The analysis extracts tempo, time signature, song structure, beats, chords, and loudness — everything needed to make musically aware cuts.
+
+## Agent / Harness Usage
+
+recut ships two [Agent Skills](https://code.claude.com/docs/en/skills) at `skills/cutting/` and `skills/music-theory/` — `cutting` covers the `Clip`/`XFade`/`compose()`/`validate()` mechanics, `music-theory` covers the musical judgment behind a cut (cadence quality, hook selection, energy arcs). Point your harness at both; currently tested with Claude Code.
+
+## Current Limitations
+
+recut is an early prototype. A few headline gaps — full list in [`LIMITATIONS.md`](LIMITATIONS.md):
+
+- No partial-clip effect application — an effect always applies to a clip's whole buffer, not just part of it.
+- No live per-instrument/stem editing — `compose()` works on the full mix only.
+- Musical judgment (cadence quality, hook selection) is inferred by whoever's reasoning about the cut, not verified against ground-truth data — the map has no harmonic-function or cadence fields.
+- Meter detection covers 3/4 and 4/4 only.
 
 ## Third-Party Models
 
