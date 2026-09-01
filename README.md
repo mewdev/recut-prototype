@@ -147,3 +147,7 @@ recut currently uses third-party open-source models for music analysis. All mode
 > **⚠ MuQ is non-commercial only** (CC BY-NC 4.0, Tencent AI Lab). SongFormer uses MuQ as its audio encoder, making the structure pipeline non-commercial. Replace MuQ with a MIT-licensed alternative (MERT, EnCodec) before any commercial use.
 
 > **⚠ Essentia is AGPLv3** (free for non-commercial use; a separate commercial license is required otherwise — [MTG/UPF](https://essentia.upf.edu/)). AGPL's copyleft extends to network/SaaS use, not just redistribution — a stronger constraint than MuQ's non-commercial clause. Replace with a permissively-licensed key-detection method before any commercial or hosted use.
+
+## License
+
+recut's own code is [MIT licensed](LICENSE). The third-party models it depends on for analysis have their own, separate licenses — see the table above before any commercial use.
