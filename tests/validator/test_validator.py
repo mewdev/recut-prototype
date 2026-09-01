@@ -5,9 +5,14 @@ from typing import cast
 import pytest
 
 from recut.compositor import Clip
+from recut.compositor.effects import Fade
 from recut.map.schema import MusicMap, SegmentName
 from recut.validator import validate
-from recut.validator.checks import check_duration_exceeds, check_label_exists
+from recut.validator.checks import (
+    check_duration_exceeds,
+    check_label_exists,
+    check_sequence_boundaries,
+)
 
 
 def _seg(name, start, end, downbeats, idx):
@@ -115,6 +120,38 @@ def test_duration_no_override(music_map):
 def test_duration_missing_label_returns_none(music_map):
     result = check_duration_exceeds(Clip(cast(SegmentName, "nonexistent"), bars=1), music_map)
     assert result is None
+
+
+# --- check_sequence_boundaries ----------------------------------------------
+
+
+def test_sequence_boundaries_hard_cut_warns(music_map):
+    results = check_sequence_boundaries([Clip("verse"), Clip("chorus")], music_map)
+    assert len(results) == 1
+    assert results[0].severity == "warning"
+    assert "Cut starts at 'verse'" in results[0].message
+
+
+def test_sequence_boundaries_fx_on_boundary_clip_suppresses_warning(music_map):
+    results = check_sequence_boundaries(
+        [Clip("verse", fx=[Fade(vol_start=0.0, vol_end=1.0)]), Clip("chorus")], music_map
+    )
+    assert results == []
+
+
+def test_sequence_boundaries_both_ends_hard_cut_warns_twice(music_map):
+    results = check_sequence_boundaries([Clip("verse")], music_map)
+    assert len(results) == 2
+
+
+def test_sequence_boundaries_fx_only_on_one_end_suppresses_only_that_one(music_map):
+    # first clip bare (start warns), last clip has fx (end suppressed) — both ends
+    # are "verse", neither matches the song's real first/last segment.
+    results = check_sequence_boundaries(
+        [Clip("verse"), Clip("verse", fx=[Fade()])], music_map
+    )
+    assert len(results) == 1
+    assert "Cut starts at 'verse'" in results[0].message
 
 
 # --- validate() integration ------------------------------------------------

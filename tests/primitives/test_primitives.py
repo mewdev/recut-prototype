@@ -11,6 +11,7 @@ from recut.primitives.chain import chain
 from recut.primitives.curves import make_envelope
 from recut.primitives.cut import cut
 from recut.primitives.fade import fade
+from recut.primitives.reverb import reverb_sweep
 from recut.primitives.xfade import xfade
 
 MAP = "tests/fixtures/sample-map.json"
@@ -26,6 +27,14 @@ def make_audio(duration_s: float = 2.0, sr: int = 44100, channels: int = 2) -> A
 
 def make_mono(duration_s: float = 2.0, sr: int = 44100) -> Audio:
     samples = np.ones(int(duration_s * sr))
+    return Audio(samples, sr)
+
+
+def make_noise(duration_s: float = 2.0, sr: int = 44100, channels: int = 2) -> Audio:
+    # reverb of a constant signal is degenerate (IIR comb/allpass structure barely
+    # reacts to DC) — noise gives a real, measurable wet/dry difference.
+    rng = np.random.default_rng(0)
+    samples = rng.uniform(-0.3, 0.3, (channels, int(duration_s * sr))).astype("float32")
     return Audio(samples, sr)
 
 
@@ -191,6 +200,38 @@ def test_xfade_mono():
     b = make_mono(2.0)
     result = xfade(500)(a, b)
     assert result.is_mono
+
+
+# --- reverb_sweep -----------------------------------------------------------
+
+
+def test_reverb_sweep_preserves_shape():
+    audio = make_noise(1.0)
+    result = reverb_sweep()(audio)
+    assert result.samples.shape == audio.samples.shape
+
+
+def test_reverb_sweep_starts_dry():
+    audio = make_noise(1.0)
+    result = reverb_sweep(wetness_start=0.0, wetness_end=0.6)(audio)
+    assert np.allclose(result.samples[:, 0], audio.samples[:, 0], atol=1e-6)
+
+
+def test_reverb_sweep_ramps_wetter_over_time():
+    audio = make_noise(2.0)
+    result = reverb_sweep(wetness_start=0.0, wetness_end=0.6)(audio)
+    start_diff = np.abs(result.samples[:, 0] - audio.samples[:, 0]).mean()
+    end_diff = np.abs(result.samples[:, -1] - audio.samples[:, -1]).mean()
+    assert end_diff > start_diff
+
+
+def test_reverb_sweep_holds_at_wetness_end_past_duration():
+    audio = make_noise(2.0)
+    short = reverb_sweep(wetness_start=0.0, wetness_end=0.6, duration=0.5)(audio)
+    full = reverb_sweep(wetness_start=0.0, wetness_end=0.6, duration=None)(audio)
+    # after the 0.5s ramp, `short` should already be fully at wetness_end — same
+    # mix as `full`'s own tail, since both converge to the same constant 0.6 wet
+    assert np.allclose(short.samples[:, -1], full.samples[:, -1], atol=1e-4)
 
 
 # --- curves ---------------------------------------------------------------

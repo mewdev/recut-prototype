@@ -29,11 +29,18 @@ class Clip:
     # Use to splice into the middle of a segment, e.g. take only the second half
     # of a chorus: Clip("chorus", offset_beats=16, beats=16)
     snap_to_downbeat: bool = False
-    # snap_to_downbeat: use downbeats[0] as start instead of segment["start"].
-    # Fixes pre-roll silence when the structural model draws the section boundary
-    # slightly before the first actual beat (common on intros/pickups).
+    # snap_to_downbeat: use downbeats[0]/downbeats[-1] as start/end instead of
+    # segment.start/segment.end. Fixes pre-roll silence when the structural model
+    # draws the section boundary slightly before the first actual beat (common on
+    # intros/pickups).
     # Don't use when the segment genuinely starts before the first downbeat
     # (e.g. chorus pickups) — snapping will skip real audio.
+    # CAUTION on the END side: downbeats[-1] is the LAST BAR'S START, not the
+    # segment's end — if a segment's downbeats array doesn't include a trailing
+    # marker at segment.end (common when a segment has N bars but only N downbeat
+    # timestamps), this silently drops the final bar's worth of audio. Check
+    # `segment.end - segment.downbeats[-1]` before using this on a segment you
+    # need the tail of; if it's ~1 bar, snap_to_downbeat will cut it off.
     loop: Optional[int] = None
     fx: list[Effect] = field(default_factory=list)
 

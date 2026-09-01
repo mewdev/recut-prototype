@@ -25,22 +25,33 @@ def check_duration_exceeds(node: AudioNode, music_map: MusicMap) -> Optional[Val
         segment = get_segment(music_map, node.segment_name, node.index)
     except ValueError:
         return None
+
+    # Mirror compose()'s resolution order: offset shifts the effective start
+    # before bars/beats measures a length from it — checking against
+    # segment.start alone (ignoring offset_bars/offset_beats) misses overflows
+    # that only happen because of the offset.
+    start = segment.start
+    if node.offset_bars is not None:
+        start += bars_to_seconds(music_map, node.offset_bars)
+    elif node.offset_beats is not None:
+        start += beats_to_seconds(music_map, node.offset_beats)
+
     if node.bars is not None:
         requested_s = bars_to_seconds(music_map, node.bars)
         segment_duration_s = segment.end - segment.start
-        if segment.start + requested_s > segment.end:
+        if start + requested_s > segment.end:
             return ValidationResult(
                 severity="error",
-                message=f"{node.bars} bars ({requested_s:.2f}s) exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
+                message=f"{node.bars} bars ({requested_s:.2f}s) from offset exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
                 node=node,
             )
     elif node.beats is not None:
         requested_s = beats_to_seconds(music_map, node.beats)
         segment_duration_s = segment.end - segment.start
-        if segment.start + requested_s > segment.end:
+        if start + requested_s > segment.end:
             return ValidationResult(
                 severity="error",
-                message=f"{node.beats} beats ({requested_s:.2f}s) exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
+                message=f"{node.beats} beats ({requested_s:.2f}s) from offset exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
                 node=node,
             )
     return None
@@ -59,7 +70,11 @@ def check_sequence_boundaries(nodes: list[AudioNode], music_map: MusicMap) -> li
 
     try:
         seg = get_segment(music_map, first_node.segment_name, first_node.index)
-        if abs(seg.start - first_song_seg.start) > 0.1:
+        # Any fx on the boundary clip means the user already applied something to
+        # smooth the entry (fade-in, reverb, filter sweep, ...) — this check can't
+        # judge whether it's musically the *right* choice, so it doesn't second-guess
+        # a deliberate effect, only a bare hard cut.
+        if abs(seg.start - first_song_seg.start) > 0.1 and not first_node.fx:
             results.append(
                 ValidationResult(
                     severity="warning",
@@ -76,7 +91,7 @@ def check_sequence_boundaries(nodes: list[AudioNode], music_map: MusicMap) -> li
     last_node = audio_nodes[-1]
     try:
         seg = get_segment(music_map, last_node.segment_name, last_node.index)
-        if abs(seg.end - last_song_seg.end) > 0.1:
+        if abs(seg.end - last_song_seg.end) > 0.1 and not last_node.fx:
             results.append(
                 ValidationResult(
                     severity="warning",

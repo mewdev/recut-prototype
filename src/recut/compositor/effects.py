@@ -13,7 +13,7 @@ from recut.primitives.curves import Curve
 from recut.primitives.delay import delay
 from recut.primitives.fade import fade
 from recut.primitives.filter_sweep import FilterType, filter_sweep
-from recut.primitives.reverb import ReverbType, reverb
+from recut.primitives.reverb import ReverbType, reverb, reverb_sweep
 
 
 @dataclass
@@ -51,6 +51,21 @@ class Reverb(Effect):
 
 
 @dataclass
+class ReverbSweep(Effect):
+    _primitive: ClassVar[Callable] = staticmethod(reverb_sweep)
+    type: ClassVar[str] = "reverb_sweep"
+
+    wetness_start: float = 0.0
+    wetness_end: float = 0.4
+    reverb_type: ReverbType = "hall"
+    room_size: float | None = None
+    damping: float | None = None
+    width: float | None = None
+    duration: float | None = None
+    curve: Curve = "qsin"
+
+
+@dataclass
 class Delay(Effect):
     _primitive: ClassVar[Callable] = staticmethod(delay)
     type: ClassVar[str] = "delay"
@@ -75,6 +90,7 @@ class FilterSweep(Effect):
 EFFECT_TYPES: dict[str, type[Effect]] = {
     "fade": Fade,
     "reverb": Reverb,
+    "reverb_sweep": ReverbSweep,
     "delay": Delay,
     "filter_sweep": FilterSweep,
 }
