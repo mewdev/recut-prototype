@@ -13,6 +13,7 @@ Read this first, every time. Find the row, load only the listed file(s).
 | Which section is the strongest hook to keep in a short edit? | `hooks-and-highlights.md` |
 | How do I read the map's `chords` field (`C:maj7` etc)? Translate to lead-sheet / Roman numeral | `../assets/chord-notation.md` |
 | Fast lookup: section type → density/cadence-risk/hook-likelihood | `../assets/section-role-quickref.md` |
+| "Can this skill do X" / how reliable is a cadence/function/instrument-activity read | `known-limitations.md` |
 
 ## Rule
 

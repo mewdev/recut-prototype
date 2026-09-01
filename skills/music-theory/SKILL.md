@@ -26,7 +26,8 @@ references/
 ├── song-form-and-sections.md       ← Section roles (intro/verse/chorus/...), mapped to recut's SegmentName
 ├── phrase-boundaries-and-groove.md ← Sub-segment cut granularity: phrase length, elision risk, beat/bar alignment
 ├── energy-arcs-and-density.md      ← How energy/density should arc across a sequence of cuts
-└── hooks-and-highlights.md         ← Which section is the strongest keeper in a short edit
+├── hooks-and-highlights.md         ← Which section is the strongest keeper in a short edit
+└── known-limitations.md            ← Honest gaps: no harmonic function/cadence data in the map, no instrument-activity signal
 
 assets/
 ├── chord-notation.md               ← recut's ROOT:QUALITY chord format, translated to lead-sheet/Roman numeral
@@ -44,4 +45,4 @@ scripts/
 
 ## Honesty about gaps
 
-`MusicMap` has no genre field today, so genre-specific conventions (K-pop multi-hook structure, EDM drop/build/breakdown) can inform judgment only when the user names the genre explicitly — don't assume one. If a question needs theory this skill doesn't cover, say so rather than guessing.
+`MusicMap` has no genre field today, so genre-specific conventions (K-pop multi-hook structure, EDM drop/build/breakdown) can inform judgment only when the user names the genre explicitly — don't assume one. See `references/known-limitations.md` for the bigger ones — no harmonic-function/cadence data in the map, no instrument-activity signal. If a question needs theory this skill doesn't cover, say so rather than guessing.
