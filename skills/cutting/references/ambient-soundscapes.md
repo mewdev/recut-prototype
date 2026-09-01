@@ -7,7 +7,7 @@ primitives as everywhere else (`Clip`, `loop`, `fx`, `chain`), a different arran
 pattern. This file is the fast path — the mechanics behind it are already in
 `effects-routing.md` (Delay feedback ranges, gain staging), `known-limitations.md`
 (partial-clip effects, `chain()` reprocessing), and `map-interpretation.md`
-(`bpm` verification, `snap_to_downbeat`) — read those if something here is unclear.
+(`bpm` verification) — read those if something here is unclear.
 
 ## 1. Pick source material — drum-free, and check the seam
 

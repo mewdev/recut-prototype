@@ -67,14 +67,8 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
 
         segment = get_segment(music_map, node.segment_name, node.index)
 
-        if node.snap_to_downbeat and segment.downbeats:
-            start = segment.downbeats[0]
-            end = segment.downbeats[-1]
-            # NOTE: downbeats[-1] is the start of the segment's last bar, not
-            # segment.end — see the CAUTION in Clip.snap_to_downbeat's docstring.
-        else:
-            start = segment.start
-            end = segment.end
+        start = segment.start
+        end = segment.end
 
         if node.offset_bars is not None:
             start += bars_to_seconds(music_map, node.offset_bars)

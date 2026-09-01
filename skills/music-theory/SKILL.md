@@ -15,7 +15,7 @@ Structural and harmonic judgment for evaluating and selecting sections of an **e
 
 1. **Read `references/00-navigation.md` first** — routes your question to 1–3 files.
 2. **Ground everything in the real map data.** This skill's judgment is only useful if applied to `MusicMap`/`EnrichedSegment` fields that actually exist (`segments[].chords`, `.loudness_db*`, `.phrases`, `.downbeats`) — see `skills/cutting/references/map-interpretation.md` for the field reference, and `assets/chord-notation.md` here for reading the map's chord format.
-3. **Translate judgment into a `cutting`-skill action.** A conclusion like "this boundary is a half cadence, not a clean exit" should change a `Clip`/`XFade` choice (e.g. `snap_to_downbeat`, which `index` occurrence to use, whether to `XFade` instead of a hard cut) — this skill doesn't touch `Clip`/`XFade`/`compose()` itself.
+3. **Translate judgment into a `cutting`-skill action.** A conclusion like "this boundary is a half cadence, not a clean exit" should change a `Clip`/`XFade` choice (e.g. which `offset_bars`/`bars` value to land on, which `index` occurrence to use, whether to `XFade` instead of a hard cut) — this skill doesn't touch `Clip`/`XFade`/`compose()` itself.
 
 ## Navigation
 

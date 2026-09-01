@@ -87,7 +87,6 @@ def _nodes_to_json(nodes: list[Node]) -> list[dict]:
                     "beats": node.beats,
                     "offset_bars": node.offset_bars,
                     "offset_beats": node.offset_beats,
-                    "snap_to_downbeat": node.snap_to_downbeat,
                     "loop": node.loop,
                     "fx": [effect.to_json() for effect in node.fx],
                 }

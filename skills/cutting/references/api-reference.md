@@ -90,7 +90,6 @@ Clip(
     beats: Optional[float] = None,
     offset_bars: Optional[float] = None,
     offset_beats: Optional[float] = None,
-    snap_to_downbeat: bool = False,
     loop: Optional[int] = None,
     fx: list[Effect] = [],
 )
@@ -105,7 +104,6 @@ XFade(
 - `index`: 1st occurrence of this label, 2nd, ...
 - `source`: placeholder only — not read by `compose()` today, see `known-limitations.md`
 - `offset_bars`/`offset_beats`: skip N bars/beats from segment start before cutting
-- `snap_to_downbeat`: use `segment.downbeats[0]`/`[-1]` instead of `segment.start`/`end`
 - `loop`: repeat the extracted clip N times, THEN apply `fx`
 - `XFade.curve`: `qsin` = equal-power, best default for music
 - `XFade.beats`: if set, duration resolved from map BPM instead of `ms`
@@ -187,7 +185,7 @@ music_map = parse_recut_map(".appdata/maps/enriched/midnight_run-map.json")
 audio = Audio.load(".appdata/audio/midnight_run.mp3")
 
 nodes = [
-    Clip("intro", snap_to_downbeat=True),
+    Clip("intro"),
     XFade(beats=4),
     Clip("verse"),
     Clip("chorus", loop=2, fx=[Reverb(wetness=0.35, reverb_type="hall"), Fade(vol_start=1.0, vol_end=0.0)]),

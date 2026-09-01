@@ -10,7 +10,7 @@ The `MusicMap` (`src/recut/map/schema.py`) tells you **structure**. It does not 
 
 | Map field | Reliability | Use for |
 |---|---|---|
-| `MusicMap.beats` / `MusicMap.bars` | High | Precise timestamps for cut points — `Clip(snap_to_downbeat=True)` uses `segment.downbeats` |
+| `MusicMap.beats` / `MusicMap.bars` | High | Precise timestamps for cut points, sub-bar splicing via `offset_bars`/`offset_beats` |
 | `MusicMap.bpm`, `beats_per_bar` | **Verify before trusting** | `bars_to_seconds()` / `beats_to_seconds()` for `Clip(bars=...)`/`Clip(beats=...)` — see verification step below |
 | `EnrichedSegment.start/end/duration` | Medium | Coarse section boundaries |
 | `EnrichedSegment.segment_name` | Medium | Content hints (see label guide below) |
@@ -28,7 +28,7 @@ The `MusicMap` (`src/recut/map/schema.py`) tells you **structure**. It does not 
 |---|---|
 | `chorus` | Highest-energy, most memorable content — good clip target, watch vocal entries at its start |
 | `outro` / `ending` | Often repetitive or already winding down — good exit zone |
-| `intro` | Often instrumental — safe re-entry point for a trimmed start; also often the segment where a pickup/upbeat runs slightly before `segment.start`, which is exactly what `snap_to_downbeat=True` corrects for |
+| `intro` | Often instrumental — safe re-entry point for a trimmed start |
 | `verse` | Melodic/narrative content — cutting mid-verse reads as wrong; wait for a boundary |
 | `pre-chorus` / `bridge` | Transitional — good candidates for an `XFade` join point |
 | `silence` | Literal gap — don't build a `Clip` around it expecting audio |
@@ -81,17 +81,21 @@ land exactly there.**
 1. Resolve the user's target zone from `segment_name` (+ `index` if a label repeats).
 2. Verify `bpm` against the map's real bar spacing (above) before doing any bar/beat
    arithmetic — cheap, do it once per song, saves rework.
-3. Decide `snap_to_downbeat`. It snaps **both** ends to the downbeat grid
-   (`downbeats[0]`/`downbeats[-1]`), not just the start — `downbeats[-1]` is the last
-   *bar's start*, not `segment.end`, so if a segment's downbeat array doesn't include a
-   trailing marker flush with its own end (common), `snap_to_downbeat=True` silently
-   drops the segment's final bar. Check `segment.end - segment.downbeats[-1]` before
-   using it on a segment you need the tail of — if that's ~1 bar, it will get cut. Also
-   pointless (not just risky) whenever `segment.start` already equals `downbeats[0]`,
-   which is common — verify before reaching for it out of habit, don't default to
-   `True` for every intro/outro.
-4. Use `offset_bars`/`offset_beats` + `bars`/`beats` to splice into the middle of a
+3. Use `offset_bars`/`offset_beats` + `bars`/`beats` to splice into the middle of a
    segment (e.g. only the second half of a chorus) — see the fp-boundary note above if
    the tail should run to the segment's natural end.
-5. Check `loudness_db_start`/`loudness_db_end` of the next segment before deciding on a hard cut vs. a crossfade.
-6. Trust the user for anything below phrase-level resolution — don't guess a sub-phrase repeat point.
+4. Check `loudness_db_start`/`loudness_db_end` of the next segment before deciding on a hard cut vs. a crossfade.
+5. Trust the user for anything below phrase-level resolution — don't guess a sub-phrase repeat point.
+
+## Segment boundaries are already snapped — `Clip` doesn't offer its own snap anymore
+
+`make_map.py` snaps both `segment.start` and `segment.end` to the nearest downbeat at
+map-generation time (`recut.map.helpers.snap_to_downbeat` — a different function from
+the now-removed `Clip.snap_to_downbeat`, don't confuse the two). Every segment in a
+freshly-generated map already starts and ends on a downbeat; there's no per-`Clip`
+snapping to reach for anymore. (`Clip` used to have a `snap_to_downbeat` flag for this —
+removed after repeated real-world use showed it was both redundant, given this
+map-level snap, and actively harmful: it snapped a clip's *end* to `downbeats[-1]`, the
+start of the segment's last bar rather than its actual end, silently dropping the final
+bar whenever a segment's downbeat array didn't include a trailing marker flush with its
+own end.)

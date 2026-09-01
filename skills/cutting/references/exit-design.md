@@ -4,7 +4,10 @@ How to end a cut deliberately. The exit is the listener's last impression — it
 
 ## Choosing the exit point
 
-Always snap to a downbeat (`Clip(snap_to_downbeat=True)` or an explicit `bars`/`beats` boundary) — never end mid-bar.
+Always land on a downbeat — never end mid-bar. Segment boundaries are already
+downbeat-snapped at map-generation time (see `map-interpretation.md`), so a bare
+`Clip(segment_name)` naturally ends on one; use an explicit `bars`/`beats` boundary
+when ending mid-segment instead.
 
 **Best exit zones, in order of preference:**
 1. End of a `chorus` — highest emotional resolution.

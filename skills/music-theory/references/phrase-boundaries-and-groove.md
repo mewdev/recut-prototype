@@ -21,7 +21,7 @@ When one phrase's cadence coincides with the next phrase's start (no gap), cutti
 
 ## Cut on beat/bar boundaries, respect the groove pattern
 
-Even within a phrase, an arbitrary sample-accurate cut point can land mid-groove-pattern (e.g., splitting a ghost-note fill, or landing between a kick and its paired snare in a syncopated pattern) and read as wrong even when harmonically fine. Prefer `Clip(snap_to_downbeat=True)` or an explicit `bars`/`beats` offset over a raw timestamp — recut's `bars_to_seconds`/`beats_to_seconds` (`src/recut/map/parser.py`) exist precisely so cuts land on the beat grid rather than an arbitrary point.
+Even within a phrase, an arbitrary sample-accurate cut point can land mid-groove-pattern (e.g., splitting a ghost-note fill, or landing between a kick and its paired snare in a syncopated pattern) and read as wrong even when harmonically fine. Prefer an explicit `offset_bars`/`offset_beats` + `bars`/`beats` value over a raw timestamp — recut's `bars_to_seconds`/`beats_to_seconds` (`src/recut/map/parser.py`) exist precisely so cuts land on the beat grid rather than an arbitrary point. (Segment boundaries themselves are already downbeat-snapped at map-generation time — see `skills/cutting/references/map-interpretation.md`.)
 
 ## Feel changes — check before assuming groove continuity
 
