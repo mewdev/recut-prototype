@@ -47,6 +47,4 @@ class XFade:
     # beats: if set, compositor resolves duration from map BPM instead of using ms.
 
 
-AudioNode = Clip
-
 Node = Union[Clip, XFade]

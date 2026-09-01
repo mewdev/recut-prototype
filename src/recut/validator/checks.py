@@ -1,6 +1,6 @@
 from typing import Optional
 
-from recut.compositor.nodes import AudioNode, XFade
+from recut.compositor.nodes import Clip, XFade
 from recut.map.parser import (
     bars_to_seconds,
     beats_to_seconds,
@@ -12,7 +12,7 @@ from recut.map.schema import MusicMap
 from recut.validator.types import ValidationResult
 
 
-def check_label_exists(node: AudioNode, music_map: MusicMap) -> Optional[ValidationResult]:
+def check_label_exists(node: Clip, music_map: MusicMap) -> Optional[ValidationResult]:
     try:
         get_segment(music_map, node.segment_name, node.index)
     except ValueError as error:
@@ -20,7 +20,7 @@ def check_label_exists(node: AudioNode, music_map: MusicMap) -> Optional[Validat
     return None
 
 
-def check_duration_exceeds(node: AudioNode, music_map: MusicMap) -> Optional[ValidationResult]:
+def check_duration_exceeds(node: Clip, music_map: MusicMap) -> Optional[ValidationResult]:
     try:
         segment = get_segment(music_map, node.segment_name, node.index)
     except ValueError:
@@ -57,7 +57,7 @@ def check_duration_exceeds(node: AudioNode, music_map: MusicMap) -> Optional[Val
     return None
 
 
-def check_sequence_boundaries(nodes: list[AudioNode], music_map: MusicMap) -> list[ValidationResult]:
+def check_sequence_boundaries(nodes: list[Clip], music_map: MusicMap) -> list[ValidationResult]:
     results: list[ValidationResult] = []
     first_song_seg = first_segment(music_map)
     last_song_seg = last_segment(music_map)

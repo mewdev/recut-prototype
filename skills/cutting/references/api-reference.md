@@ -138,7 +138,7 @@ Takes **one** `Audio` — the full mix. Runs each `Clip` through: resolve segmen
 
 ```python
 validate(music_map: MusicMap, *nodes: Node) -> list[ValidationResult]
-ValidationResult(severity: Literal["error", "warning", "info"], message: str, node: AudioNode, source: Optional[str] = None)
+ValidationResult(severity: Literal["error", "warning", "info"], message: str, node: Clip, source: Optional[str] = None)
 ```
 
 See `validation-workflow.md` for what the current rules actually check.
