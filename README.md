@@ -80,7 +80,7 @@ audio = Audio.load("midnight_run.mp3")
 result = compose(
     music_map,
     audio,
-    Clip("intro", snap_to_downbeat=True),
+    Clip("intro"),
     Clip("verse"),
     Clip("chorus", loop=2, fx=[fade(vol_start=1.0, vol_end=0.0)]),
 )
