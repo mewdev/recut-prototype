@@ -1,28 +1,23 @@
 {
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.extraPaths": ["src"],
-  "python.analysis.ignore": ["**/site-packages/**", "archive/**", "src/analysis/models/**", "temp/**", "src/analysis/pipeline.py"],
-  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", "**/.*", "**/site-packages/**", "archive/**", "src/analysis/models/**", "temp/**"],
+  "python.analysis.ignore": ["**/site-packages/**", "src/analysis/models/**", "temp/**", "src/analysis/pipeline.py"],
+  "python.analysis.exclude": ["**/node_modules", "**/__pycache__", "**/.*", "**/site-packages/**", "src/analysis/models/**", "temp/**"],
   "python.analysis.diagnosticMode": "openFilesOnly",
   "python.defaultInterpreterPath": "/Users/michal/miniconda3/envs/recut/bin/python",
   "python-envs.defaultEnvManager": "ms-python.python:conda",
   "python-envs.defaultPackageManager": "ms-python.python:conda",
   "files.watcherExclude": {
-    "**/archive/**": true,
     "**/src/analysis/models/**": true,
     "**/__pycache__/**": true,
-    "**/*.egg-info/**": true,
-    "**/temp/**": true
+    "**/*.egg-info/**": true
   },
   "search.exclude": {
-    "**/archive/**": true,
     "**/src/analysis/models/**": true,
-    "**/__pycache__/**": true,
-    "**/temp/**": true
+    "**/__pycache__/**": true
   },
   "explorer.excludeGitIgnore": false,
   "files.exclude": {
-    "**/archive": true,
     "**/__pycache__": true,
     "**/*.egg-info": true,
     "**/src/analysis/models": true
