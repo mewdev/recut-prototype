@@ -17,6 +17,9 @@ dist/
 *.flac
 *.asd
 
+# ...except the deliberately-committed example bundle
+!examples/**/*.mp3
+
 # OS
 .DS_Store
 
