@@ -142,5 +142,8 @@ recut currently uses third-party open-source models for music analysis. All mode
 | **SongFormer** (structure segmentation) | [ASLP-lab/SongFormer](https://github.com/ASLP-lab/SongFormer) via [mewdev/ChordMiniApp](https://github.com/mewdev/ChordMiniApp) | MIT ✅ |
 | **MusicFM** weights | [minzwon/MusicFM](https://huggingface.co/minzwon/MusicFM) | MIT ✅ |
 | **MuQ** weights | [OpenMuQ/MuQ-large-msd-iter](https://huggingface.co/OpenMuQ/MuQ-large-msd-iter) | CC BY-NC 4.0 ⚠ |
+| **Essentia** (key detection) | [MTG/essentia](https://github.com/MTG/essentia) | AGPLv3 ⚠ |
 
 > **⚠ MuQ is non-commercial only** (CC BY-NC 4.0, Tencent AI Lab). SongFormer uses MuQ as its audio encoder, making the structure pipeline non-commercial. Replace MuQ with a MIT-licensed alternative (MERT, EnCodec) before any commercial use.
+
+> **⚠ Essentia is AGPLv3** (free for non-commercial use; a separate commercial license is required otherwise — [MTG/UPF](https://essentia.upf.edu/)). AGPL's copyleft extends to network/SaaS use, not just redistribution — a stronger constraint than MuQ's non-commercial clause. Replace with a permissively-licensed key-detection method before any commercial or hosted use.

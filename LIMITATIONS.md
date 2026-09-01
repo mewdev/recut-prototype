@@ -50,5 +50,11 @@
 - **MuQ (SongFormer's audio encoder) is CC BY-NC 4.0 — non-commercial only.** This
   makes the structure-detection stage of the pipeline non-commercial as shipped.
   Replace MuQ with a MIT-licensed alternative (MERT, EnCodec) before any commercial
-  use. See `README.md`'s model table for the full license breakdown — madmom,
+  use.
+- **Essentia (key detection) is AGPLv3** — free for non-commercial use, a separate
+  commercial license is required otherwise. AGPL's copyleft extends to network/SaaS
+  use, not just redistribution — a stronger constraint than MuQ's clause above.
+  Replace with a permissively-licensed key-detection method before any commercial or
+  hosted use.
+- See `README.md`'s model table for the full license breakdown — madmom,
   Chord-CNN-LSTM, SongFormer itself, and MusicFM are all permissively licensed.
