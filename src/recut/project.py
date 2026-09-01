@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Literal, Optional
@@ -77,20 +77,9 @@ def _nodes_to_json(nodes: list[Node]) -> list[dict]:
     result = []
     for node in nodes:
         if isinstance(node, Clip):
-            result.append(
-                {
-                    "type": "clip",
-                    "segment_name": node.segment_name,
-                    "index": node.index,
-                    "source": node.source,
-                    "bars": node.bars,
-                    "beats": node.beats,
-                    "offset_bars": node.offset_bars,
-                    "offset_beats": node.offset_beats,
-                    "loop": node.loop,
-                    "fx": [effect.to_json() for effect in node.fx],
-                }
-            )
+            fields = asdict(node)
+            fields["fx"] = [effect.to_json() for effect in node.fx]
+            result.append({"type": "clip", **fields})
 
         if isinstance(node, XFade):
             result.append(
