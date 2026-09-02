@@ -2,7 +2,7 @@
 
 # recut
 
-Declarative audio editing — describe music edits in code, recut renders them. Inspired by [Remotion](https://www.remotion.dev), but for audio.
+Declarative audio editing — describe music edits in code, recut renders them.
 
 The system analyzes an audio file into a structured music map (segments, beats, chords), then lets you compose edits programmatically using a simple node-based API.
 
@@ -147,6 +147,12 @@ recut currently uses third-party open-source models for music analysis. All mode
 > **⚠ MuQ is non-commercial only** (CC BY-NC 4.0, Tencent AI Lab). SongFormer uses MuQ as its audio encoder, making the structure pipeline non-commercial. Replace MuQ with a MIT-licensed alternative (MERT, EnCodec) before any commercial use.
 
 > **⚠ Essentia is AGPLv3** (free for non-commercial use; a separate commercial license is required otherwise — [MTG/UPF](https://essentia.upf.edu/)). AGPL's copyleft extends to network/SaaS use, not just redistribution — a stronger constraint than MuQ's non-commercial clause. Replace with a permissively-licensed key-detection method before any commercial or hosted use.
+
+## Inspiration
+
+**[Remotion](https://www.remotion.dev)** — declarative, code-driven video editing; recut's core model, applied to audio instead.
+
+**[VideoAgent](https://github.com/HKUDS/VideoAgent)** — LLM agent orchestrating video editing; agentic pipeline, tool-use over media primitives, natural-language-to-edit.
 
 ## License
 
