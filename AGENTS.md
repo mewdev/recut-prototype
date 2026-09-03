@@ -8,7 +8,7 @@ If the request is to trim, cut, loop, crossfade, or otherwise edit an existing s
 
 If your harness doesn't auto-discover skills from `.claude/skills/`, load those two `SKILL.md` files directly — they're plain markdown with no Claude-Code-specific mechanics beyond the YAML frontmatter.
 
-Not covered by either skill: composing new melodies/lyrics/orchestration (out of scope — `skills/INSPO_music-composition/` is reference material only, not meant to be loaded), or generating/enriching a music map (`recut analyze` / `recut map`, `src/analysis/`, `src/recut/map/make_map.py`).
+Not covered by either skill: composing new melodies/lyrics/orchestration (out of scope), or generating/enriching a music map (`recut analyze` / `recut map`, `src/analysis/`, `src/recut/map/make_map.py`).
 
 ## Python Environment
 Always use `/Users/michal/miniconda3/envs/recut/bin/python` — never `conda run -n recut` (picks up wrong system Python).
@@ -23,7 +23,7 @@ Run both — fix all errors before committing:
 ## Key Files
 - `CHANGELOG.md` — version history + primitives table
 - `src/recut/primitives/` — curried functions: cut, fade, filter_sweep, reverb, delay, xfade, chain; shared envelope curves in `curves.py`
-- `src/recut/map/` — map schema, make_map pipeline, chord data, ui-editor
+- `src/recut/map/` — map schema, make_map pipeline, chord data
 - `src/recut/map/schema.py` — MusicMap (Pydantic BaseModel) + section/beat types
 - `src/recut/map/parser.py` — JSON → MusicMap
 - `src/recut/map/make_map.py` — analysis output → MusicMap
@@ -32,7 +32,7 @@ Run both — fix all errors before committing:
 - `src/recut/project.py` — source registry (.appdata scan, status classification, hash verify) + composition registry (save/load/list edit plans)
 - `src/recut/paths.py` — `.appdata/` layout: audio/, maps/raw/, maps/enriched/, compositions/, renders/
 - `src/analysis/pipeline.py` — Modal GPU pipeline for analysis
-- `tests/` — map, primitives, validator, cli, project, skills test suites
+- `tests/` — map, primitives, validator, compositor, cli, project, skills test suites
 
 ## Primitives Interface
 All primitives are curried closures: `fn(**params) -> (audio: Audio) -> Audio`. Compose with `chain(audio, fade(...), reverb(...), ...)` — bare callables passed positionally.
@@ -40,4 +40,3 @@ All primitives are curried closures: `fn(**params) -> (audio: Audio) -> Audio`. 
 ## Skills
 - `skills/cutting/` — build and render edits (see above)
 - `skills/music-theory/` — musical judgment for cutting decisions (see above)
-- `skills/INSPO_music-composition/` — general composition-advisory reference material, not for direct use

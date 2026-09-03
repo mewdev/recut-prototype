@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Drift check for the `cutting` skill: doc signatures vs live src/recut code.
 
-Mirrors skills/music-composition/scripts/music_theory_sanity_check.py's role as a
-maintainer regression check, but compares against real importable signatures
-instead of regexes over prose — this is the direct fix for the failure mode that
-made archive/skills/cutting go stale (the API moved, the docs didn't).
+Compares docs against real importable signatures instead of regexes over prose —
+this is the direct fix for the failure mode that made archive/skills/cutting go
+stale (the API moved, the docs didn't).
 
 Run via tests/skills/test_cutting_skill.py under `pytest tests/`.
 """

@@ -36,4 +36,4 @@ See `validation-workflow.md` — `label_exists`, `duration_exceeds`, `sequence_b
 
 ## No map generation or DAW/notation concerns here
 
-This skill doesn't cover building/enriching a `MusicMap` (`recut analyze`/`recut map`, `src/recut/map/make_map.py`) or pure music-theory questions (`music-composition` skill) — those are explicitly out of scope, see `SKILL.md`.
+This skill doesn't cover building/enriching a `MusicMap` (`recut analyze`/`recut map`, `src/recut/map/make_map.py`) or musical-judgment questions (`music-theory` skill) — those are explicitly out of scope, see `SKILL.md`.

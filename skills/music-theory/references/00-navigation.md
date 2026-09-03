@@ -7,7 +7,7 @@ Read this first, every time. Find the row, load only the listed file(s).
 | Question | File(s) |
 |---|---|
 | Is this cut boundary clean, or does it leave harmony hanging? Cadence type, tension/resolution | `cut-points-and-cadences.md` |
-| What does this section (intro/verse/pre-chorus/chorus/bridge/outro) actually do? Which recut `SegmentName` does an INSPO section concept map to? | `song-form-and-sections.md` |
+| What does this section (intro/verse/pre-chorus/chorus/bridge/outro) actually do? | `song-form-and-sections.md` |
 | Where's the natural phrase/breath boundary *inside* a segment? Beat/bar alignment, groove feel changes | `phrase-boundaries-and-groove.md` |
 | How should energy/density arc across a sequence of clips? What shape (build, single arch, plateau)? | `energy-arcs-and-density.md` |
 | Which section is the strongest hook to keep in a short edit? | `hooks-and-highlights.md` |

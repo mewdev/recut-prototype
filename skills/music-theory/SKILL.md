@@ -1,6 +1,6 @@
 ---
 name: music-theory
-description: Use this skill when a cutting decision needs real musical judgment, not just structural validity — which section is the strongest hook to keep in a short edit, whether a candidate cut point lands on a clean harmonic cadence or leaves things hanging, how energy/density should arc across a sequence of sections, where a natural phrase boundary falls inside a segment, or how to read the chord/key data in a song's MusicMap. It's the analytical companion to the `cutting` skill: `cutting` handles mechanics (Clip/XFade/compose/validate), this skill handles "is this choice musically good." Also usable standalone for structural/harmonic questions about an existing recording ("what's the hook here," "is this a good place to loop"). Do NOT use for composing new melodies, lyrics, or orchestration — that's `INSPO_music-composition`'s job (a large general composition-advisory skill kept only as reference material, not meant to be loaded for cutting work). Do NOT use for edit mechanics (node building, effects, rendering) — that's `cutting`'s job.
+description: Use this skill when a cutting decision needs real musical judgment, not just structural validity — which section is the strongest hook to keep in a short edit, whether a candidate cut point lands on a clean harmonic cadence or leaves things hanging, how energy/density should arc across a sequence of sections, where a natural phrase boundary falls inside a segment, or how to read the chord/key data in a song's MusicMap. It's the analytical companion to the `cutting` skill: `cutting` handles mechanics (Clip/XFade/compose/validate), this skill handles "is this choice musically good." Also usable standalone for structural/harmonic questions about an existing recording ("what's the hook here," "is this a good place to loop"). Do NOT use for composing new melodies, lyrics, or orchestration (out of scope). Do NOT use for edit mechanics (node building, effects, rendering) — that's `cutting`'s job.
 ---
 
 # Music Theory (for cutting)
@@ -39,7 +39,7 @@ scripts/
 
 ## What this skill does NOT cover
 
-- Writing new melodies, chord progressions, lyrics, or orchestration for material that doesn't exist yet — general composition is `INSPO_music-composition`'s domain (kept only as source material for this skill, not for direct use).
+- Writing new melodies, chord progressions, lyrics, or orchestration for material that doesn't exist yet — out of scope for this skill.
 - Building `Clip`/`XFade` nodes, applying effects, validating, or rendering — that's `cutting`.
 - Generating or enriching a `MusicMap` — that's `recut analyze`/`recut map`.
 
