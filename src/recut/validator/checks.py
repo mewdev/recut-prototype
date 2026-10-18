@@ -91,7 +91,7 @@ def check_sequence_boundaries(nodes: list[Clip], music_map: MusicMap) -> list[Va
     last_node = audio_nodes[-1]
     try:
         seg = get_segment(music_map, last_node.segment_name, last_node.index)
-        if abs(seg.end - last_song_seg.end) > 0.1 and not last_node.fx:
+        if seg.end < last_song_seg.end - 0.1 and not last_node.fx:
             results.append(
                 ValidationResult(
                     severity="warning",

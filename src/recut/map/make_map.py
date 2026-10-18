@@ -46,9 +46,11 @@ def build_segment(
     all_phrases: list[BeatTime],
     audio: np.ndarray,
     sample_rate: int,
+    is_last: bool = False,
 ) -> EnrichedSegment:
     start = snap_to_downbeat(all_downbeats, segment["start"])
-    end = snap_to_downbeat(all_downbeats, segment["end"])
+    # the song's tail (fade-out, silence) has no downbeat to snap to — last segment runs to end of audio
+    end = len(audio) / sample_rate if is_last else snap_to_downbeat(all_downbeats, segment["end"])
     seg_downbeats = downbeats_in(all_downbeats, start, end)
     seg_audio = audio[int(start * sample_rate) : int(end * sample_rate)]
     return EnrichedSegment(
@@ -75,7 +77,10 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
     all_phrases = phrase_in(data["downbeats"])
 
     segments = [
-        build_segment(segment, index, data["downbeats"], data["chords"], all_phrases, audio, sr)
+        build_segment(
+            segment, index, data["downbeats"], data["chords"], all_phrases, audio, sr,
+            is_last=index == len(data["segments"]) - 1,
+        )
         for index, segment in enumerate(data["segments"])
     ]
 

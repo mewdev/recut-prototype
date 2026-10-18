@@ -154,6 +154,14 @@ def test_sequence_boundaries_fx_only_on_one_end_suppresses_only_that_one(music_m
     assert "Cut starts at 'verse'" in results[0].message
 
 
+def test_sequence_boundaries_ending_on_trailing_silence_does_not_warn(music_map):
+    music_map.segments.append(
+        music_map.segments[-1].model_copy(update={"segment_name": "silence", "start": 60.1, "end": 63.0})
+    )
+    results = check_sequence_boundaries([Clip("intro"), Clip("chorus"), Clip("silence")], music_map)
+    assert results == []
+
+
 # --- validate() integration ------------------------------------------------
 
 
