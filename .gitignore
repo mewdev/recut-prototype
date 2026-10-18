@@ -31,3 +31,6 @@ dist/
 
 # App data (generated files — audio, analysis, maps, output)
 .appdata/
+
+# Claude Code session transcripts (copied by .claude Stop hook)
+sessions/
