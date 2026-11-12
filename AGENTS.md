@@ -2,6 +2,18 @@
 
 Music cutting system ("Remotion for audio"): analysis pipeline → JSON music map → primitives → LLM orchestration → specialized cutting model.
 
+## Building the prototype (week 1): start here
+
+If you were given a build task (an ID like A3, B2 or C5), read these in order and nothing else unless the task needs it:
+1. `docs/PLAN.md`: decisions (§2) and **contracts (§3), which are frozen**
+2. `docs/workstreams/<A-engine|B-backend|C-frontend>.md`: your task list, the files you own, and what you must not touch
+3. `docs/STATUS.md`: current state, blockers, and the handoff log
+
+Rules:
+- Do **one task**, make its *Done when* check pass, update `docs/STATUS.md`, then commit.
+- Never edit files outside your workstream. Never change `src/recut/contracts/`.
+- If something is unclear, **don't guess**: write it under *Blockers* in `docs/STATUS.md` and stop or move to the next task.
+
 ## Cutting or editing an audio track
 
 If the request is to trim, cut, loop, crossfade, or otherwise edit an existing song via the recut framework, use the `cutting` skill (`skills/cutting/SKILL.md`) — it covers the `Clip`/`XFade`/`compose()`/`validate()` API and the CLI. Pair it with the `music-theory` skill (`skills/music-theory/SKILL.md`) for musical judgment (hook selection, cadence quality, energy arcs).

@@ -191,6 +191,28 @@ The browser doesn't decode the whole file just to draw it.
 - Remove the inspector editing and the Assistant chat for week 1.
 - Done when: a full review can be done in under 30s per cut.
 
+## 4a. Which model does what (budget)
+
+The rule: **expensive models write the contracts and tests, cheap models make the tests
+pass.** Cheap models fail by guessing. Frozen contracts, small tasks, and a "Done when"
+command for each task (see `docs/workstreams/`) leave them nothing to guess.
+
+| Work | Model | Why |
+|---|---|---|
+| D1 contracts + fixture ticket, I1 integration, reviewing PRs/diffs between workstreams | strongest (Opus) | Mistakes here spread to every workstream |
+| Workstream tasks (A2–A5, B2–B3, C3–C6) | Sonnet | Multi-file work with music/DSP or UI subtleties |
+| Mechanical tasks (A1, A6, B1, B4–B6, C1–C2, C7), tests, docs updates | Haiku | Clearly specified, bounded by tests |
+| Open-weights models (via OpenCode/Aider, which read `AGENTS.md`) | only Haiku-tier tasks | Fine for small single-file tasks with tests; unreliable for multi-file changes |
+| **Cutting agent** on tickets (the product itself) | start with Sonnet; try cheaper later | `meta.json.model` records the model, so success rate can be compared per model from the logged data |
+
+How to save tokens:
+- One task per agent session. Start fresh for the next task: context grows with every
+  turn and costs more.
+- Agents read only `AGENTS.md`, `docs/PLAN.md` §3, their brief and `docs/STATUS.md`,
+  not the whole repo.
+- `docs/STATUS.md` is the handoff between sessions, so nothing is lost when a session
+  ends.
+
 ## 5. After week 1 (not in scope now)
 
 - Inspector editing saved as correction diffs.
