@@ -83,7 +83,7 @@ Output sections:
 2. **Failure tags**: counts of every tag (splice tags + overall tags, across all reviewed
    iterations), sorted descending. Group them as:
    - **analysis**: `map_wrong`
-   - **engine**: `missing_primitive`, `artifact`
+   - **engine**: `missing_primitive`, `artifact`, `fx_wrong`
    - **validator-catchable**: `off_beat`, `harmonic_clash`, `abrupt`, `duration_miss`
    - **judgement**: `intent_misread`, `wrong_section`, `energy_drop`, `bad_ending`
 3. **Validator misses**: splices you marked bad that had **no** validator issue in

@@ -226,6 +226,7 @@ Tag set (fixed, so tags can be counted across sessions):
 - `intent_misread`, `wrong_section`, `off_beat`, `harmonic_clash`, `energy_drop`, `abrupt`, `bad_ending`, `duration_miss`, `artifact`
 - `map_wrong`: the analysis was wrong
 - `missing_primitive`: the engine can't express the right cut
+- `fx_wrong`: an effect or its settings sound wrong (reverb too loud/squashed, wrong type, bad automation). Added 2026-11-13 after the first real review.
 
 ### 3.6 API (FastAPI)
 

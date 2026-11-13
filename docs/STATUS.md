@@ -122,6 +122,13 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — First real review (operator, demo ticket): it2 s3 bad, "reverb squashes,
+  needs to be more subtle, probably reverb type + automation". `qc_limiting` (3.4 dB) agreed
+  with the ear; `qc_tilt_jump` at s3 wasn't mentioned (likely noise). No tag fitted, so
+  `fx_wrong` was added. Likely cause: full-range send into the reverb on a loud master (kick
+  and bass in the reverb pump the limiter); the DAW fix is a return low-cut of ~300–500 Hz,
+  a lower send and a shorter decay. Recipe deliberately not changed yet: session 2 tests
+  whether the agent finds it from the review alone. Candidate task: convolution reverb.
 - 2026-11-13 — A9 + Q1 merged and reviewed (lead session): 210 tests pass with and without
   Essentia. Demo it2 issues: qc_loudness −8.9 LUFS, qc_limiting 3.4 dB, qc_true_peak +0.1
   dBTP, qc_tilt_jump at s3 (chorus → inst contrast); Essentia's 7 source transients become

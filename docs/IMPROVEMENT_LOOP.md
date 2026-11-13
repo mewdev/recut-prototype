@@ -19,6 +19,7 @@ with the strongest model, in a fresh session. The operator approves every change
    |---|---|---|
    | validator-catchable, or "validator misses" | a new or tighter rule in `src/recut/validator/` | splices marked `off_beat` that the downbeat rule missed → tighten the tolerance |
    | judgement | `skills/cutting/` or `skills/music-theory/` docs | agents keep ending on a chorus with full drums → add an exit rule with an example |
+   | `fx_wrong` | the cutting skill's effect recipes (levels, EQ on returns), or a better device (e.g. convolution reverb) | reverb wash squashes the limiter → low-cut the return, lower the send |
    | engine | a new primitive / Clip field | `missing_primitive` on partial fades → issue #53 |
    | analysis | the map pipeline (`src/analysis/`, `make_map.py`) | segment boundaries wrong on track X |
    | intent_misread | the intake form or `intent.json` instructions | "keep the drop" was read as "keep the chorus" |

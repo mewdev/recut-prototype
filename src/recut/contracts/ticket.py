@@ -20,6 +20,7 @@ Tag = Literal[
     "artifact",
     "map_wrong",
     "missing_primitive",
+    "fx_wrong",
 ]
 TAGS: tuple[str, ...] = Tag.__args__  # type: ignore[attr-defined]
 
