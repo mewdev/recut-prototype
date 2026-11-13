@@ -94,7 +94,7 @@ recut --help
 recut analyze --help
 ```
 
-Everything recut generates lives in `.appdata/` (git-ignored):
+Everything recut generates lives in `.appdata/` (git-ignored) **in the repo folder**, wherever you run `recut` from. Set `RECUT_HOME=/some/folder` to keep it elsewhere (`$RECUT_HOME/.appdata/`):
 - `.appdata/audio/<stem>.mp3` — source audio, copied in by `analyze`
 - `.appdata/maps/raw/<stem>.json` — raw model output (beats, chords, structure)
 - `.appdata/maps/enriched/<stem>.json` — enriched music map
