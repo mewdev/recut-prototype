@@ -1,13 +1,13 @@
-"""Timeline renderer for plan.json v2 (thin slice of workstream A).
+"""Timeline renderer for plan.json v2 (workstream A: A1-A4, A7, A8).
 
 Places clips on a timeline buffer and sums overlaps (instead of concatenating), applies
-clip gain, fade handles and xfade joins, then the master limiter, and reports what it did
-as RenderInfo (render.json).
+clip gain, fade handles and xfade joins, routes clip sends into return tracks (each
+return's device chain runs once over the whole timeline and rings out past the last clip),
+applies track volume/pan, then the master chain, and reports what it did as RenderInfo
+(render.json). Gain/send/device-parameter automation is rendered per sample (see
+recut.automation); devices live in recut.devices.
 
-Implemented here: sources, single track, clip selection/loop/gain/fade handles, xfade
-(length, shape, out_shape/in_shape incl. "hold"), master limiter, legacy validator.
-Not yet rendered (reported as `not_rendered` warnings): devices, sends/returns,
-automation, track volume/pan → tasks A7/A8.
+Features the engine does not render yet are reported as `not_rendered` warnings.
 """
 
 import math
@@ -16,15 +16,24 @@ from pathlib import Path
 
 import librosa
 import numpy as np
-from pedalboard import Limiter, Pedalboard  # type: ignore
 
+from recut import devices as dev_mod
 from recut.audio import Audio
+from recut.automation import AutomationError, build_curve, span_seconds
 from recut.compositor.nodes import Clip, XFade
-from recut.contracts.plan import ClipNode, Plan, Ramp, XFadeNode
-from recut.contracts.render import Issue, RenderInfo, RenderSegment, SourceInfo, Splice
+from recut.contracts.plan import ClipNode, Plan, XFadeNode
+from recut.contracts.render import (
+    AutomationSpan,
+    Issue,
+    RenderInfo,
+    RenderSegment,
+    SourceInfo,
+    Splice,
+)
 from recut.contracts.units import db_to_gain, parse_time, ramp_in
 from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment, parse_recut_map
 from recut.map.schema import MusicMap
+from recut.primitives.curves import make_envelope
 from recut.validator import validate
 from recut.validator.rules import RULES
 
@@ -137,18 +146,87 @@ def _validator_issues(plan: Plan, sources: dict[str, LoadedSource]) -> list[Issu
     ]
 
 
-def render_plan(plan: Plan, base_dir: Path) -> tuple[Audio, RenderInfo]:
+TAIL_FLOOR_DB = -60.0  # return tails are cut where they fall below this level
+TAIL_MAX_S = 10.0      # ...or this many seconds after the last clip
+
+
+@dataclass
+class _Placed:
+    node: ClipNode
+    start: int
+    samples: np.ndarray  # (2, n) after gain, fades and devices; xfade ramps are applied in place
+    sends: dict[str, "np.ndarray | float"]
+    bpm: float
+
+
+def _legacy_overlap(ms: float, curve: str, sr: int, n_prev: int, n_next: int):
+    """Old-format xfade: overlap = int(ms * sr / 1000) and curve pair from make_envelope."""
+    n = int(ms * sr / 1000)
+    if n >= n_prev or n >= n_next:
+        raise ValueError(f"xfade_ms={ms} longer than one segment (a={n_prev} samples, b={n_next} samples)")
+    return n, make_envelope(1.0, 0.0, n, curve), make_envelope(0.0, 1.0, n, curve)  # type: ignore[arg-type]
+
+
+def _check_targets(autos, owner: str, device_ids: dict[str, object], return_ids: set[str]) -> None:
+    for au in autos:
+        t = au.target
+        ok = t == "gain" or (t.startswith("sends.") and t[6:] in return_ids)
+        if not ok and t.startswith("devices."):
+            parts = t.split(".")
+            d = device_ids.get(parts[1]) if len(parts) == 3 else None
+            ok = d is not None and parts[2] in type(d).model_fields and parts[2] not in ("id", "type")
+            if not ok:
+                hint = (f" Devices here: {sorted(device_ids)}" if device_ids else
+                        f" {owner} has no devices")
+                raise PlanError(f"{owner}: automation target {t!r} is not a parameter of a device on it.{hint}")
+        if not ok:
+            raise PlanError(f"{owner}: unknown automation target {t!r}. Use 'gain', 'sends.<return id>' "
+                            f"(returns: {sorted(return_ids) or 'none'}) or 'devices.<device id>.<parameter>'")
+
+
+def _unsupported(devices: list, owner: str, issues: list[Issue], node: str | None = None) -> list:
+    keep = []
+    for d in devices:
+        if dev_mod.is_supported(d):
+            keep.append(d)
+        else:
+            issues.append(Issue(severity="warn", rule="not_rendered", node=node,
+                                message=f"{owner}: device {d.id} ({d.type}) not rendered yet"))
+    return keep
+
+
+def _pan(x: np.ndarray, pan: float) -> np.ndarray:
+    """Constant-power pan, pan in -50 (L) … 50 (R); unity at the centre."""
+    angle = (pan / 50 + 1) * math.pi / 4
+    out = x.copy()
+    out[0] *= math.sqrt(2) * math.cos(angle)
+    out[1] *= math.sqrt(2) * math.sin(angle)
+    return out
+
+
+def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[float, str]] | None = None
+                ) -> tuple[Audio, RenderInfo]:
+    """Render a plan to audio + render.json info.
+
+    `_legacy_xfades` is internal (set by recut.legacy for old saved compositions): it maps an
+    xfade node id to (ms, curve) so the old `qsin` fade-out (1 - sin, equal-gain) and the
+    old overlap length are reproduced exactly; the v2 contract has no shape for that.
+    """
     if len(plan.tracks) > 1:
         raise PlanError("multi-track not supported yet")
+    legacy = _legacy_xfades or {}
     sources = load_sources(plan, base_dir)
     sr = next(iter(sources.values())).audio.sr
+    first_map = next(iter(sources.values())).music_map
+    bpm0, bpb0 = first_map.bpm, first_map.beats_per_bar
     track = plan.tracks[0]
+    return_ids = {r.id for r in plan.returns}
     issues: list[Issue] = []
 
-    placed: list[tuple[int, np.ndarray]] = []  # (start sample, samples)
+    placed: list[_Placed] = []
     segments: list[RenderSegment] = []
     splices: list[Splice] = []
-    spans_auto = []
+    spans_auto: list[AutomationSpan] = []
     cursor = 0
     pending: XFadeNode | None = None
     prev_node: ClipNode | None = None
@@ -159,89 +237,143 @@ def render_plan(plan: Plan, base_dir: Path) -> tuple[Audio, RenderInfo]:
             continue
         src = sources[node.source]
         m = src.music_map
+        bpm, bpb = m.bpm, m.beats_per_bar
         s0, s1 = _clip_bounds(node, m)
         a, b = int(round(s0 * sr)), int(round(s1 * sr))
         clip = src.audio.samples[:, a:b].copy()
         if node.loop:
             clip = np.concatenate([clip] * node.loop, axis=-1)
-        clip *= db_to_gain(node.gain)
         n_len = clip.shape[-1]
+        _check_targets(node.automation, f"clip {node.id}", {d.id: d for d in node.devices}, return_ids)
+        try:
+            gain = build_curve(node.automation, "gain", n_len, sr, bpm, bpb, "level")
+            send_curves: dict[str, np.ndarray | float] = {}
+            for rid in return_ids:
+                base = db_to_gain(node.sends.get(rid, "-inf"))
+                curve = build_curve(node.automation, f"sends.{rid}", n_len, sr, bpm, bpb, "level")
+                if curve is not None or base > 0:
+                    send_curves[rid] = base if curve is None else curve
+        except AutomationError as e:
+            raise PlanError(f"clip {node.id}: {e}") from e
+        clip *= db_to_gain(node.gain) if gain is None else gain
         if node.fade_in:
-            k = min(n_len, int(parse_time(node.fade_in.length, m.bpm, m.beats_per_bar) * sr))
+            k = min(n_len, int(parse_time(node.fade_in.length, bpm, bpb) * sr))
             clip[:, :k] *= ramp_in(node.fade_in.shape, k)
         if node.fade_out:
-            k = min(n_len, int(parse_time(node.fade_out.length, m.bpm, m.beats_per_bar) * sr))
+            k = min(n_len, int(parse_time(node.fade_out.length, bpm, bpb) * sr))
             clip[:, n_len - k:] *= ramp_in(node.fade_out.shape, k)[::-1]
+        if node.devices:
+            _unsupported(node.devices, f"clip {node.id}", issues, node.id)
+            if any(dev_mod.is_supported(d) for d in node.devices):
+                issues.append(Issue(severity="warn", rule="not_rendered", node=node.id,
+                                    message=f"clip {node.id}: clip devices not rendered yet (engine task A8)"))
 
         overlap = 0
         if pending is not None and placed:
-            want = int(parse_time(pending.length, m.bpm, m.beats_per_bar) * sr)
-            prev_start, prev = placed[-1]
-            overlap = min(want, prev.shape[-1] - 1, n_len - 1)
+            prev = placed[-1]
+            if pending.id in legacy:
+                overlap, out_ramp, in_ramp = _legacy_overlap(*legacy[pending.id], sr, prev.samples.shape[-1], n_len)
+                want = overlap
+            else:
+                want = int(parse_time(pending.length, bpm, bpb) * sr)
+                overlap = min(want, prev.samples.shape[-1] - 1, n_len - 1)
+                out_ramp = ramp_in(pending.shape_out, overlap)[::-1]
+                in_ramp = ramp_in(pending.shape_in, overlap)
             if overlap < want:
                 issues.append(Issue(severity="warn", rule="xfade_clamped", node=pending.id,
                                     message=f"xfade {pending.id} shortened to {overlap / sr * 1000:.0f} ms (a clip is shorter than the requested {pending.length})"))
             if overlap > 0:
-                prev[:, prev.shape[-1] - overlap:] *= ramp_in(pending.shape_out, overlap)[::-1]
-                clip[:, :overlap] *= ramp_in(pending.shape_in, overlap)
+                prev.samples[:, prev.samples.shape[-1] - overlap:] *= out_ramp
+                clip[:, :overlap] *= in_ramp
         start = cursor - overlap
 
         if prev_node is not None:
             splices.append(Splice(
                 id=f"s{len(splices) + 1}", out_time=start / sr, from_=prev_node.id, to=node.id,
                 cross_source=prev_node.source != node.source, overlap_ms=overlap / sr * 1000,
-                out_shape=pending.shape_out if pending and overlap else None,
-                in_shape=pending.shape_in if pending and overlap else None,
+                out_shape=(legacy[pending.id][1] if pending.id in legacy else pending.shape_out)
+                if pending and overlap else None,
+                in_shape=(legacy[pending.id][1] if pending.id in legacy else pending.shape_in)
+                if pending and overlap else None,
             ))
-        placed.append((start, clip))
+        placed.append(_Placed(node, start, clip, send_curves, bpm))
         segments.append(RenderSegment(
             node_id=node.id, source=node.source, label=f"{node.segment}#{node.index}",
             src_start=s0, src_end=s1, out_start=start / sr, out_end=(start + n_len) / sr,
         ))
         for au in node.automation:
-            if isinstance(au, Ramp):
-                over = parse_time(au.over, m.bpm, m.beats_per_bar)
-                rel = 0.0 if au.at == "start" else (n_len / sr - over if au.at == "end"
-                                                     else parse_time(au.at, m.bpm, m.beats_per_bar))
-                spans_auto.append(dict(node_id=node.id, target=au.target,
-                                       out_start=start / sr + rel, out_end=start / sr + rel + over))
-        unrendered = [w for w, v in (("devices", node.devices), ("sends", node.sends),
-                                     ("automation", node.automation)) if v]
-        if unrendered:
-            issues.append(Issue(severity="warn", rule="not_rendered", node=node.id,
-                                message=f"clip {node.id}: {', '.join(unrendered)} not rendered yet (engine tasks A7/A8) — preview plays it dry"))
+            rel0, rel1 = span_seconds(au, bpm, bpb, n_len / sr)
+            spans_auto.append(AutomationSpan(node_id=node.id, target=au.target,
+                                             out_start=start / sr + rel0, out_end=start / sr + rel1))
         cursor = start + n_len
         prev_node, pending = node, None
 
-    for what, present in (("track devices/automation", track.devices or track.automation),
-                          ("track volume/pan", track.volume not in (0, 0.0) or track.pan != 0),
-                          ("returns", plan.returns)):
-        if present:
-            issues.append(Issue(severity="warn", rule="not_rendered",
-                                message=f"{what} not rendered yet (engine tasks A7/A8)"))
+    timeline = max(p.start + p.samples.shape[-1] for p in placed)
+    pad = int(TAIL_MAX_S * sr)
 
-    total = max(s + c.shape[-1] for s, c in placed)
-    mix = np.zeros((2, total), dtype=np.float32)
-    for s, c in placed:
-        mix[:, s:s + c.shape[-1]] += c
+    # ---- track: sum clips, devices, volume, pan ------------------------------------------
+    bus = np.zeros((2, timeline + pad), dtype=np.float32)
+    returns_in = {rid: np.zeros((2, timeline + pad), dtype=np.float32) for rid in return_ids}
+    for p in placed:
+        n = p.samples.shape[-1]
+        bus[:, p.start:p.start + n] += p.samples
+        for rid, g in p.sends.items():
+            returns_in[rid][:, p.start:p.start + n] += p.samples * g
+    clip_peak = max(float(np.abs(p.samples).max()) for p in placed)
+
+    _check_targets(track.automation, f"track {track.id}", {d.id: d for d in track.devices}, return_ids)
+    try:
+        tgain = build_curve(track.automation, "gain", timeline + pad, sr, bpm0, bpb0, "level", timeline / sr)
+    except AutomationError as e:
+        raise PlanError(f"track {track.id}: {e}") from e
+    ctx = dev_mod.Ctx(sr, bpm0, bpb0, timeline / sr, track.automation)
+    bus = dev_mod.apply_devices(_unsupported(track.devices, f"track {track.id}", issues), bus, ctx)
+    bus = bus * (db_to_gain(track.volume) if tgain is None else tgain)
+    if track.pan:
+        bus = _pan(bus, track.pan)
+    for au in track.automation:
+        rel0, rel1 = span_seconds(au, bpm0, bpb0, timeline / sr)
+        spans_auto.append(AutomationSpan(node_id=track.id, target=au.target, out_start=rel0, out_end=rel1))
+
+    # ---- returns: one device chain over the whole send buffer, tails ring out ------------
+    floor = 10 ** (TAIL_FLOOR_DB / 20)
+    tail_end = 0
+    mix_parts = [bus]
+    for r in plan.returns:
+        buf = returns_in[r.id]
+        if not np.any(buf):
+            continue
+        _check_targets(r.automation, f"return {r.id}", {d.id: d for d in r.devices}, return_ids)
+        rctx = dev_mod.Ctx(sr, bpm0, bpb0, timeline / sr, r.automation)
+        out = dev_mod.apply_devices(_unsupported(r.devices, f"return {r.id}", issues), buf, rctx)
+        try:
+            rgain = build_curve(r.automation, "gain", out.shape[-1], sr, bpm0, bpb0, "level", timeline / sr)
+        except AutomationError as e:
+            raise PlanError(f"return {r.id}: {e}") from e
+        out = out * (db_to_gain(r.volume) if rgain is None else rgain)
+        for au in r.automation:
+            rel0, rel1 = span_seconds(au, bpm0, bpb0, timeline / sr)
+            spans_auto.append(AutomationSpan(node_id=r.id, target=au.target, out_start=rel0, out_end=rel1))
+        loud = np.nonzero(np.abs(out).max(axis=0) > floor)[0]
+        if loud.size:
+            tail_end = max(tail_end, int(loud[-1]) + 1)
+        mix_parts.append(out.astype(np.float32))
+
+    total = max(timeline, tail_end)
+    mix = sum(part[:, :total] for part in mix_parts[1:]) + bus[:, :total] if len(mix_parts) > 1 else bus[:, :total]
+    mix = np.ascontiguousarray(mix, dtype=np.float32)
+
+    # ---- master ------------------------------------------------------------------------
+    peak_pre = float(np.abs(mix).max()) if total else 0.0
+    peak_pre_db = 20 * math.log10(peak_pre) if peak_pre > 0 else -math.inf
+    mctx = dev_mod.Ctx(sr, bpm0, bpb0, total / sr)
+    mix = dev_mod.apply_devices(_unsupported(plan.master.devices, "master", issues), mix, mctx)
+    # only flag clipping the edit created (overlaps, returns), not a source that is already hot
+    if peak_pre_db > 0 and peak_pre > clip_peak * 1.06:
+        issues.append(Issue(severity="warn", rule="peak_clip",
+                            message=f"overlapping audio sums to {peak_pre_db:+.1f} dBFS before the master chain"))
 
     peak = float(np.abs(mix).max()) if total else 0.0
-    peak_db = 20 * math.log10(peak) if peak > 0 else -math.inf
-    limited = False
-    for dev in plan.master.devices:
-        if dev.type == "limiter" and peak_db > dev.ceiling:
-            # pedalboard's (JUCE) Limiter normalizes its output to 0 dBFS → scale to the ceiling
-            mix = Pedalboard([Limiter(threshold_db=dev.ceiling)])(mix, sr) * (10 ** (dev.ceiling / 20))
-            limited = True
-        elif dev.type != "limiter":
-            issues.append(Issue(severity="warn", rule="not_rendered",
-                                message=f"master device {dev.id} ({dev.type}) not rendered yet"))
-    # only flag clipping the edit created (overlaps), not a source that is already hot
-    clip_peak = max(float(np.abs(c).max()) for _, c in placed)
-    if peak_db > 0 and peak > clip_peak * 1.06:
-        issues.append(Issue(severity="warn", rule="peak_clip",
-                            message=f"overlapping audio sums to {peak_db:+.1f} dBFS before the master chain"))
-
     issues = _validator_issues(plan, sources) + issues
     if plan.target_duration_s:
         diff = total / sr - plan.target_duration_s
@@ -263,7 +395,8 @@ def render_plan(plan: Plan, base_dir: Path) -> tuple[Audio, RenderInfo]:
             for sid, s in sources.items()
         },
         automation=spans_auto,
-        peak_dbfs=peak_db if peak > 0 else -120.0,
-        limiter_applied=limited,
+        returns_tail_end=tail_end / sr if tail_end else None,
+        peak_dbfs=20 * math.log10(peak) if peak > 0 else -120.0,
+        limiter_applied=mctx.limited,
     )
     return Audio(mix, sr), info

@@ -27,13 +27,13 @@ def test_medley_segments_and_splices(demo):
     assert r["segments"][1]["out_end"] - r["segments"][2]["out_start"] == pytest.approx(2 * beat, abs=1e-3)
 
 
-def test_hold_overlap_and_unrendered_features_reported(demo):
+def test_hold_overlap_and_send_automation_reported(demo):
     root, tid = demo
     _, r = load(root, tid, 2)
     s3 = r["splices"][2]
     assert (s3["overlap_ms"], s3["out_shape"], s3["in_shape"]) == (pytest.approx(30, abs=0.1), "hold", "equal_power")
-    rules = {i["rule"] for i in r["issues"]}
-    assert "not_rendered" in rules  # sends/automation/returns are A7/A8
+    assert "not_rendered" not in {i["rule"] for i in r["issues"]}  # sends/returns render now
+    assert r["returns_tail_end"] is not None
     assert r["automation"][0]["target"] == "sends.A"
     seg = r["segments"][2]
     assert r["automation"][0]["out_end"] == pytest.approx(seg["out_end"], abs=1e-3)

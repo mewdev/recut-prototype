@@ -24,7 +24,7 @@ agent won't know it.
 | A4 render.json | done | `engine.render_plan` → `RenderInfo` |
 | A5 cross-song validator rules | todo | |
 | A6 session logging | partial | the server/CLI log renders + reviews to `events.jsonl`; `RECUT_SESSION` for direct `compose()` calls is still todo |
-| A7 timeline engine: tracks, joins, returns/sends, master | todo | Sonnet, after A4. Ending-transplant core |
+| A7 timeline engine: tracks, joins, returns/sends, master | done | `engine.py`, `devices.py` (reverb + limiter), `automation.py` (gain/send ramps + points). Tests: `tests/engine/test_timeline.py` |
 | A8 devices, automation, old-format adapter, skill docs | todo | Sonnet, after A7 |
 | B1 ticket store | done | `src/recut/tickets.py` |
 | B2 FastAPI app | done (no share routes) | `src/recut/server/app.py`, `recut serve` |
@@ -48,6 +48,16 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-13 — Level automation (`gain`, `sends.*`, volume) interpolates in the linear gain
+  domain with the shape warping progress, so `-inf → 0` + `exp` swells from silence. Before a
+  ramp starts the curve holds its `from`, after it ends its `to`; automation overrides the
+  static `gain`/send value. Sends are post-fader (after clip gain, fades, xfade ramps).
+- 2026-11-13 — The Freeverb `reverb` device: `decay` → room_size via a measured table
+  (`devices.REVERB_DECAY_TABLE`, 0.53–9.5 s), `size` scales decay (x0.7…x1.3), the wet signal
+  is level-compensated so `dry_wet: 100` is about as loud as the input.
+- 2026-11-13 — Legacy xfade path: `render_plan(..., _legacy_xfades={node_id: (ms, curve)})`
+  is an internal argument (not in the contract) that reproduces the old overlap length and
+  old curves, including `qsin` out = `1 - sin`. Only `recut.legacy` (A8) should pass it.
 - 2026-11-13 — Thin slice first (operator's request): D1 + engine + tickets + server + a
   no-build page, so the operator can pull and test before the workstreams fill in.
 - 2026-11-13 — Renders are `audio.wav` (fast, lossless); mp3 only for client share links later.
@@ -61,6 +71,12 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — A7 done. Clip `sends` feed one buffer per return; the return's chain runs once
+  over the whole timeline (+10 s pad), the tail is cut where it falls below -60 dBFS
+  (`returns_tail_end`), track `volume`/constant-power `pan`, master chain, `peak_dbfs` (output
+  level, after the master) and `limiter_applied`. Gain and send automation render per sample.
+  `not_rendered` warnings are gone for sends/returns/automation; clip/track devices other
+  than reverb/limiter still warn until A8. 144 tests pass.
 - 2026-11-13 — D1 + thin slice done. Contracts in `src/recut/contracts/`; engine
   `src/recut/engine.py`; ticket store `src/recut/tickets.py`; review server
   `src/recut/server/` (`recut serve`); CLI `recut ticket ...`. 136 tests pass. Tested in
