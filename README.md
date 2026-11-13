@@ -1,114 +1,115 @@
-> **⚠ Early prototype / MVP** — work in progress, APIs may change.
+> **⚠ Early prototype**: in active testing, formats and APIs may still change.
 
 # recut
 
-Declarative audio editing — describe music edits in code, recut renders them.
-
-The system analyzes an audio file into a structured music map (segments, beats, chords), then lets you compose edits programmatically using a simple node-based API.
+AI music editing, with recut doing for audio what Remotion does for video. A client sends a track and says what
+they want ("make it 2:30, keep the second chorus, end on the real ending"). An agent
+writes the edit as a small Ableton-style plan, recut renders it, and a human reviews it
+in the browser. Every session is logged, so the system improves from the reviews.
 
 ```
-audio → analyze → music map → compose edits → output audio
+track → analysis (Modal) → music map → agent writes plan.json → render + checks
+      → browser review (per join: ok/bad, tags, note) → agent reworks → ship to client
+                                         ↓
+                weekly: recut report → improvement pass → general fixes (PR)
 ```
 
-## Setup
+## Contents
+- [Quick start](#quick-start)
+- [Working with tickets](#working-with-tickets)
+- [The weekly improvement pass](#the-weekly-improvement-pass)
+- [Plan format](#plan-format)
+- [Automatic checks](#automatic-checks)
+- [CLI reference](#cli-reference)
+- [Data layout](#data-layout)
+- [Setup details](#setup-details) (Intel Mac, Modal, Docker)
+- [Docs map](#docs-map)
+- [Limitations](#limitations) · [Third-party models](#third-party-models) · [License](#license)
 
-**1. Create and activate the conda environment**
-```bash
-conda create -n recut python=3.10
-conda activate recut
-```
-
-**2. Install recut and its dependencies**
-```bash
-pip install -e .
-```
-
-Use `pip install -e ".[dev]"` to also get the test tools (pytest, ruff, httpx).
-
-**Intel Mac notes:**
-- Some dependencies no longer ship Intel-Mac packages. Install with
-  `pip install --only-binary=llvmlite,numba,cbor2 -e ".[dev,qc]"`, so pip picks the
-  newest versions that still have ready-made Intel builds instead of compiling (which
-  needs CMake/Rust).
-- Essentia's Intel-Mac build crashes Python on import ("Failed loading SDL2 library").
-  The `qc` extra skips it on Intel Macs, and QC uses its basic detectors there. If you
-  installed it already: `pip uninstall -y essentia`.
-
-**Try the review GUI (no Modal needed):**
-```bash
-recut ticket demo     # demo ticket from examples/summer-party, 2 rendered iterations
-recut serve           # → http://localhost:8000
-```
-Edit a `plan.json` under `.appdata/tickets/<id>/sessions/1/iterations/2/` and the browser
-re-renders and reloads at the same playhead. Workflow and formats: `docs/PLAN.md`.
-
-**3. Set up Modal (for audio analysis)**
-
-Requires a [Modal account](https://modal.com) — free tier is sufficient.
+## Quick start
 
 ```bash
-pip install modal
-modal token new       # one-time authentication, saves to ~/.modal.toml
-modal deploy src/analysis/pipeline.py
+git clone https://github.com/mewdev/recut-prototype.git && cd recut-prototype
+conda create -n recut python=3.11 -y && conda activate recut
+pip install -e ".[dev,qc]"          # Intel Mac: see "Setup details"
+
+recut ticket demo                   # demo ticket from examples/summer-party, 2 cuts rendered
+recut serve                         # → http://localhost:8000
 ```
 
-Models are cloned automatically at deploy time — no manual download needed.
+In the browser:
+- `space` plays and pauses.
+- `a` switches between the cut and the original at the same musical position.
+- `n` / `p` jump between joins, and `g` / `b` mark a join ok or bad.
+- Pick a verdict, write a note and save.
 
-## Run with Docker
+Edit an iteration's `plan.json` and save it: the browser re-renders in about 0.1–0.5 s
+and keeps playing from the same place.
 
-One image runs on Intel Mac (Docker Desktop), Arch Linux, and the VPS. Create `~/.modal.toml`
-first (step 3 above); the compose file mounts it so `recut ticket work` can run analysis on Modal.
+## Working with tickets
+
+A **ticket** is one client request: tracks plus text. Tickets are **data, not code**.
+They live in `.appdata/tickets/`, which is git-ignored, and every attempt and review is
+kept there.
 
 ```bash
-docker compose up -d                                # build and start the review server
-docker compose exec recut recut ticket demo         # create the demo ticket
-# then open http://localhost:8000
+recut ticket new song.mp3 --text "make it 2:30, end on the real ending" --duration 150
+recut ticket work <id> --model sonnet     # analyzes new tracks (Modal), starts a session, prints paths
 ```
 
-Tickets and renders are stored in `./.appdata` on the host. The container restarts unless stopped.
-To run the tests inside the image: `docker compose run --rm recut python -m pytest tests/ -q`.
+1. **The agent cuts.** Open Claude Code in the repo and say *"Work ticket `<id>`
+   following AGENTS.md"*. The agent writes `intent.json` (how it read the request), then
+   `plan.json`, renders it, and puts each attempt in a new iteration.
+2. **You review** at `recut serve` → `/t/<id>`:
+   - Mark every join ok or bad, and tag the bad ones (`off_beat`, `fx_wrong`,
+     `bad_ending`, …).
+   - Pick a verdict:
+     - **ship**: I'd send it exactly as it is
+     - **fixable**: right direction, but I'd still change something
+     - **reject**: wrong approach
+   - Write what's wrong in plain words. The agent reads it.
+3. **Fixable or reject** → run `recut ticket work <id>` again. The agent reworks from your
+   review. **Ship** → send it to the client.
 
-## CLI
+Clients can also upload through the form at `/new`.
+
+**Transcript hook (once per machine).** It lets the improvement pass see the agent's
+reasoning. See "Transcript hook" in [`AGENTS.md`](AGENTS.md).
+
+## The weekly improvement pass
+
+Run it every ~5–10 tickets. Code changes happen **only** here, and they must be
+**general improvements, never per-ticket workarounds** (see the core principle in
+[`AGENTS.md`](AGENTS.md)).
 
 ```bash
-# Analyze an audio file → raw JSON (also copies the audio into .appdata/audio/)
-recut analyze path/to/track.mp3
-
-# Build enriched music maps for all sources that need one
-recut map
-
-# Registry state for all sources (ready / needs_map / needs_analysis / hash_mismatch)
-recut status
-
-# List saved compositions
-recut compositions
-
-# Validate a saved composition against its music map
-recut validate <name>
-
-# Validate, then render a saved composition to audio (--force skips validation errors, --out sets the path)
-recut render <name>
-
-# Help
-recut --help
-recut analyze --help
+git checkout main && git pull && git checkout -b improve/2026-11-20
+recut report --since 2026-11-13          # success rate, top failure tags, validator misses, worst sessions
+claude                                   # use the strongest model (/model → Opus)
 ```
 
-Everything recut generates lives in `.appdata/` (git-ignored) **in the repo folder**, wherever you run `recut` from. Set `RECUT_HOME=/some/folder` to keep it elsewhere (`$RECUT_HOME/.appdata/`):
-- `.appdata/audio/<stem>.mp3` — source audio, copied in by `analyze`
-- `.appdata/maps/raw/<stem>.json` — raw model output (beats, chords, structure)
-- `.appdata/maps/enriched/<stem>.json` — enriched music map
-- `.appdata/compositions/<name>.json` — saved edit plans
-- `.appdata/renders/<name>.mp3` — rendered output from `recut render`
+1. **Ask Claude Code to run the pass:** *"Run the weekly improvement pass following
+   docs/IMPROVEMENT_LOOP.md on tickets since 2026-11-13."* It proposes the top 3 general
+   fixes with evidence and waits for your OK.
+2. **It implements the approved fixes with tests.** You push the branch and open a pull
+   request.
+3. **Review it in a fresh session** (`/code-review`), then merge it into `main`.
 
-**Try it without your own Modal deploy**: `examples/summer-party/` has a
-pre-analyzed track (audio + enriched map) — copy it into `.appdata/` per that
-folder's README and skip straight to the code example below.
+## Plan format
 
-## Code Example
+A plan is plain JSON, written like a small Ableton arrangement. The full spec is in
+[`docs/PLAN.md`](docs/PLAN.md) §3.2.
 
-Given an analyzed track (the bundled `examples/summer-party/` works here — see Setup
-above), build a cut in code:
+- **Tracks** hold **clips**, which are chosen musically from the map: a `segment`, plus
+  `bars` / `offset_bars` / `beats`, never timecodes.
+- **Joins** are `xfade` entries with a `length` and a shape. `hold` keeps one side at full
+  level.
+- Clips have **gain** and **fade handles**.
+- **Devices**: `eq`, `auto_filter`, `utility`, `reverb`, `delay`, `limiter`.
+- Clips feed **sends** into **return tracks**, where reverb and delay live and ring out.
+- **Automation** works as ramps or breakpoints.
+- **Units:** time is written as `"1/8."`, `"2 bars"`, `"250ms"`; levels are in dB; mix
+  and size settings are percentages, as Ableton shows them.
 
 ```python
 from pathlib import Path
@@ -118,91 +119,182 @@ import soundfile as sf
 from recut.contracts import Plan
 from recut.engine import render_plan
 
-# A plan is plain data: sources, one track of clips and joins, returns (reverb/delay),
-# devices and automation. Format: docs/PLAN.md section 3.2.
 plan = Plan.model_validate({
     "version": 2,
-    "sources": {"a": {"file": "audio/summer-party.mp3", "map": "maps/enriched/summer-party.json"}},
+    "sources": {"a": {"file": "summer-party.mp3", "map": "summer-party-map.json"}},
     "returns": [{"id": "A", "name": "Reverb", "devices": [
-        {"id": "verb", "type": "reverb", "decay": "3.5s", "pre_delay": "20ms", "dry_wet": 100}]}],
+        {"id": "lc", "type": "eq", "low_cut": 250},
+        {"id": "verb", "type": "reverb", "decay": "2s", "pre_delay": "30ms", "dry_wet": 100}]}],
     "tracks": [{"id": "main", "clips": [
-        {"id": "n1", "type": "clip", "source": "a", "segment": "chorus"},
-        {"id": "n2", "type": "clip", "source": "a", "segment": "intro"},
-        {"id": "x1", "type": "xfade", "length": "2 beats", "shape": "equal_power"},
-        {"id": "n3", "type": "clip", "source": "a", "segment": "verse"},
-        {"id": "n4", "type": "clip", "source": "a", "segment": "inst", "bars": 7},
-        {"id": "x2", "type": "xfade", "length": "30ms", "out_shape": "hold", "in_shape": "equal_power"},
-        {"id": "n5", "type": "clip", "source": "a", "segment": "inst", "offset_bars": 7,
-         "sends": {"A": -6}, "fade_out": {"length": "2 bars", "shape": "exp"}},
+        {"id": "n1", "type": "clip", "source": "a", "segment": "intro",
+         "fade_in": {"length": "1 beat", "shape": "linear"}},
+        {"id": "n2", "type": "clip", "source": "a", "segment": "verse"},
+        {"id": "n3", "type": "clip", "source": "a", "segment": "chorus", "bars": 4,
+         "sends": {"A": -26},
+         "automation": [{"target": "sends.A", "from": -26, "to": -13, "over": "2 bars", "at": "end"}]},
+        {"id": "x1", "type": "xfade", "length": "30ms", "out_shape": "hold", "in_shape": "equal_power"},
+        {"id": "n4", "type": "clip", "source": "a", "segment": "inst", "offset_bars": 4,
+         "fade_out": {"length": "2 bars", "shape": "exp"}},
     ]}],
 })
 
-# chorus (hook) -> intro -> verse -> inst, fading out over the last bars with the reverb ringing on
-audio, info = render_plan(plan, Path(".appdata"))
-print(info.duration_s, info.peak_dbfs, [i.message for i in info.issues])
-
-sf.write("summer-party-cut.wav", audio.samples.T, audio.sr)
+# intro → verse → half the chorus → the song's real ending, with a reverb wash into it
+audio, info = render_plan(plan, Path("examples/summer-party"))
+print(f"{info.duration_s:.1f}s", [f"{i.severity} {i.rule}" for i in info.issues])
+sf.write("cut.wav", audio.samples.T, audio.sr)
 ```
 
-`render_plan` returns the audio and a `RenderInfo` (what `render.json` holds: segments, splices,
-issues, return tail end, peak level). Clips are chosen musically from the map (`segment`, `bars`,
-`offset_bars`), never by timecodes. Reverb and delay sit on **return tracks** that clips feed with
-`sends`; `devices` (`eq`, `auto_filter`, `utility`, `reverb`, `delay`, `limiter`) and `automation`
-use Ableton's names and units (`"1/8."`, `"2 bars"`, dB, percentages). `recut ticket render <id>`
-does the same for a ticket's `plan.json` and prints the issues.
+`render_plan` returns the audio and a `RenderInfo`, which is what `render.json` holds:
+segments, joins, issues, QC numbers and peak level. Recipes for common edits, like
+endings and the "ending transplant", are in [`skills/cutting/`](skills/cutting/SKILL.md).
 
-The older `Clip`/`XFade`/`compose()` Python API and its `Fade`/`Reverb`/`Delay`/`FilterSweep` effects
-still work but are deprecated; old saved compositions convert to a plan with
-`recut.legacy.composition_to_plan`.
+The older `Clip`/`XFade`/`compose()` Python API is deprecated but still works. To convert
+old saved compositions, use `recut.legacy.composition_to_plan`.
 
-**Validation** — a linter for music cuts. Before rendering, validates that all nodes are musically coherent: segment labels exist in the map, requested bars/beats don't exceed the segment duration, and the cut doesn't start or end abruptly mid-song. The goal is to grow this into a richer rule set that catches musical issues automatically — wrong key transitions, energy drops, rhythmic misalignments — so the system can eventually guide or automate cut decisions.
+## Automatic checks
 
-```python
-from recut.validator import validate
+Every render runs two kinds of checks. They show up in the browser's Problems panel and
+in `render.json`.
+- **Musical linter**, before rendering, on the plan and the map:
+  - section and bar validity
+  - `phrase_align`: joins should land on phrase boundaries
+  - `ending`: the cut shouldn't stop mid-section without a fade
+  - `energy_drop` across a join
+  - `duration` against the target
+- **Audio QC**, after rendering:
+  - loudness compared with the source
+  - limiter squash and true peak
+  - clipping, clicks at joins, gaps
+  - gain and brightness jumps at joins
+  - low-quality source (bandwidth)
+  - DC offset and phase
 
-issues = validate(music_map, Clip("intro"), Clip("verse"), Clip("chorus", loop=2))
-# issues: list of ValidationResult with severity ("error" | "warning") and message
+  Essentia's detectors are used where they're installed, except on Intel Macs (see
+  below).
+
+Joins you mark bad that no check flagged appear in `recut report` as **validator
+misses**. Those are the input for new rules.
+
+## CLI reference
+
+```bash
+# tickets
+recut ticket new <files...> --text "..." [--duration S]   # create a ticket
+recut ticket list                                         # all tickets + status
+recut ticket work <id> [--model M]                        # analyze new tracks, start an agent session
+recut ticket iterate <id>                                 # new attempt (copies the last plan)
+recut ticket render <id> [--session N --iteration K]      # render + print issues
+recut ticket demo                                         # demo ticket from examples/summer-party
+recut serve [--port 8000]                                 # review server + live preview
+recut report [--since DATE] [--json]                      # numbers for the improvement pass
+
+# analysis + legacy compositions
+recut analyze <track>        # Modal analysis → raw JSON
+recut map                    # build enriched music maps
+recut status                 # source registry
+recut compositions | validate <name> | render <name>      # old compose() workflow
 ```
 
-The analysis extracts tempo, time signature, song structure, beats, chords, and loudness — everything needed to make musically aware cuts.
+## Data layout
 
-## Agent / Harness Usage
+Everything recut generates lives in `.appdata/` **in the repo folder**, whichever folder
+you run `recut` from. Set `RECUT_HOME=/some/folder` to use `/some/folder/.appdata/`
+instead.
 
-recut ships two [Agent Skills](https://code.claude.com/docs/en/skills) at `skills/cutting/` and `skills/music-theory/` — `cutting` covers writing a plan (tracks, clips, devices, sends, automation) and the ending-transplant recipes, `music-theory` covers the musical judgment behind a cut (cadence quality, hook selection, energy arcs). Point your harness at both; currently tested with Claude Code.
+```
+.appdata/tickets/<id>/
+  request.json                       client text, target duration, files, status
+  inputs/<a|b|…>.<ext>  maps/<a|b|…>.json
+  sessions/<n>/meta.json             agent, model, git sha
+  sessions/<n>/intent.json           how the agent read the request
+  sessions/<n>/events.jsonl          every render + review, failures included
+  sessions/<n>/transcript.jsonl      agent transcript (hook)
+  sessions/<n>/iterations/<k>/       plan.json  render.json  audio.wav  review.json
+.appdata/audio/  maps/  compositions/  renders/    (analysis + legacy compose workflow)
+```
 
-## Current Limitations
+## Setup details
 
-recut is an early prototype. A few headline gaps — full list in [`LIMITATIONS.md`](LIMITATIONS.md):
+**Python:** use 3.10 or 3.11. `pip install -e ".[dev]"` adds the test tools, and `[qc]`
+adds Essentia.
 
-- One track only — sequencing several songs works, layering (mashups) doesn't yet.
-- No time-stretching — pick joins between songs with compatible tempos.
-- No live per-instrument/stem editing — clips are full mixes.
-- Musical judgment (cadence quality, hook selection) is inferred by whoever's reasoning about the cut, not verified against ground-truth data — the map has no harmonic-function or cadence fields.
-- Meter detection covers 3/4 and 4/4 only.
+**Intel Mac:**
+- Some dependencies no longer ship Intel builds. Install with
+  `pip install --only-binary=llvmlite,numba,cbor2 -e ".[dev,qc]"`, so pip picks versions
+  that have ready-made Intel packages instead of compiling (which needs CMake and Rust).
+- Essentia's Intel build crashes Python on import ("Failed loading SDL2 library").
+  recut skips it on Intel Macs automatically, and QC uses its basic detectors. If it got
+  installed anyway: `pip uninstall -y essentia`.
 
-## Third-Party Models
+**Modal (track analysis).** You need a [Modal account](https://modal.com); the free tier
+is enough.
+```bash
+modal token new                          # one-time login, saves ~/.modal.toml
+modal deploy src/analysis/pipeline.py    # models are fetched at deploy time
+```
 
-recut currently uses third-party open-source models for music analysis. All models are cloned automatically when you run `modal deploy`. No manual setup required.
+**Docker.** One image runs on Mac (Docker Desktop), Linux and a VPS. Create
+`~/.modal.toml` first, because compose mounts it.
+```bash
+docker compose up -d --build
+docker compose exec recut recut ticket demo     # then http://localhost:8000
+docker compose run --rm recut python -m pytest tests/ -q
+```
+
+**Before every commit:** `ruff check .` and `python -m pytest tests/`.
+
+## Docs map
+
+| File | What it's for |
+|---|---|
+| [`AGENTS.md`](AGENTS.md) (= `CLAUDE.md`) | Rules for every agent: core principle, ticket workflow, transcript hook |
+| [`docs/PLAN.md`](docs/PLAN.md) | Decisions and the frozen formats (plan, render, tickets, API) |
+| [`docs/STATUS.md`](docs/STATUS.md) | Task table, decisions, blockers, handoff log |
+| [`docs/IMPROVEMENT_LOOP.md`](docs/IMPROVEMENT_LOOP.md) | How session data becomes general fixes |
+| [`docs/workstreams/`](docs/workstreams/) | Task briefs per area: engine, backend, frontend, quality, music data |
+| [`skills/`](skills/) | Agent skills: `cutting` (writing plans, recipes) and `music-theory` (judgment) |
+
+## Limitations
+
+Full list in [`LIMITATIONS.md`](LIMITATIONS.md). The main ones:
+- **One track per plan.** Sequencing several songs works; layering (mashups) and stems
+  don't yet.
+- **No time-stretching.** Joins between songs need compatible tempos.
+- **Basic reverb.** It's an algorithmic room; a convolution reverb is a candidate task.
+- **The map has no drum/vocal activity or pace yet.** This is planned in
+  `docs/workstreams/M-music-data.md`.
+- **Meter detection** covers 3/4 and 4/4 only.
+
+## Third-party models
+
+The analysis models are fetched automatically by `modal deploy`.
 
 | Component | Source | License |
 |-----------|--------|---------|
 | **madmom** (beat tracking) | [CPJKU/madmom](https://github.com/CPJKU/madmom) | BSD-3-Clause ✅ |
-| **Chord-CNN-LSTM** (chord recognition) | [ptnghia-j/chord-cnn-lstm-model](https://github.com/ptnghia-j/chord-cnn-lstm-model) — fork of [music-x-lab/ISMIR2019](https://github.com/music-x-lab/ISMIR2019-Large-Vocabulary-Chord-Recognition) | MIT ✅ |
+| **Chord-CNN-LSTM** (chord recognition) | [ptnghia-j/chord-cnn-lstm-model](https://github.com/ptnghia-j/chord-cnn-lstm-model), a fork of [music-x-lab/ISMIR2019](https://github.com/music-x-lab/ISMIR2019-Large-Vocabulary-Chord-Recognition) | MIT ✅ |
 | **SongFormer** (structure segmentation) | [ASLP-lab/SongFormer](https://github.com/ASLP-lab/SongFormer) via [mewdev/ChordMiniApp](https://github.com/mewdev/ChordMiniApp) | MIT ✅ |
 | **MusicFM** weights | [minzwon/MusicFM](https://huggingface.co/minzwon/MusicFM) | MIT ✅ |
 | **MuQ** weights | [OpenMuQ/MuQ-large-msd-iter](https://huggingface.co/OpenMuQ/MuQ-large-msd-iter) | CC BY-NC 4.0 ⚠ |
-| **Essentia** (key detection) | [MTG/essentia](https://github.com/MTG/essentia) | AGPLv3 ⚠ |
+| **Essentia** (key detection; QC detectors) | [MTG/essentia](https://github.com/MTG/essentia) | AGPLv3 ⚠ |
+| **pyloudnorm** (QC loudness) | [csteinmetz1/pyloudnorm](https://github.com/csteinmetz1/pyloudnorm) | MIT ✅ |
 
-> **⚠ MuQ is non-commercial only** (CC BY-NC 4.0, Tencent AI Lab). SongFormer uses MuQ as its audio encoder, making the structure pipeline non-commercial. Replace MuQ with a MIT-licensed alternative (MERT, EnCodec) before any commercial use.
-
-> **⚠ Essentia is AGPLv3** (free for non-commercial use; a separate commercial license is required otherwise — [MTG/UPF](https://essentia.upf.edu/)). AGPL's copyleft extends to network/SaaS use, not just redistribution — a stronger constraint than MuQ's non-commercial clause. Replace with a permissively-licensed key-detection method before any commercial or hosted use.
+> **⚠ Non-commercial prototype.** MuQ is CC BY-NC (non-commercial). SongFormer uses it,
+> so the structure analysis is non-commercial too. Essentia is AGPLv3, and that copyleft
+> covers network/SaaS use as well. Before any commercial or hosted use:
+> - replace MuQ (e.g. with MERT or EnCodec)
+> - replace Essentia key detection
+> - remove `src/recut/qc_essentia.py`
 
 ## Inspiration
 
-**[Remotion](https://www.remotion.dev)** — declarative, code-driven video editing; recut's core model, applied to audio instead.
+**[Remotion](https://www.remotion.dev)**: declarative, code-driven video editing. recut
+applies the same model to audio.
 
-**[VideoAgent](https://github.com/HKUDS/VideoAgent)** — LLM agent orchestrating video editing; agentic pipeline, tool-use over media primitives, natural-language-to-edit.
+**[VideoAgent](https://github.com/HKUDS/VideoAgent)**: an LLM agent that orchestrates
+video editing through tool use over media primitives.
 
 ## License
 
-recut's own code is [MIT licensed](LICENSE). The third-party models it depends on for analysis have their own, separate licenses — see the table above before any commercial use.
+recut's own code is [MIT licensed](LICENSE). The third-party models it uses for analysis
+have their own licenses; see the table above before any commercial use.
