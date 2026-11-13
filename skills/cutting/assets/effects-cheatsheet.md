@@ -22,7 +22,7 @@ Quick lookup — quote directly, don't paraphrase. The format is `docs/PLAN.md` 
 | `log` | fast start, slow end (`√t`) | quick attack then settle |
 | `hold` | full level for the whole overlap/ramp | the incoming "hit" (`in_shape`), or the outgoing dry signal under a wash (`out_shape`) |
 
-A fade-out uses the mirror of the shape. Level automation (`gain`, `sends.*`) interpolates in linear gain, so `-inf → 0` with `exp` swells from true silence. Frequency parameters move in log-frequency.
+A fade-out uses the mirror of the shape. Level automation (`gain`, `sends.*`) interpolates in linear gain, so `-inf → 0` with `exp` swells from true silence (fine for a fade-in, but not for a reverb send: see the return recipe). Frequency parameters move in log-frequency.
 
 ## Devices
 
@@ -48,7 +48,9 @@ Clip `devices` run after the clip's gain and fades; their tails ring on past the
 | `"3s"`–`"4s"` | big hall / exit wash |
 | `"6s"`+ | cathedral; will blur fast material |
 
-Send level for a reverb return: `-12` to `-9` is "air", `-6` is a clear room, `0` is a wash (dry stays as is). The wet signal is level-matched, so a send at 0 dB is about as loud as the dry. `hi_cut` 5000–7000 keeps tails soft; `pre_delay` 10–30 ms keeps the source clear.
+Send level for a reverb return: `-13` to `-9` is "air" and the usual **peak** for an ending wash, `-6` is a clear room, `0` is as loud as the dry: avoid it on a `dry_wet: 100` return. The wet signal is level-matched. `hi_cut` 4500–6000 keeps tails soft; `pre_delay` 20–30 ms keeps the source clear.
+
+**Return reverb recipe** (loud masters especially): `eq` `low_cut` 200–300 Hz first, then `reverb` `decay` 1.5–2.5 s, `size` 50–60. Start the send from a low base (-24 to -30 dB), never from `"-inf"`, and ramp over 2 beats or more to a peak of -9 to -13 dB. Low end in the reverb pumps the limiter; an onset from silence is audible as the reverb "switching on". Details and evidence: `../references/ending-transplant.md`.
 
 ## Delay: `time` in note values
 
@@ -65,7 +67,7 @@ Send level for a reverb return: `-12` to `-9` is "air", `-6` is a clear room, `0
 ## Automation
 
 ```json
-{"target": "sends.A", "from": "-inf", "to": 0, "over": "1 beat", "at": "end", "shape": "exp"}
+{"target": "sends.A", "from": -26, "to": -9, "over": "2 beats", "at": "end", "shape": "linear"}
 {"target": "devices.flt.frequency", "points": [["0 beats", 20000], ["2 bars", 800]], "shape": "exp"}
 ```
 

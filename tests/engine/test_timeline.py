@@ -5,6 +5,7 @@ import json
 
 import numpy as np
 import pytest
+from scipy import signal
 
 from recut import tickets
 from recut.compositor import Clip, XFade, compose
@@ -86,7 +87,10 @@ def test_limiter_only_applied_when_the_peak_is_too_high(base):
     assert np.allclose(quiet.samples, raw.samples)  # untouched
     loud, li = render_plan(_plan([clip("n1", "chorus", bars=2, gain=12)], p), d)
     assert li.limiter_applied
-    assert li.peak_dbfs == pytest.approx(-1.0, abs=0.05) and np.abs(loud.samples).max() <= 10 ** (-0.99 / 20)
+    # the sample peak sits at or below the ceiling; the true peak (4x oversampled) is held at it
+    assert li.peak_dbfs <= -0.99 and np.abs(loud.samples).max() <= 10 ** (-0.99 / 20)
+    full = float(np.abs(signal.resample_poly(loud.samples, 4, 1, axis=-1)).max())
+    assert 20 * np.log10(full) == pytest.approx(-1.0, abs=0.1)
 
 
 def test_qc_limiting_replaces_peak_clip_when_overlaps_sum_hot(base):

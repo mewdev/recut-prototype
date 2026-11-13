@@ -165,6 +165,13 @@ def cmd_serve(args) -> None:
                 log_level="warning")
 
 
+def _intent_snippet(tid: str) -> str:
+    from recut import tickets
+
+    return json.dumps({"target_duration_s": tickets.load_request(tid).target_duration_s,
+                       "must_keep": [], "must_cut": [], "ending": None, "notes": None}, indent=2)
+
+
 def _print_work_instructions(tid: str, n: int, k: int) -> None:
     from recut import tickets
 
@@ -173,6 +180,7 @@ def _print_work_instructions(tid: str, n: int, k: int) -> None:
     review = None
     if n > 1:
         review = tickets.load_review(tid, n - 1)
+    snippet = "\n".join("    " + line for line in _intent_snippet(tid).splitlines())
     print(f"""
 Ticket {tid} · session {n} · iteration {k}
 
@@ -180,13 +188,20 @@ Ticket {tid} · session {n} · iteration {k}
   sources:   {json.dumps(tickets.sources(tid))}
   last review: {sd.parent / str(n - 1) / "review.json" if review else "(none)"}
   edit plan: {tickets.iteration_dir(tid, n, k) / "plan.json"}
-  write intent first: {sd / "intent.json"}
 
   export RECUT_SESSION={sd.resolve()}
 
-Edit plan.json (format: docs/PLAN.md §3.2) — the browser preview re-renders on save.
-Check without the browser:  recut ticket render {tid}
+STEP 1 — write {sd / "intent.json"} BEFORE cutting (how you read the request; fill in, keep
+these keys, no others):
+{snippet}
+STEP 2 — edit plan.json (format: docs/PLAN.md §3.2) — the browser preview re-renders on save.
+         In plan.notes write what you changed and why (every iteration).
+Check without the browser:  recut ticket render {tid}   (it warns about a missing intent.json
+                            and unchanged plan.notes)
 Next attempt:               recut ticket iterate {tid}
+
+Transcript: if the operator enabled the Stop hook (AGENTS.md, "Working a client ticket"),
+your transcript is copied to {sd / "transcript.jsonl"} automatically.
 """)
 
 
@@ -214,6 +229,7 @@ def cmd_ticket(args) -> None:
         if mapped:
             print(f"Analyzed + mapped sources: {', '.join(mapped)}")
         n = tickets.new_session(tid, agent=args.agent, model=args.model)
+        tickets.mark_current_session(tid, n)
         k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
     elif args.action == "iterate":
@@ -237,6 +253,8 @@ def cmd_ticket(args) -> None:
         for i in out["issues"]:
             where = i.get("splice") or i.get("node") or ""
             print(f"  {i['severity']:<5} {i['rule']:<14} {where:<4} {i['message']}")
+        for w in tickets.process_warnings(tid, n, k):
+            print(f"  WARNING (process): {w}")
 
 
 def _starter_plan(tid: str) -> dict:

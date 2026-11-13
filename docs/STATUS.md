@@ -31,13 +31,13 @@ agent won't know it.
 | B3 SSE live reload | done | polling, renders stale iterations |
 | B4 waveform peaks | done | on request, cached in memory |
 | B5 share links | todo | |
-| B6 CLI + transcript hook | partial | CLI done; hook todo (put it in `scripts/hooks/`) |
+| B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | todo | Haiku; needed by day 7 |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
 | Q1 audio QC after render | done | `src/recut/qc.py` (+ `qc_essentia.py`, switch `RECUT_QC_ESSENTIA`); engine calls `run_qc`; tests `tests/engine/test_qc.py` |
-| Q2 QC follow-ups | todo | Sonnet. (a) Run the Essentia part of QC **after** render.json is written and append its issues, so the live preview isn't slowed: today render+QC on the 46 s demo takes 2.2 s with Essentia vs 0.56 s without, and a 3-min track adds ~3.5 s. (b) Make the master limiter true-peak aware (oversampled detection, or a −1.5 dB internal ceiling), so `qc_true_peak` stops firing on every limited render. |
+| Q2 QC follow-ups | partial: (b) done, (a) todo | Sonnet. (a) Run the Essentia part of QC **after** render.json is written and append its issues, so the live preview isn't slowed: today render+QC on the 46 s demo takes 2.2 s with Essentia vs 0.56 s without, and a 3-min track adds ~3.5 s. (b) **done in improvement pass 1** (task 2): the master limiter is true-peak aware, see Q-quality.md Q2b. |
 | M1 stems + instrument activity (Demucs on Modal) | todo | Sonnet; docs/workstreams/M-music-data.md |
 | M2 pace + key ranges + short-term loudness | todo | Sonnet |
 | M3 map schema fields + linter rules + GUI lanes | todo | Sonnet, after M1/M2 |
@@ -50,6 +50,7 @@ agent won't know it.
 | C6 review panel | todo | |
 | C7 client pages | todo | |
 | I1 integration + real tickets | todo | Day 6–7, strongest model |
+| R1 convolution reverb (pedalboard Convolution + freely licensed IRs, reverb `type`) | candidate — wait for real tickets | operator on s2·it3 (low-cut return, -26 dB base send rising to -13 dB): "okay for now, needs real cases". Build only when a real ticket shows the algorithmic reverb is the limit |
 
 ## Blockers
 - Music maps can contain `NaN` loudness (zero-length segments), which isn't valid JSON for
@@ -122,6 +123,28 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — Improvement pass 1, task 3 (enforce the agent process; evidence: the s2 agent wrote no `intent.json`, kept no
+  transcript, and its plan `notes` were the only record). `recut ticket render` prints `WARNING (process)` lines for a missing or
+  invalid `intent.json` and for `plan.notes` empty / identical to the previous iteration's (CLI only: no render.json change, no
+  contract change). `recut ticket work` prints a ready-to-fill `intent.json` snippet (valid `Intent` keys) instead of creating a
+  file, the `export RECUT_SESSION` line, and a note about the transcript hook. B6 hook: `scripts/hooks/copy_transcript.sh`
+  (stdin JSON `transcript_path`, destination `$RECUT_SESSION` or `.appdata/tickets/.current_session`, always exit 0); enable
+  snippet in AGENTS.md. NOT verified: a real Claude Code Stop hook run (tested with a fake transcript only; the stdin JSON shape
+  is from the hooks docs, not observed).
+- 2026-11-13 — Improvement pass 1, task 2 (QC relative to the source; evidence: every render of the loud demo gave
+  `qc_loudness` -8.9 LUFS and `qc_true_peak` +0.06 dBTP). `qc_loudness` now compares the render with the source ranges it
+  uses (warn > 1 LU louder than the loudest, > 3 LU quieter than the weighted mean; absolute window only when there is no source);
+  numbers `lufs`, `source_lufs`, `lufs_vs_source` in `render.json.qc`. `devices.limit` trims the 4x true peak to the ceiling with
+  one static gain (about 1 dB on the demo; `limit()` now returns `(audio, trim_db)`; QC discounts the trim from `qc_limiting`, so
+  the sample peak of a limited render is now ~1 dB under the ceiling). Demo variants: no qc_loudness / qc_true_peak left. Tests:
+  `test_qc.py` (unchanged loud source: no warning; +3 dB: warning; limited render: true peak <= ceiling + 0.1 dB), `test_timeline.py`.
+- 2026-11-13 — Improvement pass 1, task 1 (reverb recipe rules; evidence ticket 20261113-mbyv, s1·it2 "reverb squash" 3.4 dB
+  limiting, s2·it2 "much better, still turned on", s2·it3 "okay for now"). `ending-transplant.md`, `effects-routing.md`,
+  `effects-cheatsheet.md`: return `eq` low_cut 200-300 Hz before the reverb, decay 1.5-2.5 s, send peak -9 to -13 dB (never 0 dB
+  on a 100 % wet return), no ramp from `-inf` (base -24 to -30 dB, ramp >= 2 beats). Variant snippets updated. Tests in
+  `test_ending_transplant_doc.py`: every variant renders on the loud demo source with no `qc_limiting` and gain reduction <= 3 dB
+  (2.3-2.8 dB; the source alone limits 2.3-2.5 dB), the doc follows the recipe, and the old 3.5 s / -inf to 0 dB wash limits
+  harder (3.44 dB, matches the ticket). `examples/summer-party/plans/02-ending-transplant.json` is the old recipe, left as is.
 - 2026-11-13 — First real review (operator, demo ticket): it2 s3 bad, "reverb squashes,
   needs to be more subtle, probably reverb type + automation". `qc_limiting` (3.4 dB) agreed
   with the ear; `qc_tilt_jump` at s3 wasn't mentioned (likely noise). No tag fitted, so

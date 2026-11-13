@@ -68,6 +68,7 @@ class Ctx:
     length_s: float  # owner length, for `at: "end"` automation
     autos: list[Automation] = field(default_factory=list)
     limited: bool = False  # set when a limiter device actually reduced the signal
+    trim_db: float = 0.0  # static true-peak trim the limiter applied (dB, <= 0); QC discounts it
 
     def curve(self, dev, param: str, n: int):
         """Per-sample automation curve for devices.<id>.<param>, or None. Level kinds are linear gain."""
@@ -89,9 +90,36 @@ AUTOMATABLE: dict[str, dict[str, str]] = {
 BLOCK = 512
 
 
-def limit(x: np.ndarray, sr: int, ceiling_db: float) -> np.ndarray:
-    """Limit to `ceiling_db`. pedalboard's (JUCE) Limiter normalizes to 0 dBFS → rescale."""
-    return Pedalboard([PbLimiter(threshold_db=ceiling_db)])(x, sr) * (10 ** (ceiling_db / 20))
+TRUE_PEAK_TOP = 50_000  # candidate peaks oversampled when trimming (a limited master has many)
+
+
+def limit(x: np.ndarray, sr: int, ceiling_db: float) -> tuple[np.ndarray, float]:
+    """Limit to `ceiling_db`, true-peak aware. Returns (audio, static trim in dB, <= 0).
+
+    1. pedalboard's (JUCE) Limiter holds the *sample* peak at the threshold and normalizes to
+       0 dBFS, so rescale to the ceiling.
+    2. Sample peaks at the ceiling can reconstruct (4x oversampled, BS.1770) above it by
+       0.2 to 1 dB on a loud master, which made `qc_true_peak` fire on every limited render. So
+       measure the 4x true peak and, when it is over the ceiling, apply one static gain trim
+       that brings it down to the ceiling. A static trim is inaudible (about 1 dB for the whole
+       render) and simpler and safer than an oversampled look-ahead limiter; the cost is that
+       the sample peaks sit that much below the ceiling. QC discounts the trim when it measures
+       limiter gain reduction (it is a level offset, not squash).
+    """
+    y = Pedalboard([PbLimiter(threshold_db=ceiling_db)])(x, sr) * (10 ** (ceiling_db / 20))
+    return trim_true_peak(y.astype(np.float32), ceiling_db)
+
+
+def trim_true_peak(y: np.ndarray, ceiling_db: float) -> tuple[np.ndarray, float]:
+    """Scale `y` down so its 4x-oversampled peak is at `ceiling_db` (minus a 0.01 dB margin for
+    the oversampling estimate); untouched if already under. Returns (audio, trim in dB)."""
+    from recut.qc import true_peak
+
+    _, tp = true_peak(y, top=TRUE_PEAK_TOP)
+    ceil = 10 ** ((ceiling_db - 0.01) / 20)
+    if tp <= ceil:
+        return y, 0.0
+    return (y * (ceil / tp)).astype(np.float32), 20 * math.log10(ceil / tp)
 
 
 def _clampf(f: float, sr: int, lo: float = 10.0) -> float:
@@ -213,10 +241,17 @@ def _delay(dev, x, ctx):
 
 def _limiter(dev, x, ctx):
     peak = float(np.abs(x).max()) if x.size else 0.0
-    if peak > 0 and 20 * math.log10(peak) > dev.ceiling:
-        ctx.limited = True
-        return limit(x, ctx.sr, dev.ceiling)
-    return x
+    if peak <= 0:
+        return x
+    if 20 * math.log10(peak) > dev.ceiling:
+        y, trim = limit(x, ctx.sr, dev.ceiling)
+    else:  # sample peaks are under the ceiling: only a true-peak overshoot needs the trim
+        y, trim = trim_true_peak(x, dev.ceiling)
+        if not trim:
+            return x
+    ctx.limited = True
+    ctx.trim_db += trim
+    return y
 
 
 _DEVICES = {"utility": _utility, "eq": _eq, "auto_filter": _auto_filter, "reverb": _reverb,

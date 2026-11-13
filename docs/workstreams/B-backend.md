@@ -62,6 +62,7 @@ Whenever a source or render is written, also write `<file>.peaks.json`:
   the agent.
 - `scripts/hooks/copy_transcript.sh` (not under `.claude/`, which is git-ignored) is a Claude Code Stop hook that copies the session
   transcript to `$RECUT_SESSION/transcript.jsonl`.
+- Built (improvement pass 1): the hook also falls back to `.appdata/tickets/.current_session` (written by `recut ticket work`), because an `export` inside the agent's shell is invisible to Claude Code's hook process. `$RECUT_TRANSCRIPT_PATH` overrides the stdin path (tests). `recut ticket render` prints process warnings (`tickets.process_warnings`): missing/invalid `intent.json`, empty or unchanged `plan.notes`. They are CLI output only; `render.json` is untouched. `recut ticket work` prints an `intent.json` snippet (the `Intent` model forbids extra keys, so no template file is written).
 - Done when: CLI tests pass and the hook is documented in AGENTS.md.
 
 ### B7 — `recut report`
