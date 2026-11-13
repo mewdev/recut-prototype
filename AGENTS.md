@@ -35,12 +35,37 @@ Tickets live in `.appdata/tickets/<id>/` (format: `docs/PLAN.md` §3). To work o
    tracks via Modal) and prints the paths.
 2. Read `request.json` and the previous session's `review.json` if there is one: its
    per-splice tags and note are what to fix.
-3. Write `intent.json` (how you read the request) **before** cutting.
+3. Write `intent.json` (how you read the request) **before** cutting. `recut ticket work` prints
+   a ready-to-fill snippet (keys: `target_duration_s`, `must_keep`, `must_cut`, `ending`, `notes`;
+   no other keys). `recut ticket render` warns if the file is missing.
 4. Edit the iteration's `plan.json` (§3.2: sections + bars/beats, Ableton-style units).
    `recut ticket render <id>` renders it and prints issues; with `recut serve` running,
    the operator's browser updates live.
 5. For a new attempt, run `recut ticket iterate <id>` instead of overwriting: every
    attempt is kept, failures included.
+6. In every iteration's `plan.notes`, write what you changed and why (it is the only record of
+   your reasoning besides the transcript). `recut ticket render` warns when the notes are
+   identical to the previous iteration's, or empty.
+
+**Transcript hook (operator, once).** `scripts/hooks/copy_transcript.sh` is a Claude Code Stop
+hook that copies the session transcript to `<session>/transcript.jsonl`, for the weekly
+improvement pass. `.claude/` is git-ignored, so each operator adds it to their own
+`.claude/settings.local.json` (use the absolute path of the checkout):
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "/ABS/PATH/TO/recut-prototype/scripts/hooks/copy_transcript.sh"}]}
+    ]
+  }
+}
+```
+
+The hook finds the session folder from `$RECUT_SESSION` (the `export` line `recut ticket work`
+prints: set it in the shell that starts Claude Code if you can) and otherwise from
+`.appdata/tickets/.current_session`, which `recut ticket work` writes. It never fails the agent.
+Check it: `echo '{"transcript_path": "/path/to/any.jsonl"}' | RECUT_SESSION=<session dir> scripts/hooks/copy_transcript.sh`.
 
 The `cutting`/`music-theory` skills below give the musical judgment. `skills/cutting/` is
 written for `plan.json` (the ending-transplant recipes are in

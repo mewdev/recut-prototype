@@ -18,7 +18,7 @@ from typing import Optional
 
 import soundfile as sf
 
-from recut.contracts import Plan, Request, Review, SessionMeta
+from recut.contracts import Intent, Plan, Request, Review, SessionMeta
 from recut.engine import PlanError, render_plan
 from recut.paths import TICKETS_DIR
 
@@ -175,6 +175,59 @@ def new_iteration(ticket_id: str, n: int, plan: Optional[dict] = None,
     if plan is not None:
         _write(d / "plan.json", plan)
     return k
+
+
+def mark_current_session(ticket_id: str, n: int, root: Path = TICKETS_DIR) -> None:
+    """Remember the session being worked on, for the transcript hook (scripts/hooks/copy_transcript.sh):
+    a Claude Code hook can't see an `export` made inside an agent's shell, so it falls back to
+    this pointer file."""
+    (root / CURRENT_SESSION_FILE).write_text(str(session_dir(ticket_id, n, root).resolve()) + "\n")
+
+
+CURRENT_SESSION_FILE = ".current_session"
+STARTER_NOTES_PREFIX = "starter plan"  # `recut ticket work` seeds plan.notes with this
+
+
+def _previous_plan(ticket_id: str, n: int, k: int, root: Path) -> Optional[dict]:
+    """The plan this iteration follows: iteration k-1 of the session, or for the first
+    iteration of a session the last plan of an earlier session."""
+    if k > 1:
+        p = iteration_dir(ticket_id, n, k - 1, root) / "plan.json"
+        return json.loads(p.read_text()) if p.exists() else None
+    for m in reversed([s for s in session_numbers(ticket_id, root) if s < n]):
+        for j in reversed(iteration_numbers(ticket_id, m, root)):
+            p = iteration_dir(ticket_id, m, j, root) / "plan.json"
+            if p.exists():
+                return json.loads(p.read_text())
+    return None
+
+
+def process_warnings(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR) -> list[str]:
+    """Agent-process reminders for iteration k of session n (AGENTS.md, "Working a client ticket"):
+    `intent.json` written before cutting, and `plan.notes` saying what changed and why. Shown by
+    `recut ticket render`; they are not render issues (render.json stays as the engine wrote it)."""
+    out: list[str] = []
+    ip = session_dir(ticket_id, n, root) / "intent.json"
+    if not ip.exists():
+        out.append(f"no intent.json for session {n}: write how you read the request BEFORE cutting "
+                   f"({ip}); fields: target_duration_s, must_keep, must_cut, ending, notes")
+    else:
+        try:
+            Intent.model_validate_json(ip.read_text())
+        except ValueError as e:
+            out.append(f"intent.json is not valid ({ip}): {str(e).splitlines()[0]}")
+    pp = iteration_dir(ticket_id, n, k, root) / "plan.json"
+    if pp.exists():
+        notes = (json.loads(pp.read_text()).get("notes") or "").strip()
+        prev = _previous_plan(ticket_id, n, k, root)
+        prev_notes = ((prev or {}).get("notes") or "").strip()
+        if not notes or notes.lower().startswith(STARTER_NOTES_PREFIX):
+            out.append("plan.notes is empty: write what you changed and why in plan.notes "
+                       "(it is the only record of your reasoning)")
+        elif prev is not None and notes == prev_notes:
+            out.append("plan.notes are identical to the previous iteration's: write what you "
+                       "changed and why in plan.notes")
+    return out
 
 
 def log_event(ticket_id: str, n: int, event: dict, root: Path = TICKETS_DIR) -> None:

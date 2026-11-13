@@ -31,7 +31,7 @@ agent won't know it.
 | B3 SSE live reload | done | polling, renders stale iterations |
 | B4 waveform peaks | done | on request, cached in memory |
 | B5 share links | todo | |
-| B6 CLI + transcript hook | partial | CLI done; hook todo (put it in `scripts/hooks/`) |
+| B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | todo | Haiku; needed by day 7 |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
@@ -123,6 +123,14 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — Improvement pass 1, task 3 (enforce the agent process; evidence: the s2 agent wrote no `intent.json`, kept no
+  transcript, and its plan `notes` were the only record). `recut ticket render` prints `WARNING (process)` lines for a missing or
+  invalid `intent.json` and for `plan.notes` empty / identical to the previous iteration's (CLI only: no render.json change, no
+  contract change). `recut ticket work` prints a ready-to-fill `intent.json` snippet (valid `Intent` keys) instead of creating a
+  file, the `export RECUT_SESSION` line, and a note about the transcript hook. B6 hook: `scripts/hooks/copy_transcript.sh`
+  (stdin JSON `transcript_path`, destination `$RECUT_SESSION` or `.appdata/tickets/.current_session`, always exit 0); enable
+  snippet in AGENTS.md. NOT verified: a real Claude Code Stop hook run (tested with a fake transcript only; the stdin JSON shape
+  is from the hooks docs, not observed).
 - 2026-11-13 — Improvement pass 1, task 2 (QC relative to the source; evidence: every render of the loud demo gave
   `qc_loudness` -8.9 LUFS and `qc_true_peak` +0.06 dBTP). `qc_loudness` now compares the render with the source ranges it
   uses (warn > 1 LU louder than the loudest, > 3 LU quieter than the weighted mean; absolute window only when there is no source);
