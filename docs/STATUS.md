@@ -57,6 +57,11 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-13 — Essentia's Intel-Mac wheel aborts Python on import (native "Failed loading
+  SDL2 library" dialog; no try/except can catch it). `qc_essentia` is now off by default on
+  darwin/x86_64, probes the import in a child process before importing in-process, and the
+  `qc` extra skips Essentia on Intel Macs. Intel-Mac install also needs
+  `--only-binary=llvmlite,numba,cbor2` (README).
 - 2026-11-13 — Q1: the frozen `RenderInfo` has no `qc` field, so the engine returns
   `recut.qc.RenderInfoQC` (a subclass with `qc: dict`); `render.json` carries it and readers
   that validate with `RenderInfo` ignore it. No contract edit, no blocker.

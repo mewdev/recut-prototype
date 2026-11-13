@@ -10,6 +10,9 @@ total, so `detect()` runs them once on the mono render.
 """
 
 import os
+import platform
+import subprocess
+import sys
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -17,9 +20,31 @@ import numpy as np
 _ES = None  # the essentia.standard module once imported; False if the import failed
 
 
+# Intel-Mac Essentia wheels abort the whole process on import ("Failed loading SDL2 library"),
+# which no try/except can catch and which would kill `recut serve`. So: off by default there,
+# and wherever it is on, the import is probed once in a child process first.
+_BROKEN_PLATFORM = sys.platform == "darwin" and platform.machine() == "x86_64"
+_PROBE_OK = None
+
+
+def _probe() -> bool:
+    global _PROBE_OK
+    if _PROBE_OK is None:
+        try:
+            r = subprocess.run([sys.executable, "-c", "import essentia.standard"],
+                               capture_output=True, timeout=60)
+            _PROBE_OK = r.returncode == 0
+        except Exception:
+            _PROBE_OK = False
+    return _PROBE_OK
+
+
 def _module():
     global _ES
     if _ES is None:
+        if not _probe():
+            _ES = False
+            return None
         try:
             import essentia
 
@@ -34,7 +59,8 @@ def _module():
 
 
 def enabled() -> bool:
-    return os.environ.get("RECUT_QC_ESSENTIA", "1").strip().lower() not in ("0", "false", "off", "no")
+    default = "0" if _BROKEN_PLATFORM else "1"
+    return os.environ.get("RECUT_QC_ESSENTIA", default).strip().lower() not in ("0", "false", "off", "no")
 
 
 def available() -> bool:

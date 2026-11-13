@@ -25,6 +25,15 @@ pip install -e .
 
 Use `pip install -e ".[dev]"` to also get the test tools (pytest, ruff, httpx).
 
+**Intel Mac notes:**
+- Some dependencies no longer ship Intel-Mac packages. Install with
+  `pip install --only-binary=llvmlite,numba,cbor2 -e ".[dev,qc]"`, so pip picks the
+  newest versions that still have ready-made Intel builds instead of compiling (which
+  needs CMake/Rust).
+- Essentia's Intel-Mac build crashes Python on import ("Failed loading SDL2 library").
+  The `qc` extra skips it on Intel Macs, and QC uses its basic detectors there. If you
+  installed it already: `pip uninstall -y essentia`.
+
 **Try the review GUI (no Modal needed):**
 ```bash
 recut ticket demo     # demo ticket from examples/summer-party, 2 rendered iterations
