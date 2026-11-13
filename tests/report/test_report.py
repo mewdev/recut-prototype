@@ -26,7 +26,9 @@ def _session(root, tid, model, iterations):
     n = tickets.new_session(tid, agent="test", model=model, root=root)
     for it in iterations:
         ids = [chr(ord("a") + i) for i in range(it["sources"])]
-        plan = {"version": 2, "sources": {s: {"file": f"inputs/{s}.mp3", "map": None} for s in ids}}
+        plan = {"version": 2, "sources": {s: {"file": f"inputs/{s}.mp3", "map": None} for s in ids},
+                "tracks": [{"id": "main", "clips": [{"id": f"n{i}", "type": "clip", "source": s}
+                                                   for i, s in enumerate(ids)]}]}
         k = tickets.new_iteration(tid, n, plan, root=root)
         if it.get("issues") is not None:
             d = tickets.iteration_dir(tid, n, k, root)
@@ -241,3 +243,12 @@ def test_demo_fixture(demo):
     assert data["success"][0]["n"] == 0 and data["success"][0]["success_pct"] is None
     assert data["validator_misses"]["count"] == 0 and data["worst_sessions"] == []
     assert "0 reviewed, 1 unreviewed" in report.format_text(data)
+
+
+def test_declared_but_unused_source_is_single_song():
+    from recut.report import _used_sources
+
+    plan = {"sources": {"a": {}, "b": {}},
+            "tracks": [{"clips": [{"type": "clip", "source": "a"}, {"type": "xfade"},
+                                  {"type": "clip", "source": "a"}]}]}
+    assert _used_sources(plan) == {"a"}

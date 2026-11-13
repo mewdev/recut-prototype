@@ -75,7 +75,7 @@ Definitions (use exactly these):
   no review count as `unreviewed` and are left out of rates.
 - **Success** means the result is `ship`.
 - **Iterations to ship**: the iteration number in the `ship` review.
-- **Multi-song**: the latest iteration's `plan.json` has more than one source.
+- **Multi-song**: the latest iteration's clips use more than one source (declared but unused sources don't count).
 - **Model**: `meta.json.model`.
 
 Output sections:

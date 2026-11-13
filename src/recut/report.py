@@ -47,6 +47,16 @@ def _read_json(p: Path) -> Optional[dict]:
         return None
 
 
+
+def _used_sources(plan: Optional[dict]) -> set[str]:
+    """Sources that clips actually use: a plan may declare sources it doesn't cut from."""
+    used = set()
+    for track in (plan or {}).get("tracks", []):
+        for node in track.get("clips", []):
+            if node.get("type") == "clip" and node.get("source"):
+                used.add(node["source"])
+    return used
+
 class _Session:
     """One reviewed or unreviewed agent session, with everything the report needs from it."""
 
@@ -109,7 +119,7 @@ def _load_sessions(root: Path, since: Optional[date]) -> tuple[list[_Session], i
             latest_plan = next((_read_json(tickets.iteration_dir(tid, n, k, root) / "plan.json")
                                 for k in reversed(ks)
                                 if (tickets.iteration_dir(tid, n, k, root) / "plan.json").exists()), None)
-            multi = len((latest_plan or {}).get("sources", {})) > 1
+            multi = len(_used_sources(latest_plan)) > 1
             sessions.append(_Session(tid, n, meta.get("model"), multi, reviews, renders))
             ticket_ids.add(tid)
     return sessions, len(ticket_ids)
