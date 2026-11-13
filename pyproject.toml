@@ -8,8 +8,17 @@ dependencies = [
     "scipy",
     "pedalboard",
     "modal",
-    "pydantic"
+    "pydantic",
+    "soundfile",
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
+    "pyloudnorm",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "httpx"]
+qc = ['essentia; not (sys_platform == "darwin" and platform_machine == "x86_64")']   # AGPL: non-commercial prototype only; see src/recut/qc_essentia.py
 
 [project.scripts]
 recut = "recut.cli:main"
@@ -21,6 +30,7 @@ analysis_output = "temp/analysis"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+filterwarnings = ["ignore:.*is deprecated. use plan v2:DeprecationWarning"]
 
 [tool.ruff]
 line-length = 100

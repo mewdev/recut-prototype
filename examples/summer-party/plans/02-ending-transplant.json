@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "sources": {
+    "a": {"file": "inputs/a.mp3", "map": "maps/a.json"},
+    "b": {"file": "inputs/b.wav", "map": "maps/b.json"}
+  },
+  "returns": [
+    {"id": "A", "name": "Reverb", "devices": [
+      {"id": "verb", "type": "reverb", "decay": "3.5s", "pre_delay": "20ms",
+       "size": 80, "hi_cut": 6000, "dry_wet": 100}]}
+  ],
+  "tracks": [
+    {"id": "main", "clips": [
+      {"id": "n1", "type": "clip", "source": "a", "segment": "intro", "index": 1,
+       "fade_in": {"length": "1 beat", "shape": "linear"}},
+      {"id": "n2", "type": "clip", "source": "a", "segment": "verse", "index": 1},
+      {"id": "n3", "type": "clip", "source": "a", "segment": "chorus", "index": 1, "bars": 4,
+       "sends": {"A": "-inf"},
+       "automation": [{"target": "sends.A", "from": "-inf", "to": 0, "over": "1 beat",
+                       "at": "end", "shape": "exp"}]},
+      {"id": "x1", "type": "xfade", "length": "30ms", "out_shape": "hold", "in_shape": "equal_power"},
+      {"id": "n4", "type": "clip", "source": "a", "segment": "inst", "index": 1, "offset_bars": 4,
+       "fade_out": {"length": "2 bars", "shape": "exp"}}
+    ]}
+  ],
+  "target_duration_s": 45,
+  "notes": "Demo iteration 2: ending transplant (variant 2, reverb wash into the ending). The song's real ending (last 4 bars of inst) lands after the first half of the chorus."
+}

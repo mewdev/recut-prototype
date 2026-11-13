@@ -1,0 +1,13 @@
+services:
+  recut:
+    build: .
+    command: ["recut", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      # Tickets, sources and renders live on the host, not in the image.
+      - ./.appdata:/app/.appdata
+      # Modal credentials for `recut ticket work` (analysis runs on Modal). Create the file first:
+      # if it is missing, Docker creates a directory in its place.
+      - ~/.modal.toml:/root/.modal.toml:ro
+    restart: unless-stopped

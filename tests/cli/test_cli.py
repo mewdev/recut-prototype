@@ -40,7 +40,7 @@ def _mock_modal(beats=None, chords=None, structure=None, key=None):
         mock_fn.spawn.return_value.get.return_value = results[name]
         return mock_fn
 
-    return patch("recut.cli.Function.from_name", side_effect=_from_name)
+    return patch("modal.Function.from_name", side_effect=_from_name)
 
 
 # ---------------------------------------------------------------------------

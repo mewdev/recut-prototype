@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recut Review</title>
+<style>
+  :root {
+    --bg: #ffffff; --panel: #f6f7f9; --border: #e3e5e8; --text: #16181d; --muted: #6b7280;
+    --ok: #16a34a; --bad: #dc2626; --warn: #d97706; --accent: #111827;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 13px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; color: var(--text); background: var(--bg); }
+  header { display: flex; gap: 16px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  header a { color: var(--muted); text-decoration: none; } header a:hover { color: var(--text); }
+  header b { font-size: 14px; }
+  main { padding: 12px 16px; max-width: 1400px; margin: 0 auto; }
+  button { font: inherit; border: 1px solid var(--border); background: #fff; border-radius: 6px; padding: 3px 9px; cursor: pointer; }
+  button:hover { background: #f1f2f4; } button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.ok.on { background: var(--ok); border-color: var(--ok); } button.bad.on { background: var(--bad); border-color: var(--bad); }
+  table { border-collapse: collapse; width: 100%; } td, th { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; } tr.link { cursor: pointer; } tr.link:hover { background: var(--panel); }
+  .muted { color: var(--muted); } .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-top: 12px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: #fff; }
+  .card h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  canvas { display: block; width: 100%; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+  .issue { padding: 4px 0; border-bottom: 1px solid var(--border); cursor: pointer; } .issue:last-child { border-bottom: 0; }
+  .sev-error { color: var(--bad); } .sev-warn { color: var(--warn); } .sev-info { color: var(--muted); }
+  .splice { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; }
+  .splice.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .tags button { font-size: 11px; padding: 1px 6px; }
+  textarea, input[type=text], input[type=number] { font: inherit; width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; }
+  .err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 8px 10px; white-space: pre-wrap; margin-top: 10px; }
+  .toast { position: fixed; right: 16px; bottom: 16px; background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 8px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: .95; }
+  pre { background: var(--panel); border-radius: 6px; padding: 8px; overflow: auto; max-height: 360px; font-size: 12px; }
+  kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+<header>
+  <b>Recut</b>
+  <a href="/">Tickets</a>
+  <a href="/new">New ticket</a>
+  <span class="muted" id="hdr"></span>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+const COLORS = ["#0ea5e9", "#f59e0b", "#8b5cf6", "#10b981", "#ef4444"];
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (t) => { t = Math.max(0, t || 0); const m = Math.floor(t / 60); const s = (t % 60).toFixed(1).padStart(4, "0"); return `${m}:${s}`; };
+const api = async (url, opts) => { const r = await fetch(url, opts); if (!r.ok) throw new Error(`${r.status} ${await r.text()}`); return r.json(); };
+let TAGS = [];
+const VERDICT_HELP = {
+  ship: "ship: I'd send it to the client exactly as it is, without changing anything.",
+  fixable: "fixable: right direction, but I'd still change something before sending.",
+  reject: "reject: wrong approach, start over rather than tweak.",
+};
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 1800); }
+
+// ------------------------------------------------------------------ routing
+async function route() {
+  TAGS = (await api("/api/meta")).tags;
+  const p = location.pathname;
+  if (p.startsWith("/t/")) return ticketPage(decodeURIComponent(p.slice(3)));
+  if (p === "/new") return newPage();
+  return listPage();
+}
+
+async function listPage() {
+  const rows = await api("/api/tickets");
+  $("#main").innerHTML = `
+    <h2>Tickets</h2>
+    ${rows.length ? "" : `<p class="muted">No tickets yet. Create one at <a href="/new">New ticket</a>, or run <code>recut ticket demo</code> for a demo.</p>`}
+    <table><tr><th>Ticket</th><th>Status</th><th>Sessions</th><th>Last verdict</th><th>Request</th></tr>
+    ${rows.map((r) => `<tr class="link" onclick="location='/t/${r.id}'"><td><b>${esc(r.id)}</b><div class="muted">${esc(r.created_at)}</div></td>
+      <td><span class="pill">${esc(r.status)}</span></td><td>${r.sessions}</td><td>${esc(r.latest_verdict || "—")}</td>
+      <td>${esc(r.text.slice(0, 140))}${r.target_duration_s ? ` <span class="muted">· target ${r.target_duration_s}s</span>` : ""}</td></tr>`).join("")}
+    </table>`;
+}
+
+function newPage() {
+  $("#main").innerHTML = `
+    <h2>New edit request</h2>
+    <form id="f" class="card" style="max-width:560px">
+      <p><label>Tracks<br><input type="file" name="files" multiple required accept="audio/*"></label></p>
+      <p><label>What should the edit do?<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
+      <p><label>Target duration (seconds, optional)<br><input type="number" name="target_duration_s" min="1" step="1"></label></p>
+      <p><label>Your name (optional)<br><input type="text" name="client_name"></label></p>
+      <button class="on" type="submit">Send request</button> <span id="st" class="muted"></span>
+    </form>`;
+  $("#f").onsubmit = async (e) => {
+    e.preventDefault(); $("#st").textContent = "Uploading…";
+    const fd = new FormData(e.target); if (!fd.get("target_duration_s")) fd.delete("target_duration_s");
+    try { const r = await api("/api/tickets", { method: "POST", body: fd }); $("#main").innerHTML = `<h2>Thanks!</h2><p>Your request was received. Reference: <b>${esc(r.id)}</b></p>`; }
+    catch (err) { $("#st").textContent = "Upload failed: " + err.message; }
+  };
+}
+
+// ------------------------------------------------------------------ ticket page
+const S = {
+  tid: null, ticket: null, n: null, k: null, it: null, render: null, maps: {}, peaks: {}, cutPeaks: null,
+  cut: new Audio(), orig: {}, mode: "cut", origSeg: null, selSplice: null, review: null, follow: true, audioVersion: null,
+};
+
+async function ticketPage(tid) {
+  S.tid = tid;
+  $("#main").innerHTML = `
+    <div class="row" style="justify-content:space-between">
+      <div><h2 style="margin:4px 0">${esc(tid)}</h2><div id="req" class="muted"></div></div>
+      <div class="row" id="iters"></div>
+    </div>
+    <div class="row" style="margin:10px 0">
+      <button id="play" style="min-width:64px">▶ Play</button>
+      <span id="time" class="muted" style="min-width:110px">0:00.0</span>
+      <span class="row" style="gap:0"><button id="mCut" class="on">Cut</button><button id="mOrig">Original</button></span>
+      <label class="muted"><input type="checkbox" id="follow" checked> follow latest iteration</label>
+      <span class="muted" style="margin-left:auto"><kbd>space</kbd> play · <kbd>a</kbd> cut/original · <kbd>n</kbd>/<kbd>p</kbd> splice · <kbd>g</kbd>/<kbd>b</kbd> ok/bad</span>
+    </div>
+    <canvas id="cv" height="300"></canvas>
+    <div id="errbox"></div>
+    <div class="grid">
+      <div>
+        <div class="card"><h3>Problems</h3><div id="issues" class="muted">—</div></div>
+        <div class="card" style="margin-top:12px"><h3>Plan</h3><div id="notes" class="muted"></div>
+          <details><summary class="muted">plan.json</summary><pre id="plan"></pre></details></div>
+      </div>
+      <div class="card"><h3>Review</h3><div id="review"></div></div>
+    </div>`;
+  $("#play").onclick = togglePlay;
+  $("#mCut").onclick = () => setMode("cut");
+  $("#mOrig").onclick = () => setMode("orig");
+  $("#follow").onchange = (e) => { S.follow = e.target.checked; };
+  const cv = $("#cv");
+  cv.onclick = onCanvasClick;
+  new ResizeObserver(() => draw()).observe(cv);
+  document.onkeydown = onKey;
+  await loadTicket(true);
+  const es = new EventSource(`/api/tickets/${encodeURIComponent(tid)}/events`);
+  es.addEventListener("changed", () => loadTicket(false));
+  requestAnimationFrame(tick);
+}
+
+async function loadTicket(first) {
+  const t = await api(`/api/tickets/${encodeURIComponent(S.tid)}`);
+  S.ticket = t;
+  const r = t.request;
+  $("#hdr").textContent = `status: ${r.status}`;
+  $("#req").innerHTML = `${esc(r.text)}${r.target_duration_s ? ` · <b>target ${r.target_duration_s}s</b>` : ""}<br>` +
+    Object.entries(r.files).map(([sid, name], i) => `<span class="pill" style="border-color:${COLORS[i % 5]};color:${COLORS[i % 5]}">${sid} · ${esc(name)}</span>`).join(" ");
+  const all = t.sessions.flatMap((s) => s.iterations.filter((i) => i.has_plan).map((i) => ({ n: s.n, k: i.k, ...i })));
+  $("#iters").innerHTML = all.length ? all.map((i) => `<button data-n="${i.n}" data-k="${i.k}" class="${i.n === S.n && i.k === S.k ? "on" : ""}" title="session ${i.n}, iteration ${i.k}">${i.error ? "⚠ " : ""}s${i.n}·it${i.k}</button>`).join("")
+    : `<span class="muted">No iterations yet — run <code>recut ticket work ${esc(S.tid)}</code></span>`;
+  document.querySelectorAll("#iters button").forEach((b) => (b.onclick = () => selectIteration(+b.dataset.n, +b.dataset.k)));
+  if (!all.length) return;
+  const last = all[all.length - 1];
+  if (first || (S.follow && (last.n !== S.n || last.k !== S.k))) {
+    if (!first) toast(`New iteration s${last.n}·it${last.k}`);
+    return selectIteration(last.n, last.k);
+  }
+  return refreshIteration();
+}
+
+async function selectIteration(n, k) {
+  const changed = n !== S.n || k !== S.k;
+  S.n = n; S.k = k;
+  if (changed) { S.selSplice = null; S.audioVersion = null; }
+  document.querySelectorAll("#iters button").forEach((b) => b.classList.toggle("on", +b.dataset.n === n && +b.dataset.k === k));
+  await refreshIteration();
+}
+
+async function refreshIteration() {
+  const it = await api(`/api/tickets/${encodeURIComponent(S.tid)}/sessions/${S.n}/iterations/${S.k}`);
+  S.it = it; S.render = it.render;
+  $("#errbox").innerHTML = it.error ? `<div class="err"><b>Render failed</b> — fix plan.json:\n${esc(it.error.message)}</div>` : "";
+  $("#plan").textContent = JSON.stringify(it.plan, null, 2);
+  $("#notes").textContent = it.plan?.notes || "";
+  // source maps + peaks (once per source)
+  if (it.plan) for (const [sid, ref] of Object.entries(it.plan.sources)) {
+    if (!S.maps[sid]) S.maps[sid] = await api(`/api/tickets/${encodeURIComponent(S.tid)}/maps/${sid}`).catch(() => null);
+    if (!S.peaks[sid]) S.peaks[sid] = await api(`/api/tickets/${encodeURIComponent(S.tid)}/peaks/${ref.file}?n=2000`).catch(() => null);
+    if (!S.orig[sid]) { S.orig[sid] = new Audio(`/media/tickets/${encodeURIComponent(S.tid)}/${ref.file}`); S.orig[sid].preload = "auto"; }
+  }
+  if (it.audio_version && it.render && it.audio_version !== S.audioVersion) {
+    const reload = S.audioVersion !== null;
+    S.audioVersion = it.audio_version;
+    const rel = `sessions/${S.n}/iterations/${S.k}/audio.wav`;
+    const t = S.cut.currentTime, wasPlaying = !S.cut.paused && S.mode === "cut";
+    S.cut.pause();
+    S.cut.src = `/media/tickets/${encodeURIComponent(S.tid)}/${rel}?v=${it.audio_version}`;
+    S.cut.onloadedmetadata = () => { if (reload) S.cut.currentTime = Math.min(t, S.cut.duration || t); if (wasPlaying) S.cut.play(); S.cut.onloadedmetadata = null; };
+    S.cutPeaks = await api(`/api/tickets/${encodeURIComponent(S.tid)}/peaks/${rel}?n=2400&v=${it.audio_version}`).catch(() => null);
+    if (reload) toast("Re-rendered — playing from the same position");
+  }
+  // keep an unsaved review across live reloads of the same iteration
+  if (!(S.reviewDirty && S.review?.iteration === S.k)) {
+    const sess = S.ticket.sessions.find((s) => s.n === S.n);
+    const itRev = sess?.iterations.find((i) => i.k === S.k)?.review;
+    S.review = itRev ? structuredClone(itRev)
+      : { iteration: S.k, verdict: null, splices: {}, tags: [], note: "" };
+    S.reviewDirty = false;
+  }
+  renderIssues(); renderReview(); draw();
+}
+
+// ------------------------------------------------------------------ playback
+function curTime() { return S.cut.currentTime || 0; }
+function segAt(t) { const segs = S.render?.segments || []; let hit = null; for (const s of segs) if (t >= s.out_start && t < s.out_end) hit = s; return hit || segs[segs.length - 1]; }
+function togglePlay() {
+  const a = S.mode === "cut" ? S.cut : S.orig[S.origSeg?.source];
+  if (!a) return;
+  if (a.paused) a.play(); else a.pause();
+}
+function setMode(mode) {
+  if (mode === S.mode || !S.render) return;
+  const playing = S.mode === "cut" ? !S.cut.paused : !(S.orig[S.origSeg?.source]?.paused ?? true);
+  if (mode === "orig") {
+    const seg = segAt(curTime()); if (!seg) return;
+    S.origSeg = seg; S.cut.pause();
+    const a = S.orig[seg.source]; a.currentTime = seg.src_start + (curTime() - seg.out_start);
+    if (playing) a.play();
+  } else {
+    const a = S.orig[S.origSeg.source]; a.pause();
+    const seg = S.origSeg;
+    if (a.currentTime >= seg.src_start && a.currentTime <= seg.src_end) S.cut.currentTime = seg.out_start + (a.currentTime - seg.src_start);
+    if (playing) S.cut.play();
+  }
+  S.mode = mode;
+  $("#mCut").classList.toggle("on", mode === "cut"); $("#mOrig").classList.toggle("on", mode === "orig");
+}
+function seekCut(t) { if (S.mode !== "cut") setMode("cut"); S.cut.currentTime = Math.max(0, t); }
+function tick() {
+  const a = S.mode === "cut" ? S.cut : S.orig[S.origSeg?.source];
+  const playing = a && !a.paused;
+  $("#play") && ($("#play").textContent = playing ? "❚❚ Pause" : "▶ Play");
+  if ($("#time")) $("#time").textContent = S.mode === "cut" ? `${fmt(curTime())} / ${fmt(S.render?.duration_s)}` : `orig ${S.origSeg?.source} ${fmt(a?.currentTime)}`;
+  draw(); requestAnimationFrame(tick);
+}
+
+// ------------------------------------------------------------------ timeline canvas
+const L = { compY: 26, compH: 96, gap: 54, srcH: 58, srcGap: 26 };
+function layout() {
+  const sids = Object.keys(S.it?.plan?.sources || {});
+  const rows = {}; let y = L.compY + L.compH + L.gap;
+  sids.forEach((sid, i) => { rows[sid] = { y, color: COLORS[i % 5] }; y += L.srcH + L.srcGap; });
+  return { rows, height: y };
+}
+function wave(ctx, pk, x0, x1, y, h, color, from = 0, to = null) {
+  if (!pk) return;
+  const n = pk.max.length, dur = pk.duration_s; to = to ?? dur;
+  ctx.fillStyle = color;
+  for (let px = Math.floor(x0); px < x1; px++) {
+    const t = from + ((px - x0) / (x1 - x0)) * (to - from);
+    const i = Math.min(n - 1, Math.max(0, Math.floor((t / dur) * n)));
+    const mx = pk.max[i], mn = pk.min[i];
+    ctx.fillRect(px, y + h / 2 - mx * h / 2, 1, Math.max(1, (mx - mn) * h / 2));
+  }
+}
+function draw() {
+  const cv = $("#cv"); if (!cv) return;
+  const { rows, height } = layout();
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth;
+  if (cv.height !== Math.round(height * dpr) || cv.width !== Math.round(W * dpr)) { cv.width = W * dpr; cv.height = height * dpr; cv.style.height = height + "px"; }
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, height);
+  const R = S.render; ctx.font = "11px system-ui";
+  if (!R) { ctx.fillStyle = "#6b7280"; ctx.fillText(S.it?.error ? "Render failed — see the error below" : "No render yet", 12, 40); return; }
+  const X = (t) => (t / R.duration_s) * W;
+  const sidx = Object.keys(rows);
+  // composition segments
+  R.segments.forEach((s, i) => {
+    const c = rows[s.source].color, x0 = X(s.out_start), x1 = X(s.out_end), lane = i % 2 && overlapsPrev(i) ? 1 : 0;
+    ctx.fillStyle = c + "22"; ctx.fillRect(x0, L.compY, x1 - x0, L.compH);
+    ctx.fillStyle = c; ctx.fillRect(x0, L.compY + (lane ? L.compH - 4 : 0), x1 - x0, 4);
+    ctx.fillStyle = "#16181d"; ctx.fillText(`${s.label} · ${s.source}`, x0 + 5, L.compY + 16 + lane * 0);
+  });
+  wave(ctx, S.cutPeaks, 0, W, L.compY + 20, L.compH - 26, "#374151aa");
+  // overlaps (bowties) and splices
+  R.splices.forEach((sp) => {
+    const x = X(sp.out_time), w = X(sp.out_time + sp.overlap_ms / 1000) - x;
+    if (w > 1) { ctx.strokeStyle = "#11182799"; ctx.beginPath(); ctx.moveTo(x, L.compY + 20); ctx.lineTo(x + w, L.compY + L.compH);
+      ctx.moveTo(x, L.compY + L.compH); ctx.lineTo(x + w, L.compY + 20); ctx.stroke(); }
+    const rv = S.review?.splices?.[sp.id];
+    const col = rv ? (rv.ok ? "#16a34a" : "#dc2626") : "#9ca3af";
+    ctx.strokeStyle = sp.id === S.selSplice ? "#111827" : col; ctx.lineWidth = sp.id === S.selSplice ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(x, 10); ctx.lineTo(x, L.compY + L.compH); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, 10, sp.id === S.selSplice ? 7 : 5.5, 0, 7); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = "9px system-ui"; ctx.textAlign = "center"; ctx.fillText(sp.id.slice(1), x, 13); ctx.textAlign = "left"; ctx.font = "11px system-ui";
+  });
+  // automation spans
+  (R.automation || []).forEach((a) => {
+    const x0 = X(a.out_start), x1 = X(a.out_end);
+    ctx.fillStyle = "#8b5cf6"; ctx.beginPath(); ctx.moveTo(x0, L.compY + L.compH - 2); ctx.lineTo(x1, L.compY + L.compH - 12); ctx.lineTo(x1, L.compY + L.compH - 2); ctx.fill();
+    ctx.fillText(a.target, x0, L.compY + L.compH - 14);
+  });
+  // connectors + source rows
+  const top = L.compY + L.compH;
+  R.segments.forEach((s) => {
+    const row = rows[s.source], sd = R.sources[s.source]?.duration_s || 1, SX = (t) => (t / sd) * W;
+    ctx.fillStyle = row.color + "26"; ctx.beginPath();
+    ctx.moveTo(X(s.out_start), top); ctx.lineTo(X(s.out_end), top); ctx.lineTo(SX(s.src_end), row.y); ctx.lineTo(SX(s.src_start), row.y); ctx.fill();
+  });
+  sidx.forEach((sid) => {
+    const row = rows[sid], sd = R.sources[sid]?.duration_s || S.peaks[sid]?.duration_s || 1, SX = (t) => (t / sd) * W;
+    ctx.fillStyle = "#f6f7f9"; ctx.fillRect(0, row.y, W, L.srcH);
+    R.segments.filter((s) => s.source === sid).forEach((s) => { ctx.fillStyle = row.color + "55"; ctx.fillRect(SX(s.src_start), row.y, SX(s.src_end) - SX(s.src_start), L.srcH); });
+    wave(ctx, S.peaks[sid], 0, W, row.y + 14, L.srcH - 16, row.color + "cc");
+    const m = S.maps[sid];
+    if (m) m.segments.forEach((g) => { if (g.end - g.start < 0.05) return; const x = SX(g.start);
+      ctx.fillStyle = "#9ca3af"; ctx.fillRect(x, row.y, 1, L.srcH); ctx.fillStyle = "#4b5563"; ctx.fillText(`${g.segment_name}`, x + 4, row.y + 11); });
+    ctx.fillStyle = row.color; ctx.font = "bold 11px system-ui"; ctx.fillText(`${sid} · ${S.ticket.request.files[sid] || ""}`, 4, row.y - 5); ctx.font = "11px system-ui";
+    if (S.mode === "orig" && S.origSeg?.source === sid) { const x = SX(S.orig[sid].currentTime); ctx.fillStyle = "#111827"; ctx.fillRect(x, row.y - 2, 2, L.srcH + 4); }
+  });
+  // playhead
+  const px = X(curTime()); ctx.fillStyle = S.mode === "cut" ? "#111827" : "#11182744"; ctx.fillRect(px, 4, 2, L.compY + L.compH - 4);
+}
+function overlapsPrev(i) { const s = S.render.segments; return i > 0 && s[i].out_start < s[i - 1].out_end - 1e-3; }
+
+function onCanvasClick(e) {
+  if (!S.render) return;
+  const cv = $("#cv"), rect = cv.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top, W = rect.width, R = S.render;
+  if (y <= L.compY + L.compH) {
+    const hit = R.splices.find((sp) => Math.abs((sp.out_time / R.duration_s) * W - x) < 7);
+    if (hit && y < L.compY + 6) return selectSplice(hit.id, true);
+    return seekCut((x / W) * R.duration_s);
+  }
+  const { rows } = layout();
+  for (const [sid, row] of Object.entries(rows)) {
+    if (y < row.y || y > row.y + L.srcH) continue;
+    const sd = R.sources[sid].duration_s, t = (x / W) * sd;
+    const seg = R.segments.find((s) => s.source === sid && t >= s.src_start && t <= s.src_end);
+    if (seg) return seekCut(seg.out_start + (t - seg.src_start));
+    S.origSeg = { source: sid, src_start: -1, src_end: -1 }; S.cut.pause();
+    S.mode = "orig"; $("#mCut").classList.remove("on"); $("#mOrig").classList.add("on");
+    S.orig[sid].currentTime = t; S.orig[sid].play();
+  }
+}
+
+// ------------------------------------------------------------------ issues & review
+function renderIssues() {
+  const iss = S.render?.issues || [];
+  $("#issues").innerHTML = iss.length ? iss.map((i, j) => `<div class="issue" data-j="${j}"><span class="sev-${i.severity}">●</span> <b>${esc(i.rule)}</b>${i.splice ? ` · ${i.splice}` : ""}${i.node ? ` · ${i.node}` : ""} — ${esc(i.message)}</div>`).join("")
+    : `<span class="muted">No validator issues.</span>`;
+  document.querySelectorAll(".issue").forEach((d) => (d.onclick = () => {
+    const i = iss[+d.dataset.j];
+    if (i.splice) return selectSplice(i.splice, true);
+    const seg = S.render.segments.find((s) => s.node_id === i.node); if (seg) seekCut(seg.out_start);
+  }));
+}
+function selectSplice(id, seek) {
+  S.selSplice = id; const sp = S.render.splices.find((s) => s.id === id);
+  if (seek && sp) seekCut(Math.max(0, sp.out_time - 2));
+  renderReview();
+}
+function segLabel(id) { return S.render.segments.find((s) => s.node_id === id)?.label || id; }
+function renderReview() {
+  if (!S.render) { $("#review").innerHTML = `<span class="muted">Nothing to review yet.</span>`; return; }
+  const rv = S.review;
+  const tagBtns = (sel, attr) => TAGS.map((t) => `<button ${attr}="${t}" class="${sel.includes(t) ? "on" : ""}">${t}</button>`).join("");
+  $("#review").innerHTML = `
+    <div class="muted" style="margin-bottom:6px">Reviewing session ${S.n}, iteration ${S.k}${S.review.reviewed_at ? ` · saved ${esc(S.review.reviewed_at)}` : ""}</div>
+    ${S.render.splices.map((sp) => { const r = rv.splices[sp.id] || {}; return `
+      <div class="splice ${sp.id === S.selSplice ? "sel" : ""}" data-sp="${sp.id}">
+        <div class="row"><b style="cursor:pointer" data-go="${sp.id}">${sp.id} @ ${fmt(sp.out_time)}</b>
+          <span class="muted">${esc(segLabel(sp.from))} → ${esc(segLabel(sp.to))}${sp.cross_source ? " · cross-source" : ""}${sp.overlap_ms ? ` · ${Math.round(sp.overlap_ms)}ms ${sp.out_shape}/${sp.in_shape}` : " · hard cut"}</span>
+          <span style="margin-left:auto"><button class="ok ${r.ok === true ? "on" : ""}" data-ok="${sp.id}">ok</button> <button class="bad ${r.ok === false ? "on" : ""}" data-bad="${sp.id}">bad</button></span></div>
+        ${r.ok === false ? `<div class="tags">${tagBtns(r.tags || [], `data-st-${sp.id}`)}</div><input type="text" data-note="${sp.id}" placeholder="note (optional)" value="${esc(r.note || "")}" style="margin-top:4px">` : ""}
+      </div>`; }).join("") || `<p class="muted">No splices (single clip).</p>`}
+    <div style="margin-top:10px"><b>Verdict</b>
+      <div class="row" style="margin:4px 0">${["ship", "fixable", "reject"].map((v) => `<button data-v="${v}" title="${VERDICT_HELP[v]}" class="${rv.verdict === v ? "on" : ""}">${v}</button>`).join("")}</div>
+      <div class="muted" style="font-size:12px">${rv.verdict ? VERDICT_HELP[rv.verdict] : "Would you send it to the client exactly as it is? Unsure → pick the stricter one."}</div></div>
+    <div><b>Overall tags</b><div class="tags">${tagBtns(rv.tags, "data-gt")}</div></div>
+    <p><textarea id="rnote" rows="3" placeholder="What should the agent change? (one or two sentences)">${esc(rv.note || "")}</textarea></p>
+    <button class="on" id="save">Save review</button> <span id="rst" class="muted"></span>`;
+  const R = $("#review");
+  R.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => selectSplice(b.dataset.go, true)));
+  R.querySelectorAll("[data-ok]").forEach((b) => (b.onclick = () => markSplice(b.dataset.ok, true)));
+  R.querySelectorAll("[data-bad]").forEach((b) => (b.onclick = () => markSplice(b.dataset.bad, false)));
+  S.render.splices.forEach((sp) => R.querySelectorAll(`[data-st-${sp.id}]`).forEach((b) => (b.onclick = () => {
+    dirty(); const t = b.getAttribute(`data-st-${sp.id}`), r = rv.splices[sp.id]; r.tags = r.tags.includes(t) ? r.tags.filter((x) => x !== t) : [...r.tags, t]; renderReview(); })));
+  R.querySelectorAll("[data-note]").forEach((i) => (i.oninput = () => { dirty(); rv.splices[i.dataset.note].note = i.value; }));
+  R.querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => { dirty(); rv.verdict = b.dataset.v; renderReview(); }));
+  R.querySelectorAll("[data-gt]").forEach((b) => (b.onclick = () => { dirty(); const t = b.dataset.gt; rv.tags = rv.tags.includes(t) ? rv.tags.filter((x) => x !== t) : [...rv.tags, t]; renderReview(); }));
+  $("#rnote").oninput = (e) => { S.reviewDirty = true; rv.note = e.target.value; };
+  $("#save").onclick = saveReview;
+}
+function dirty() { S.reviewDirty = true; if ($("#rst")) $("#rst").textContent = "unsaved changes"; }
+function markSplice(id, ok) {
+  dirty();
+  const cur = S.review.splices[id] || { tags: [] };
+  S.review.splices[id] = { ok, tags: ok ? [] : cur.tags || [], note: ok ? null : cur.note || null };
+  S.selSplice = id; renderReview();
+}
+async function saveReview() {
+  if (!S.review.verdict) { $("#rst").textContent = "Pick a verdict first."; return; }
+  const body = { iteration: S.k, verdict: S.review.verdict, splices: S.review.splices, tags: S.review.tags, note: S.review.note || null };
+  try { const r = await api(`/api/tickets/${encodeURIComponent(S.tid)}/sessions/${S.n}/review`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    S.reviewDirty = false; $("#rst").textContent = `Saved · ticket is now ${r.status}`; toast(`Review saved · ticket is now ${r.status}`); }
+  catch (e) { $("#rst").textContent = "Save failed: " + e.message; }
+}
+
+function onKey(e) {
+  if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+  const sp = S.render?.splices || [];
+  const i = sp.findIndex((s) => s.id === S.selSplice);
+  if (e.key === " ") { e.preventDefault(); togglePlay(); }
+  else if (e.key === "a") setMode(S.mode === "cut" ? "orig" : "cut");
+  else if (e.key === "n" && sp.length) selectSplice(sp[Math.min(sp.length - 1, i + 1)].id, true);
+  else if (e.key === "p" && sp.length) selectSplice(sp[Math.max(0, i - 1)].id, true);
+  else if (e.key === "g" && S.selSplice) markSplice(S.selSplice, true);
+  else if (e.key === "b" && S.selSplice) markSplice(S.selSplice, false);
+}
+
+route().catch((e) => { $("#main").innerHTML = `<div class="err">${esc(e.message)}</div>`; });
+</script>
+</body>
+</html>

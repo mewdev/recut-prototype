@@ -2,38 +2,34 @@
 
 recut is an early prototype (see repo `CLAUDE.md`). Say these gaps out loud when relevant rather than silently working around them.
 
-## No `eq` primitive
+## One track only
 
-Only `cut`, `fade`, `filter_sweep`, `reverb`, `delay`, `xfade`, `chain` exist. A static (non-swept) filter is available via `FilterSweep(freq_start=freq_end=cutoff)` — see `effects-routing.md`. There's no dedicated static-EQ primitive or effect.
+The engine renders exactly one track of clips, plus return tracks and the master. More than one track raises `multi-track not supported yet`. Layering (mashups, a vocal over another song's instrumental) is week-2 work; sequencing several sources (a medley, several versions of one song) works today.
 
-## No partial-clip effect application
+## No stem or per-instrument editing
 
-Every `Effect` applies to the *entire* buffer a `Clip` cuts — there's no way to say
-"apply this only to the last N bars, leave the rest of the clip untouched." `Fade`'s
-envelope always spans the whole clip; `Reverb`/`Delay` have no offset/duration concept
-at all; `FilterSweep`'s `duration` param looks like it should give this but doesn't —
-it **truncates** the clip to `duration` rather than sweeping then holding at `freq_end`
-for the remainder (tested: 4.0s input, `duration=1.0` → 1.0s output, not 4.0s).
+Clips are full mixes (clients send full mixes only). Every device acts on the whole mix: you can filter or duck "the mix", not "the drums". Do not tell a user "I'll isolate the drums and fade just those"; that doesn't exist. See `effects-routing.md`, `transitions-and-masking.md`.
 
-**Current workaround:** split into two `Clip()` calls
-on the same `segment_name`/`index` — one dry with `bars=N`, one effected with
-`offset_bars=N` and no `bars` cap. Real cost, not just verbosity: the complementary
-`offset_bars`/`bars` arithmetic is exactly what produces the fp-boundary trap (`offset_bars
-+ bars` summing to precisely `segment.end`, tripped by the map's own bar-grid jitter) hit
-repeatedly this session. See issue [#53](https://github.com/mewdev/recut-prototype/issues/53).
+## No time-stretching
 
-## No live per-instrument/stem editing
+Joins between songs with different tempos must be chosen to be compatible (breakdowns, outros, longer crossfades). `bpm_gap` warns when the tempos differ by more than about 3%; the engine will not match them for you.
 
-`compose(music_map, audio, *nodes)` takes exactly one `Audio` — the full mix. `Clip.source` and `Composition.sources` (`src/recut/project.py`) exist as dataclass fields but are **not read anywhere at render time** — they're placeholders for a future multi-source/stem path, not a working feature. Do not tell a user "I'll isolate the drums and fade just those" — that call doesn't exist. All effects apply to the whole mix (`effects-routing.md`, `transitions-and-masking.md`).
+## Reverb is approximate
 
-## Thin test coverage on primitives
+`reverb` runs on pedalboard's Freeverb, which has no decay-time setting. `decay` is mapped to its room size through a measured table (0.53 s to 9.5 s), `size` only scales that, and there is no early-reflection control. It sounds like a plain algorithmic room; don't promise a specific RT60 or a convolution hall.
 
-`tests/primitives/test_primitives.py` covers `cut`, `fade`, `chain`, `xfade`, and `Clip` fx/loop application. `filter_sweep`, `reverb`, and `delay` have no dedicated unit tests as of this writing. `compose()` itself has no direct test suite — it's exercised indirectly through the `Clip` fx/loop tests.
+## Automation covers a fixed set of parameters
 
-## Validator is 3 rules, not a musical linter
+Automation can move `gain`, `sends.<id>` and these device parameters: `utility` gain/width, `eq` low_cut/high_cut, `auto_filter` frequency/resonance, `reverb` dry_wet/hi_cut, `delay` dry_wet/feedback/filter_lo/filter_hi. `decay`, `time`, `size`, EQ bands and pan can't be automated; the error message lists what can.
 
-See `validation-workflow.md` — `label_exists`, `duration_exceeds`, `sequence_boundaries` only. No key/energy/rhythm-aware checks exist yet.
+## Validator is a few structure rules plus cross-song checks, not a musical linter
+
+See `validation-workflow.md`. No energy- or rhythm-aware checks beyond the beat-grid join checks.
 
 ## No map generation or DAW/notation concerns here
 
 This skill doesn't cover building/enriching a `MusicMap` (`recut analyze`/`recut map`, `src/recut/map/make_map.py`) or musical-judgment questions (`music-theory` skill) — those are explicitly out of scope, see `SKILL.md`.
+
+## Legacy Python API gaps (deprecated API only)
+
+`compose()` takes one source, applies each clip's `fx` to the whole clip, truncates `FilterSweep(duration=...)` to its duration, and has no EQ or sends. All of that is fixed in plan v2; old compositions convert through `recut.legacy`.

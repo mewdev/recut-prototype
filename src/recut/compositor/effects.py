@@ -5,6 +5,7 @@ Each Effect subclass mirrors one curried primitive's kwargs exactly, so
 to_fn() can rebuild the callable with **asdict(self) — no per-field mapping.
 """
 
+import warnings
 from dataclasses import asdict, dataclass
 from typing import Callable, ClassVar
 
@@ -18,8 +19,18 @@ from recut.primitives.reverb import ReverbType, reverb, reverb_sweep
 
 @dataclass
 class Effect:
+    """Deprecated: use plan v2 devices, sends and automation (docs/PLAN.md §3.2).
+
+    Old compositions still load and render; `recut.legacy.composition_to_plan` converts them.
+    """
+
     _primitive: ClassVar[Callable]
     type: ClassVar[str]
+
+    def __post_init__(self) -> None:
+        warnings.warn(
+            f"{type(self).__name__} is deprecated: use plan v2 devices/sends/automation "
+            "(recut.legacy converts old compositions)", DeprecationWarning, stacklevel=3)
 
     def to_fn(self) -> Callable[[Audio], Audio]:
         return self._primitive(**asdict(self))
