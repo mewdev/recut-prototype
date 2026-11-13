@@ -148,6 +148,7 @@ def _validator_issues(plan: Plan, sources: dict[str, LoadedSource]) -> list[Issu
 
 TAIL_FLOOR_DB = -60.0  # return tails are cut where they fall below this level
 TAIL_MAX_S = 10.0      # ...or this many seconds after the last clip
+TAIL_FLOOR = 10 ** (TAIL_FLOOR_DB / 20)
 
 
 @dataclass
@@ -155,6 +156,7 @@ class _Placed:
     node: ClipNode
     start: int
     samples: np.ndarray  # (2, n) after gain, fades and devices; xfade ramps are applied in place
+    tail: np.ndarray  # (2, m) device tail (reverb/delay) ringing after the clip, not part of the layout
     sends: dict[str, "np.ndarray | float"]
     bpm: float
 
@@ -174,7 +176,10 @@ def _check_targets(autos, owner: str, device_ids: dict[str, object], return_ids:
         if not ok and t.startswith("devices."):
             parts = t.split(".")
             d = device_ids.get(parts[1]) if len(parts) == 3 else None
-            ok = d is not None and parts[2] in type(d).model_fields and parts[2] not in ("id", "type")
+            ok = d is not None and parts[2] in dev_mod.AUTOMATABLE.get(d.type, {})
+            if d is not None and not ok:
+                raise PlanError(f"{owner}: {t!r} can't be automated. {d.type} parameters you can automate: "
+                                f"{sorted(dev_mod.AUTOMATABLE.get(d.type, {})) or 'none'}")
             if not ok:
                 hint = (f" Devices here: {sorted(device_ids)}" if device_ids else
                         f" {owner} has no devices")
@@ -182,17 +187,6 @@ def _check_targets(autos, owner: str, device_ids: dict[str, object], return_ids:
         if not ok:
             raise PlanError(f"{owner}: unknown automation target {t!r}. Use 'gain', 'sends.<return id>' "
                             f"(returns: {sorted(return_ids) or 'none'}) or 'devices.<device id>.<parameter>'")
-
-
-def _unsupported(devices: list, owner: str, issues: list[Issue], node: str | None = None) -> list:
-    keep = []
-    for d in devices:
-        if dev_mod.is_supported(d):
-            keep.append(d)
-        else:
-            issues.append(Issue(severity="warn", rule="not_rendered", node=node,
-                                message=f"{owner}: device {d.id} ({d.type}) not rendered yet"))
-    return keep
 
 
 def _pan(x: np.ndarray, pan: float) -> np.ndarray:
@@ -262,11 +256,19 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
         if node.fade_out:
             k = min(n_len, int(parse_time(node.fade_out.length, bpm, bpb) * sr))
             clip[:, n_len - k:] *= ramp_in(node.fade_out.shape, k)[::-1]
-        if node.devices:
-            _unsupported(node.devices, f"clip {node.id}", issues, node.id)
-            if any(dev_mod.is_supported(d) for d in node.devices):
-                issues.append(Issue(severity="warn", rule="not_rendered", node=node.id,
-                                    message=f"clip {node.id}: clip devices not rendered yet (engine task A8)"))
+        tail = np.zeros((2, 0), dtype=np.float32)
+        if node.devices:  # insert chain after fades; reverb/delay tails ring on past the clip
+            est = int(dev_mod.tail_seconds(node.devices, bpm, bpb) * sr)
+            padded = np.concatenate([clip, np.zeros((2, est), dtype=clip.dtype)], axis=-1)
+            try:
+                out = dev_mod.apply_devices(node.devices, padded,
+                                            dev_mod.Ctx(sr, bpm, bpb, n_len / sr, node.automation))
+            except AutomationError as e:
+                raise PlanError(f"clip {node.id}: {e}") from e
+            clip = out[:, :n_len].copy()
+            loud = np.nonzero(np.abs(out[:, n_len:]).max(axis=0) > TAIL_FLOOR)[0]
+            if loud.size:
+                tail = out[:, n_len: n_len + int(loud[-1]) + 1].copy()
 
         overlap = 0
         if pending is not None and placed:
@@ -296,7 +298,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
                 in_shape=(legacy[pending.id][1] if pending.id in legacy else pending.shape_in)
                 if pending and overlap else None,
             ))
-        placed.append(_Placed(node, start, clip, send_curves, bpm))
+        placed.append(_Placed(node, start, clip, tail, send_curves, bpm))
         segments.append(RenderSegment(
             node_id=node.id, source=node.source, label=f"{node.segment}#{node.index}",
             src_start=s0, src_end=s1, out_start=start / sr, out_end=(start + n_len) / sr,
@@ -309,25 +311,30 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
         prev_node, pending = node, None
 
     timeline = max(p.start + p.samples.shape[-1] for p in placed)
+    extent = max(p.start + p.samples.shape[-1] + p.tail.shape[-1] for p in placed)
     pad = int(TAIL_MAX_S * sr)
 
     # ---- track: sum clips, devices, volume, pan ------------------------------------------
-    bus = np.zeros((2, timeline + pad), dtype=np.float32)
-    returns_in = {rid: np.zeros((2, timeline + pad), dtype=np.float32) for rid in return_ids}
+    bus = np.zeros((2, extent + pad), dtype=np.float32)
+    returns_in = {rid: np.zeros((2, extent + pad), dtype=np.float32) for rid in return_ids}
     for p in placed:
         n = p.samples.shape[-1]
-        bus[:, p.start:p.start + n] += p.samples
+        m = p.tail.shape[-1]
+        full = np.concatenate([p.samples, p.tail], axis=-1) if m else p.samples
+        bus[:, p.start:p.start + n + m] += full
         for rid, g in p.sends.items():
-            returns_in[rid][:, p.start:p.start + n] += p.samples * g
+            if m and isinstance(g, np.ndarray):
+                g = np.concatenate([g, np.full(m, g[-1])])
+            returns_in[rid][:, p.start:p.start + n + m] += full * g
     clip_peak = max(float(np.abs(p.samples).max()) for p in placed)
 
     _check_targets(track.automation, f"track {track.id}", {d.id: d for d in track.devices}, return_ids)
     try:
-        tgain = build_curve(track.automation, "gain", timeline + pad, sr, bpm0, bpb0, "level", timeline / sr)
+        tgain = build_curve(track.automation, "gain", extent + pad, sr, bpm0, bpb0, "level", timeline / sr)
     except AutomationError as e:
         raise PlanError(f"track {track.id}: {e}") from e
     ctx = dev_mod.Ctx(sr, bpm0, bpb0, timeline / sr, track.automation)
-    bus = dev_mod.apply_devices(_unsupported(track.devices, f"track {track.id}", issues), bus, ctx)
+    bus = dev_mod.apply_devices(track.devices, bus, ctx)
     bus = bus * (db_to_gain(track.volume) if tgain is None else tgain)
     if track.pan:
         bus = _pan(bus, track.pan)
@@ -336,7 +343,6 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
         spans_auto.append(AutomationSpan(node_id=track.id, target=au.target, out_start=rel0, out_end=rel1))
 
     # ---- returns: one device chain over the whole send buffer, tails ring out ------------
-    floor = 10 ** (TAIL_FLOOR_DB / 20)
     tail_end = 0
     mix_parts = [bus]
     for r in plan.returns:
@@ -345,7 +351,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
             continue
         _check_targets(r.automation, f"return {r.id}", {d.id: d for d in r.devices}, return_ids)
         rctx = dev_mod.Ctx(sr, bpm0, bpb0, timeline / sr, r.automation)
-        out = dev_mod.apply_devices(_unsupported(r.devices, f"return {r.id}", issues), buf, rctx)
+        out = dev_mod.apply_devices(r.devices, buf, rctx)
         try:
             rgain = build_curve(r.automation, "gain", out.shape[-1], sr, bpm0, bpb0, "level", timeline / sr)
         except AutomationError as e:
@@ -354,12 +360,12 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
         for au in r.automation:
             rel0, rel1 = span_seconds(au, bpm0, bpb0, timeline / sr)
             spans_auto.append(AutomationSpan(node_id=r.id, target=au.target, out_start=rel0, out_end=rel1))
-        loud = np.nonzero(np.abs(out).max(axis=0) > floor)[0]
+        loud = np.nonzero(np.abs(out).max(axis=0) > TAIL_FLOOR)[0]
         if loud.size:
             tail_end = max(tail_end, int(loud[-1]) + 1)
         mix_parts.append(out.astype(np.float32))
 
-    total = max(timeline, tail_end)
+    total = max(extent, tail_end)
     mix = sum(part[:, :total] for part in mix_parts[1:]) + bus[:, :total] if len(mix_parts) > 1 else bus[:, :total]
     mix = np.ascontiguousarray(mix, dtype=np.float32)
 
@@ -367,7 +373,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     peak_pre = float(np.abs(mix).max()) if total else 0.0
     peak_pre_db = 20 * math.log10(peak_pre) if peak_pre > 0 else -math.inf
     mctx = dev_mod.Ctx(sr, bpm0, bpb0, total / sr)
-    mix = dev_mod.apply_devices(_unsupported(plan.master.devices, "master", issues), mix, mctx)
+    mix = dev_mod.apply_devices(plan.master.devices, mix, mctx)
     # only flag clipping the edit created (overlaps, returns), not a source that is already hot
     if peak_pre_db > 0 and peak_pre > clip_peak * 1.06:
         issues.append(Issue(severity="warn", rule="peak_clip",

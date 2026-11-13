@@ -2,12 +2,12 @@
 
 ## Cutting mechanics (`skills/cutting/references/known-limitations.md`)
 
-- **No `eq` primitive** — static filtering only via `FilterSweep(freq_start=freq_end)`.
-- **No partial-clip effect application** — every effect applies to a clip's entire
-  buffer; "fade just the last 4 bars" needs two `Clip()` calls, not one parameter.
-  [Issue #53](https://github.com/mewdev/recut-prototype/issues/53).
-- **No live per-instrument/stem editing** — `compose()` takes one full-mix `Audio`.
-  `Clip.source` exists as a field but isn't read at render time.
+- **One track only** — plan v2 renders one track of clips plus returns and master;
+  sequencing several songs works, layering (mashups) is week 2.
+- **No live per-instrument/stem editing** — clips are full mixes; devices act on the whole mix.
+- **No time-stretching** — joins between songs must use compatible tempos.
+- **Reverb is approximate** — Freeverb has no decay-time setting; `decay` maps to room size.
+  (The old `Clip`/`compose()` API is deprecated; its limits no longer apply to plans.)
 - **No bridge between `Clip`/`compose()` and raw `chain()` reprocessing**, and no
   gain-staging primitive — cascading wet `Reverb`/`Delay` passes can clip with nothing
   to catch it. [Issue #52](https://github.com/mewdev/recut-prototype/issues/52).

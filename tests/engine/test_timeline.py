@@ -140,3 +140,79 @@ def test_legacy_concat_and_xfade_match_compose(base):
     plain = _plan([clip("n1", "intro", bars=2), clip("n2", "verse", bars=2)], p, master={"devices": []})
     want = compose(src.music_map, src.audio, Clip("intro", bars=2), Clip("verse", bars=2))
     assert np.abs(render_plan(plain, d)[0].samples - want.samples).max() < 1e-6
+
+
+# ---- A8: devices and automation through the engine ---------------------------------------
+
+
+def test_clip_device_chain_with_automation_like_the_plan_example(base):
+    d, p = base
+    flt = {"id": "flt", "type": "auto_filter", "filter": "lowpass", "frequency": 20000, "resonance": 0.2}
+    auto = [{"target": "devices.flt.frequency", "points": [["0 beats", 20000], ["2 bars", 600]], "shape": "exp"}]
+    clips = [clip("n1", "chorus", bars=2, gain=-20, devices=[flt], automation=auto)]
+    audio, info = render_plan(_plan(clips, p, master={"devices": []}), d)
+    dry, _ = render_plan(_plan([clip("n1", "chorus", bars=2, gain=-20)], p, master={"devices": []}), d)
+    half = audio.samples.shape[-1] // 2
+    hf = lambda a: float(np.abs(np.diff(a, axis=-1)).mean())  # noqa: E731  (high-frequency content)
+    assert hf(audio.samples[:, -half // 2:]) < 0.5 * hf(dry.samples[:, -half // 2:])
+    assert hf(audio.samples[:, :2000]) > 0.8 * hf(dry.samples[:, :2000])  # starts open
+    assert info.automation[0].target == "devices.flt.frequency"
+    assert not [i for i in info.issues if i.rule == "not_rendered"]
+
+
+def test_clip_gain_automation_fades_the_clip(base):
+    d, p = base
+    auto = [{"target": "gain", "from": 0, "to": "-inf", "over": "1 bar", "at": "end", "shape": "linear"}]
+    audio, info = render_plan(_plan([clip("n1", "verse", bars=2, automation=auto)], p, master={"devices": []}), d)
+    ref, _ = render_plan(_plan([clip("n1", "verse", bars=2)], p, master={"devices": []}), d)
+    n = audio.samples.shape[-1]
+    assert np.allclose(audio.samples[:, : n // 2 - 10], ref.samples[:, : n // 2 - 10])
+    assert np.abs(audio.samples[:, -50:]).max() < 1e-3 * np.abs(ref.samples).max() + 1e-4
+
+
+def test_reverb_on_a_clip_rings_past_the_clip_without_moving_the_layout(base):
+    d, p = base
+    verb = {"id": "v", "type": "reverb", "decay": "2s", "dry_wet": 50}
+    clips = [clip("n1", "verse", bars=2, gain=-12, devices=[verb])]
+    audio, info = render_plan(_plan(clips, p), d)
+    end = info.segments[0].out_end
+    ref, rinfo = render_plan(_plan([clip("n1", "verse", bars=2, gain=-12)], p), d)
+    assert rinfo.duration_s == pytest.approx(end, abs=0.01)
+    assert info.duration_s > end + 0.5  # the tail is kept
+    after = audio.samples[:, int(end * audio.sr): int((end + 0.5) * audio.sr)]
+    assert db(np.sqrt((after**2).mean())) > -60
+    assert info.segments[0].out_end == pytest.approx(end)
+
+
+def test_bad_device_automation_targets_are_agent_readable(base):
+    d, p = base
+    flt = {"id": "flt", "type": "auto_filter", "filter": "lowpass", "frequency": 5000}
+    bad_param = [{"target": "devices.flt.filter", "from": 1, "to": 2, "over": "1 beat"}]
+    with pytest.raises(PlanError, match="can't be automated"):
+        render_plan(_plan([clip("n1", "verse", bars=1, devices=[flt], automation=bad_param)], p), d)
+    no_dev = [{"target": "devices.nope.frequency", "from": 1000, "to": 2000, "over": "1 beat"}]
+    with pytest.raises(PlanError, match="not a parameter of a device"):
+        render_plan(_plan([clip("n1", "verse", bars=1, devices=[flt], automation=no_dev)], p), d)
+    long_ramp = [{"target": "gain", "from": 0, "to": -6, "over": "8 bars", "at": "end"}]
+    with pytest.raises(PlanError, match="longer than the clip"):
+        render_plan(_plan([clip("n1", "verse", bars=1, automation=long_ramp)], p), d)
+
+
+def test_track_devices_automation_and_master_devices(base):
+    d, p = base
+    dd = copy.deepcopy(p)
+    dd["tracks"][0].update({
+        "clips": [clip("n1", "verse", bars=2, gain=-12)],
+        "devices": [{"id": "eq", "type": "eq", "high_cut": 1000}],
+        "automation": [{"target": "gain", "from": 0, "to": "-inf", "over": "1 beat", "at": "end"}]})
+    dd["master"] = {"devices": [{"id": "u", "type": "utility", "gain": -6}]}
+    dd.pop("target_duration_s", None)
+    audio, info = render_plan(Plan.model_validate(dd), d)
+    assert any(a.node_id == "main" and a.target == "gain" for a in info.automation)
+    assert np.abs(audio.samples[:, -20:]).max() < 1e-3  # track fader ramped to -inf on the last beat
+    dd["tracks"][0]["automation"] = []
+    dd["master"] = {"devices": []}
+    plain, _ = render_plan(Plan.model_validate(dd), d)
+    dd["master"] = {"devices": [{"id": "u", "type": "utility", "gain": -6}]}
+    quiet, _ = render_plan(Plan.model_validate(dd), d)
+    assert np.allclose(quiet.samples, plain.samples * 10 ** (-6 / 20), atol=1e-6)

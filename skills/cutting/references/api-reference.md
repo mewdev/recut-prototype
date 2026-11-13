@@ -1,4 +1,6 @@
-# API Reference
+# API Reference (LEGACY Python API)
+
+> **Deprecated.** New work is written as a plan (`plan.json` v2: tracks, clips, devices, sends, automation) — see `SKILL.md` and `../assets/effects-cheatsheet.md`. The classes below still work, and saved compositions in this format load into a v2 plan via `recut.legacy.composition_to_plan` (`Fade` → gain ramp, `Reverb`/`ReverbSweep` → reverb device, `Delay` → delay device, `FilterSweep` → auto_filter + ramp, `XFade(ms, curve)` → `xfade`; plain concatenation and `XFade` render sample-identical).
 
 Ground truth for the current `src/recut` call surface. This file is checked by `scripts/check_skill.py` against live signatures — if this drifts from the code, the drift check fails `pytest tests/`. Keep every signature here byte-for-byte matched to source.
 

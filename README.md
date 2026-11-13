@@ -88,34 +88,49 @@ Given an analyzed track (the bundled `examples/summer-party/` works here — see
 above), build a cut in code:
 
 ```python
+from pathlib import Path
+
 import soundfile as sf
-from recut.audio import Audio
-from recut.map.parser import parse_recut_map
-from recut.compositor import Clip, compose
-from recut.compositor.effects import Fade
 
-# Load music map and audio
-music_map = parse_recut_map(".appdata/maps/enriched/summer-party.json")
-audio = Audio.load(".appdata/audio/summer-party.mp3")
+from recut.contracts import Plan
+from recut.engine import render_plan
 
-# Build the edit: chorus (hook) → intro → verse → inst, fading out over the last bars
-result = compose(
-    music_map,
-    audio,
-    Clip("chorus"),
-    Clip("intro"),
-    Clip("verse"),
-    Clip("inst", bars=7),
-    Clip("inst", offset_bars=7, fx=[Fade(vol_start=1.0, vol_end=0.0, curve="qsin")]),
-)
+# A plan is plain data: sources, one track of clips and joins, returns (reverb/delay),
+# devices and automation. Format: docs/PLAN.md section 3.2.
+plan = Plan.model_validate({
+    "version": 2,
+    "sources": {"a": {"file": "audio/summer-party.mp3", "map": "maps/enriched/summer-party.json"}},
+    "returns": [{"id": "A", "name": "Reverb", "devices": [
+        {"id": "verb", "type": "reverb", "decay": "3.5s", "pre_delay": "20ms", "dry_wet": 100}]}],
+    "tracks": [{"id": "main", "clips": [
+        {"id": "n1", "type": "clip", "source": "a", "segment": "chorus"},
+        {"id": "n2", "type": "clip", "source": "a", "segment": "intro"},
+        {"id": "x1", "type": "xfade", "length": "2 beats", "shape": "equal_power"},
+        {"id": "n3", "type": "clip", "source": "a", "segment": "verse"},
+        {"id": "n4", "type": "clip", "source": "a", "segment": "inst", "bars": 7},
+        {"id": "x2", "type": "xfade", "length": "30ms", "out_shape": "hold", "in_shape": "equal_power"},
+        {"id": "n5", "type": "clip", "source": "a", "segment": "inst", "offset_bars": 7,
+         "sends": {"A": -6}, "fade_out": {"length": "2 bars", "shape": "exp"}},
+    ]}],
+})
 
-sf.write("summer-party-cut.mp3", result.samples.T, result.sr)
+# chorus (hook) -> intro -> verse -> inst, fading out over the last bars with the reverb ringing on
+audio, info = render_plan(plan, Path(".appdata"))
+print(info.duration_s, info.peak_dbfs, [i.message for i in info.issues])
+
+sf.write("summer-party-cut.wav", audio.samples.T, audio.sr)
 ```
 
-`Clip.fx` takes typed `Effect` objects (`Fade`, `Reverb`, `Delay`, `FilterSweep`,
-`ReverbSweep` — `recut.compositor.effects`), not the bare curried primitives
-(`recut.primitives.fade.fade` etc.) — those are the lower-level building blocks
-`Effect.to_fn()` wraps, not what `Clip.fx` expects directly.
+`render_plan` returns the audio and a `RenderInfo` (what `render.json` holds: segments, splices,
+issues, return tail end, peak level). Clips are chosen musically from the map (`segment`, `bars`,
+`offset_bars`), never by timecodes. Reverb and delay sit on **return tracks** that clips feed with
+`sends`; `devices` (`eq`, `auto_filter`, `utility`, `reverb`, `delay`, `limiter`) and `automation`
+use Ableton's names and units (`"1/8."`, `"2 bars"`, dB, percentages). `recut ticket render <id>`
+does the same for a ticket's `plan.json` and prints the issues.
+
+The older `Clip`/`XFade`/`compose()` Python API and its `Fade`/`Reverb`/`Delay`/`FilterSweep` effects
+still work but are deprecated; old saved compositions convert to a plan with
+`recut.legacy.composition_to_plan`.
 
 **Validation** — a linter for music cuts. Before rendering, validates that all nodes are musically coherent: segment labels exist in the map, requested bars/beats don't exceed the segment duration, and the cut doesn't start or end abruptly mid-song. The goal is to grow this into a richer rule set that catches musical issues automatically — wrong key transitions, energy drops, rhythmic misalignments — so the system can eventually guide or automate cut decisions.
 
@@ -130,14 +145,15 @@ The analysis extracts tempo, time signature, song structure, beats, chords, and 
 
 ## Agent / Harness Usage
 
-recut ships two [Agent Skills](https://code.claude.com/docs/en/skills) at `skills/cutting/` and `skills/music-theory/` — `cutting` covers the `Clip`/`XFade`/`compose()`/`validate()` mechanics, `music-theory` covers the musical judgment behind a cut (cadence quality, hook selection, energy arcs). Point your harness at both; currently tested with Claude Code.
+recut ships two [Agent Skills](https://code.claude.com/docs/en/skills) at `skills/cutting/` and `skills/music-theory/` — `cutting` covers writing a plan (tracks, clips, devices, sends, automation) and the ending-transplant recipes, `music-theory` covers the musical judgment behind a cut (cadence quality, hook selection, energy arcs). Point your harness at both; currently tested with Claude Code.
 
 ## Current Limitations
 
 recut is an early prototype. A few headline gaps — full list in [`LIMITATIONS.md`](LIMITATIONS.md):
 
-- No partial-clip effect application — an effect always applies to a clip's whole buffer, not just part of it.
-- No live per-instrument/stem editing — `compose()` works on the full mix only.
+- One track only — sequencing several songs works, layering (mashups) doesn't yet.
+- No time-stretching — pick joins between songs with compatible tempos.
+- No live per-instrument/stem editing — clips are full mixes.
 - Musical judgment (cadence quality, hook selection) is inferred by whoever's reasoning about the cut, not verified against ground-truth data — the map has no harmonic-function or cadence fields.
 - Meter detection covers 3/4 and 4/4 only.
 

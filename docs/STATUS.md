@@ -25,7 +25,7 @@ agent won't know it.
 | A5 cross-song validator rules | todo | |
 | A6 session logging | partial | the server/CLI log renders + reviews to `events.jsonl`; `RECUT_SESSION` for direct `compose()` calls is still todo |
 | A7 timeline engine: tracks, joins, returns/sends, master | done | `engine.py`, `devices.py` (reverb + limiter), `automation.py` (gain/send ramps + points). Tests: `tests/engine/test_timeline.py` |
-| A8 devices, automation, old-format adapter, skill docs | todo | Sonnet, after A7 |
+| A8 devices, automation, old-format adapter, skill docs | done | `devices.py`, `automation.py`, `legacy.py`; skill docs + README rewritten. Tests: `tests/engine/test_devices.py`, `test_legacy.py`, `test_ending_transplant_doc.py` |
 | B1 ticket store | done | `src/recut/tickets.py` |
 | B2 FastAPI app | done (no share routes) | `src/recut/server/app.py`, `recut serve` |
 | B3 SSE live reload | done | polling, renders stale iterations |
@@ -49,6 +49,19 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-13 — `effects-cheatsheet.md` stays in `skills/cutting/assets/` (SKILL.md and the
+  link checker already point there); the A8 brief said `references/`.
+- 2026-11-13 — Not built: a Python builder API that mirrors the JSON (`Clip(..., sends=...)`,
+  `Fade("2 bars", "exp")`). The name `Fade` is taken by the deprecated effect class, and the
+  plan JSON is the source of truth for agents. Say if you want it.
+- 2026-11-13 — Legacy adapter (`recut.legacy`): plain concat and `XFade` are sample-identical to
+  `compose()` (tests, 1e-6). `Fade`/`Reverb`/`ReverbSweep`/`Delay`/`FilterSweep` convert to
+  musically equivalent v2 features, not sample-identical (reverb tails now ring past the clip).
+  Only the first `Fade` per clip is kept (reported in `LegacyPlan.warnings`). `recut render` (old
+  CLI) still uses `compose()`; it was not switched over.
+- 2026-11-13 — Reverb `size` is folded into `decay` (x0.7..x1.3); `eq` cuts are two cascaded
+  first-order filters (12 dB/oct); delay filters sit in the feedback loop; auto_filter is a 12 dB
+  ladder filter with `resonance` scaled 0..1.25 -> 0..1.
 - 2026-11-13 — Level automation (`gain`, `sends.*`, volume) interpolates in the linear gain
   domain with the shape warping progress, so `-inf → 0` + `exp` swells from silence. Before a
   ramp starts the curve holds its `from`, after it ends its `to`; automation overrides the
@@ -72,6 +85,13 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — A8 done. Devices `utility`, `eq`, `auto_filter`, `reverb`, `delay`, `limiter` on
+  clips (tails ring past the clip), tracks, returns and master; device-parameter automation
+  (per sample for gain/width/dry_wet, per 512-sample block for filter cutoffs/resonance/
+  feedback); `recut.legacy` adapter (old `Clip`/`XFade`/effects -> `Plan`); old effect classes
+  emit `DeprecationWarning`. Skill docs (`SKILL.md`, `assets/effects-cheatsheet.md`,
+  `effects-routing.md`, `exit-design.md`, new `ending-transplant.md`) and `README.md` use the plan
+  vocabulary; the three ending-transplant snippets are rendered by a test. 174 tests pass.
 - 2026-11-13 — A7 done. Clip `sends` feed one buffer per return; the return's chain runs once
   over the whole timeline (+10 s pad), the tail is cut where it falls below -60 dBFS
   (`returns_tail_end`), track `volume`/constant-power `pan`, master chain, `peak_dbfs` (output

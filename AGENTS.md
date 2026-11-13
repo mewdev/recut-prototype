@@ -29,13 +29,14 @@ Tickets live in `.appdata/tickets/<id>/` (format: `docs/PLAN.md` §3). To work o
 5. For a new attempt, run `recut ticket iterate <id>` instead of overwriting: every
    attempt is kept, failures included.
 
-The `cutting`/`music-theory` skills below give the musical judgment. Their code examples
-still use the older Python API until task A8 rewrites them; `plan.json` is the source of
-truth.
+The `cutting`/`music-theory` skills below give the musical judgment. `skills/cutting/` is
+written for `plan.json` (the ending-transplant recipes are in
+`skills/cutting/references/ending-transplant.md`); its `api-reference.md` documents the
+deprecated Python API only.
 
 ## Cutting or editing an audio track
 
-If the request is to trim, cut, loop, crossfade, or otherwise edit an existing song via the recut framework, use the `cutting` skill (`skills/cutting/SKILL.md`) — it covers the `Clip`/`XFade`/`compose()`/`validate()` API and the CLI. Pair it with the `music-theory` skill (`skills/music-theory/SKILL.md`) for musical judgment (hook selection, cadence quality, energy arcs).
+If the request is to trim, cut, loop, crossfade, or otherwise edit an existing song via the recut framework, use the `cutting` skill (`skills/cutting/SKILL.md`) — it covers writing a plan (clips, joins, devices, sends, automation) and the CLI. Pair it with the `music-theory` skill (`skills/music-theory/SKILL.md`) for musical judgment (hook selection, cadence quality, energy arcs).
 
 If your harness doesn't auto-discover skills from `.claude/skills/`, load those two `SKILL.md` files directly — they're plain markdown with no Claude-Code-specific mechanics beyond the YAML frontmatter.
 
