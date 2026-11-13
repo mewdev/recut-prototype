@@ -50,6 +50,7 @@ allowed):**
 | rule | how | default threshold |
 |---|---|---|
 | `qc_loudness` | integrated LUFS (pyloudnorm) | warn outside −16…−9 LUFS |
+| `qc_limiting` | replaces the engine's `peak_clip`: maximum limiter gain reduction (pre-master peak minus output peak, measured in 50 ms windows) | warn > 3 dB (audible squash). `peak_clip` fires on nearly every reverb wash over mastered sources, so it's noise. |
 | `qc_true_peak` | peak of a 4× oversampled signal (`scipy.signal.resample_poly`) | warn > −1.0 dBTP |
 | `qc_clipping` | Essentia `SaturationDetector`; fallback: runs of ≥ 3 consecutive samples with \|x\| ≥ 0.999 | error if any |
 | `qc_click` | Essentia `ClickDetector` + `DiscontinuityDetector` over the whole file; fallback: for each splice, high-passed (> 4 kHz) energy in ±10 ms vs. the median of ten 20 ms windows around it | warn (fallback: > 4×, ≈ +6 dB). Hits within 50 ms of a splice name the splice. |

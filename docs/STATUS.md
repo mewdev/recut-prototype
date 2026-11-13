@@ -85,6 +85,10 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — A7 + A8 reviewed (lead session): 174 tests pass. Fresh demo ticket rendered
+  end to end; the browser page shows no `not_rendered` left. The demo 02 wash: the return
+  tail rings ~4.7 s past the ending splice, peak held at -1.0 dBFS by the limiter. Follow-up
+  for Q1: `peak_clip` is noisy on mastered sources → `qc_limiting` (gain reduction > 3 dB).
 - 2026-11-13 — A8 done. Devices `utility`, `eq`, `auto_filter`, `reverb`, `delay`, `limiter` on
   clips (tails ring past the clip), tracks, returns and master; device-parameter automation
   (per sample for gain/width/dry_wet, per 512-sample block for filter cutoffs/resonance/
