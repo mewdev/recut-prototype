@@ -11,8 +11,9 @@
 - **No bridge between `Clip`/`compose()` and raw `chain()` reprocessing**, and no
   gain-staging primitive — cascading wet `Reverb`/`Delay` passes can clip with nothing
   to catch it. [Issue #52](https://github.com/mewdev/recut-prototype/issues/52).
-- **Validator is 3 structural rules, not a musical linter** — `label_exists`,
-  `duration_exceeds`, `sequence_boundaries` only. No key/energy/rhythm-aware checks.
+- **The linter is still small**: structural rules plus `phrase_align`, `ending`,
+  `energy_drop` and `duration`. There are no key or tempo checks at joins yet (A5), and
+  nothing catches perceptual problems like a reverb audibly "switching on".
 - Thin test coverage on `filter_sweep`/`reverb`/`delay`; `compose()` only tested
   indirectly.
 
