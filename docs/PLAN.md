@@ -21,10 +21,11 @@ raise that.
 | Preview engine | **Server render + reload.** Python `compose()` renders the file, the browser plays it, and the server pushes an update over SSE so the player reloads at the same playhead. **No WebAudio engine, FAUST or preview-schedule IR for now.** | Measured: composing a 62s cut takes 0.06s and writing it 0.07s. One engine means preview and final render can't drift apart. |
 | Stack | **React** (reuse `recut-wireframe.tsx`, shadcn) + **FastAPI** JSON API around the recut library. | The mockup is already most of the layout, and agents build React/shadcn reliably. |
 | Hosting (week 1) | **Mac + named Cloudflare Tunnel on `app.<operator's domain>`** (the domain's DNS moves to Cloudflare, free). **Cloudflare Access** (email login, only the operator) protects everything except the client paths (§3.6). Move to a Hetzner VPS (same Docker setup) once clients depend on it. | Free, HTTPS, permanent share links, no billing risk. Without Access, anyone guessing a ticket id could open client audio and transcripts. |
-| Multi-song | **In scope.** Week 1: sequencing (medley A→B, several versions of the same song). Mashup/layering: the plan format has **lanes** from day 1, but only one lane renders in week 1. Week 2 adds multi-lane mixing and stem separation (clients send full mixes only). | Real tickets failed here and needed a human. Lanes now avoid a rewrite later. |
+| Multi-song | **In scope.** Week 1: sequencing (medley A→B, several versions of the same song). Mashup/layering: the plan format has **tracks** from day 1, but only one track (+ returns + master) renders in week 1. Week 2 adds multi-track mixing and stem separation (clients send full mixes only). | Real tickets failed here and needed a human. Tracks now avoid a rewrite later. |
 | Tempo mismatch | **Choose compatible join points** (breakdowns, outros, longer crossfades). No time-stretching in week 1. | Matches what the human did by hand. |
 | Loudness | **Auto LUFS-match** every source at load time (pyloudnorm). | Removes the "volume jumps at the splice" class of failures. |
-| Ending transplant | **In scope for week 1 (task A7).** The operator's most common manual fix: take the ending from the end of the same song and place it mid-song. Done three ways: (1) the ending hit lands on top while the previous part's tail rings out, (2) a reverb wash on the last beat(s) going into the ending, (3) a normal crossfade + reverb. Needs `compose()` to place clips on a timeline and add up overlaps, instead of only concatenating them. | Single-song, already the main cause of manual work. The timeline core is also what week-2 layering needs. |
+| Effects API | **Ableton-style model (D1 contract, built in A7 + A8):** tracks, clip gain and fade handles, devices (inserts), sends to return tracks, automation as ramps or breakpoints, musical time units (`"1/8."`, `"2 bars"`), dB, and percentages as Ableton shows them. It replaces the `*Sweep` classes and the earlier `ring_out`/`scope` idea. | The operator thinks in Ableton, and LLM agents know DAW vocabulary far better than recut-specific names, which means fewer plan mistakes. |
+| Ending transplant | **In scope for week 1 (task A7).** The operator's most common manual fix: take the ending from the end of the same song and place it mid-song. Done three ways: (1) the ending hit lands on top while the previous part's tail rings out, (2) a reverb wash on the last beat(s) going into the ending, (3) a normal crossfade + reverb. Needs `compose()` to place clips on a timeline and add up overlaps, plus sends to a reverb return. | Single-song, already the main cause of manual work. The timeline core is also what week-2 layering needs. |
 | Validator, cross-song splice | Downbeat alignment (**error**), BPM gap > ~3% and not near 2:1 (warn), key not Camelot-adjacent (warn), short-term loudness jump across the splice (warn). | |
 | Feedback unit | **Per splice**: ok/bad + tags. **Overall**: verdict `ship`/`fixable`/`reject` + a note. | Splices are where cuts fail. |
 | Success metric | **Primary:** operator ships the agent's cut with zero edits. **Check:** the client approves it on the share link. | The operator's verdict stands in for the client's; client approval confirms it. |
@@ -65,10 +66,13 @@ operator restarts the agent by hand (`recut ticket work <id>`). Later, a watcher
 an agent on every `needs_rework` ticket automatically, so the operator only reviews.
 Nothing in these formats needs to change for that.
 
-### 3.2 Plan v2 (`plan.json`)
+### 3.2 Plan v2 (`plan.json`): Ableton-style session
 
-This is the existing `Clip`/`XFade` model, extended with named sources and lanes.
-It keeps the musical units (sections, bars, beats); free timecodes are not allowed.
+The plan reads like a small Ableton arrangement: **tracks** hold clips, clips have
+**gain** and **fade handles**, **devices** sit on a clip, a track or the master,
+**sends** feed **return tracks** (reverb/delay live there), and any device parameter or
+send can be **automated**. Clips are still chosen musically (section + bars/beats from
+the map); free timecodes are not allowed.
 
 ```json
 {
@@ -77,38 +81,93 @@ It keeps the musical units (sections, bars, beats); free timecodes are not allow
     "a": {"file": "inputs/a.mp3", "map": "maps/a.json"},
     "b": {"file": "inputs/b.mp3", "map": "maps/b.json"}
   },
-  "lanes": [
-    {"id": "main", "gain_db": 0, "nodes": [
-      {"id": "n1", "type": "clip", "source": "a", "segment": "intro", "index": 1},
+  "returns": [
+    {"id": "A", "name": "Reverb", "devices": [
+      {"id": "verb", "type": "reverb", "decay": "3.5s", "pre_delay": "20ms",
+       "size": 80, "hi_cut": 6000, "dry_wet": 100}]},
+    {"id": "B", "name": "Delay", "devices": [
+      {"id": "dly", "type": "delay", "time": "1/8.", "feedback": 35, "ping_pong": true,
+       "filter_lo": 300, "filter_hi": 5000, "dry_wet": 100}]}
+  ],
+  "tracks": [
+    {"id": "main", "volume": 0, "pan": 0, "devices": [], "clips": [
+      {"id": "n1", "type": "clip", "source": "a", "segment": "intro", "index": 1,
+       "fade_in": {"length": "1 beat", "shape": "linear"}},
       {"id": "n2", "type": "clip", "source": "a", "segment": "chorus", "index": 1, "bars": 8},
-      {"id": "x1", "type": "xfade", "beats": 4, "curve": "qsin"},
-      {"id": "n3", "type": "clip", "source": "b", "segment": "chorus", "index": 2,
-       "offset_beats": 0, "fx": [{"type": "fade", "vol_start": 1, "vol_end": 0, "curve": "qsin"}]},
+      {"id": "x1", "type": "xfade", "length": "4 beats", "shape": "equal_power"},
+      {"id": "n3", "type": "clip", "source": "b", "segment": "chorus", "index": 2, "gain": -1.5,
+       "devices": [{"id": "flt", "type": "auto_filter", "filter": "lowpass",
+                    "frequency": 20000, "resonance": 0.2}],
+       "automation": [{"target": "devices.flt.frequency", "points": [["0 beats", 20000], ["2 bars", 800]],
+                       "shape": "exp"}]},
       {"id": "n4", "type": "clip", "source": "b", "segment": "verse", "index": 2, "bars": 4,
-       "ring_out": true,
-       "fx": [{"type": "reverb", "wetness": 0.6, "scope": {"last_beats": 1}}]},
-      {"id": "x2", "type": "xfade", "ms": 30, "out_curve": "hold", "in_curve": "qsin"},
-      {"id": "n5", "type": "clip", "source": "b", "segment": "outro", "index": 1}
+       "sends": {"A": "-inf"},
+       "automation": [{"target": "sends.A", "from": "-inf", "to": 0, "over": "1 beat",
+                       "at": "end", "shape": "exp"}]},
+      {"id": "x2", "type": "xfade", "length": "30ms", "out_shape": "hold", "in_shape": "equal_power"},
+      {"id": "n5", "type": "clip", "source": "b", "segment": "outro", "index": 1,
+       "fade_out": {"length": "2 bars", "shape": "exp"}}
     ]}
   ],
+  "master": {"devices": [{"id": "lim", "type": "limiter", "ceiling": -1}]},
   "target_duration_s": 150
 }
 ```
 
-Week 1: `compose()` raises an error if there is more than one lane. Clip field
-names follow `recut.compositor.nodes.Clip`.
+`n4 → x2 → n5` is an **ending transplant** (variant 2, "reverb wash into the ending"): the
+send to the reverb return opens on the verse's last beat, the song's real outro lands on
+top, and the wash keeps ringing on the return.
 
-**Overlap and ending fields** (all optional, so existing plans keep working; implemented in A7).
-`n4 → x2 → n5` above is an ending transplant: a reverb wash on the verse's last beat, with
-the song's real outro landing on top while the wash rings out.
-- `xfade.out_curve` / `xfade.in_curve`: the fade shape for each side of the join. They
-  default to `curve`. `"hold"` keeps that side at full volume for the whole overlap.
-  - `out_curve: "hold"` + `in_curve: "hold"`: a short overlap with both sides at full
-    volume.
-- `clip.ring_out` (default `false`): the clip's reverb/delay tail keeps playing under the
-  following material instead of being cut off at the clip's end.
-- `effect.scope` (default: the whole clip): `{"last_beats": n}` or `{"first_beats": n}`
-  applies the effect to only that part of the clip. This fixes issue #53.
+**Units:** one rule per kind of value, so agents can't mix them up.
+| Kind | Written as | Examples |
+|---|---|---|
+| Time | string with a unit. Musical units follow the source's tempo. | `"1/4"`, `"1/8."` (dotted), `"1/8t"` (triplet), `"3 beats"`, `"2 bars"`, `"250ms"`, `"3.5s"` |
+| Level (`gain`, `volume`, sends, `ceiling`, EQ gain) | number in **dB**, or `"-inf"` | `-6`, `0`, `"-inf"` |
+| Percentage (`dry_wet`, `feedback`, `size`, `width`) | number 0–100, as Ableton shows it | `dry_wet: 40` |
+| Frequency | number in Hz | `frequency: 800`, `hi_cut: 6000` |
+| Pan | -50 (L) … 50 (R), as Ableton shows it | `pan: 0` |
+| Shape (fades, xfades, automation) | `linear` · `equal_power` · `exp` · `log` · `hold` | old name `qsin` is accepted as `equal_power` |
+
+**Clip fields:**
+- Selection fields stay as today: `source`, `segment`, `index`, `bars`/`beats`,
+  `offset_bars`/`offset_beats`, `loop`.
+- `gain` (dB), `fade_in` / `fade_out` (`{length, shape}`) are the clip's fade handles.
+- `devices` (an insert chain), `sends` (`{return_id: dB}`) and `automation`.
+
+**Joins (`xfade`):** `length` and `shape`, or `out_shape` / `in_shape` per side.
+`"hold"` keeps that side at full level for the whole overlap.
+- variant 1, hit on top + tail rings: the outgoing clip has a send open, and the
+  join is a short `xfade` with `in_shape: "hold"`.
+- a short overlap with both sides at full level: `out_shape` and `in_shape` both
+  `"hold"`.
+
+**Devices (week 1)**, with Ableton names; parameters as in the example:
+| Device | Parameters |
+|---|---|
+| `utility` | `gain`, `width` |
+| `eq` | `low_cut`, `high_cut` (Hz), `bands: [{frequency, gain, q}]` |
+| `auto_filter` | `filter: lowpass, highpass or bandpass`, `frequency`, `resonance` |
+| `reverb` | `decay`, `pre_delay`, `size`, `hi_cut`, `width`, `dry_wet` |
+| `delay` | `time` (synced, e.g. `"1/8."`, or ms), `feedback`, `ping_pong`, `filter_lo`, `filter_hi`, `dry_wet` |
+| `limiter` | `ceiling` |
+
+Reverb runs on pedalboard's Freeverb, so `decay` is approximate: it's mapped to room
+size, and the engine docs give the table.
+
+**Automation:** each entry is either a **ramp** or **points**.
+- Ramp: `{target, from, to, over, at: "start" | "end" | "<time from clip start>", shape}`
+- Points: `{target, points: [[time from clip start, value], ...], shape}`
+- Targets: `gain`, `sends.<return_id>`, `devices.<device_id>.<param>`.
+- Clips, tracks and returns can carry automation.
+
+**Rules:**
+- Return tracks keep ringing after clips end, so reverb and delay tails are never cut
+  off. That's why there's no special "ring out" field.
+- Week 1 renders exactly **one** track plus returns and master. More than one track
+  raises `ValueError("multi-track not supported yet")`.
+- Old-format compositions (`Fade`, `Reverb`, `ReverbSweep`, `Delay`, `FilterSweep`,
+  `XFade(ms, curve)`) still load through an adapter in the engine, and the test suite
+  covers it.
 
 ### 3.3 Render output (`render.json`)
 
@@ -123,21 +182,24 @@ This is what the GUI needs to draw "what the cut did". It is produced by the sam
   ],
   "splices": [
     {"id": "s1", "out_time": 24.8, "from": "n2", "to": "n3",
-     "cross_source": true, "overlap_ms": 2069, "out_curve": "qsin", "in_curve": "qsin",
-     "ring_out_ms": 0}
+     "cross_source": true, "overlap_ms": 2069, "out_shape": "equal_power",
+     "in_shape": "equal_power"}
   ],
   "issues": [
     {"severity": "warn", "rule": "bpm_gap", "splice": "s1", "node": null,
      "message": "a 116 BPM → b 124 BPM (6.9%)"}
   ],
   "sources": {"a": {"bpm": 116, "key": "F#m", "lufs_in": -9.1, "lufs_target": -14}},
+  "automation": [{"node_id": "n4", "target": "sends.A", "out_start": 52.1, "out_end": 52.6}],
+  "returns_tail_end": 61.0,
   "peak_dbfs": -1.2,
   "limiter_applied": false
 }
 ```
 
-Segments can overlap in output time (crossfades, ring-out tails). `out_time` is the point
-where the incoming clip starts. `ring_out_ms` is how long the outgoing tail rings past it.
+Segments can overlap in output time (crossfades). `out_time` is the point where the
+incoming clip starts. `automation` lists where in the output each automation is active, so
+the GUI can draw it. `returns_tail_end` is where the last reverb/delay tail dies out.
 
 ### 3.4 Session logging
 
@@ -203,7 +265,8 @@ The browser doesn't decode the whole file just to draw it.
 
 **Workstream A — engine** (`src/recut/`)
 - Plan v2 parser.
-- Multi-source `compose()` over a single lane.
+- Multi-source `compose()` over a single track.
+- Ableton-style timeline engine: returns, sends, devices, automation (A7, A8).
 - LUFS match on load.
 - `render.json` output (segments, splices).
 - Cross-song validator rules.
@@ -238,7 +301,7 @@ command for each task (see `docs/workstreams/`) leave them nothing to guess.
 
 | Work | Model | Why |
 |---|---|---|
-| D1 contracts + fixture ticket, I1 integration, reviewing PRs/diffs between workstreams | strongest (Opus) | Mistakes here spread to every workstream |
+| D1 contracts (incl. the unit parser `recut.contracts.units`) + fixture ticket, I1 integration, reviewing PRs/diffs between workstreams | strongest (Opus) | Mistakes here spread to every workstream |
 | Workstream tasks (A2–A5, B2–B3, C3–C6) | Sonnet | Multi-file work with music/DSP or UI subtleties |
 | Mechanical tasks (A1, A6, B1, B4–B6, C1–C2, C7), tests, docs updates | Haiku | Clearly specified, bounded by tests |
 | Open-weights models (via OpenCode/Aider, which read `AGENTS.md`) | only Haiku-tier tasks | Fine for small single-file tasks with tests; unreliable for multi-file changes |
@@ -255,7 +318,7 @@ How to save tokens:
 ## 5. After week 1 (not in scope now)
 
 - Inspector editing saved as correction diffs.
-- Multi-lane mixing + stem separation (Demucs on Modal) for mashups.
+- Multi-track mixing + stem separation (Demucs on Modal) for mashups.
 - Time-stretch.
 - A replay eval suite built from failed tickets.
 - Hands-off rework loop: a watcher starts an agent on every `needs_rework` ticket, so the

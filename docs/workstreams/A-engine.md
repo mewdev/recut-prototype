@@ -14,11 +14,11 @@ and you have added a line to `docs/STATUS.md`. Commit after each task (see AGENT
 
 ### A1 — Plan v2 → nodes
 Write `recut.plan.load_plan(path) -> PlanV2`, which reads `plan.json` (schema in
-`recut.contracts`). Also write `to_nodes(plan) -> list[Clip | XFade]` for the single lane.
+`recut.contracts`). It resolves every time and level string through `recut.contracts.units`, so `"1/8."` and `"-inf"` are checked when the plan loads, not at render time.
 `Clip.source` gets the plan's source id.
-- Raise `ValueError("multi-lane not supported yet")` if there's more than one lane.
+- Raise `ValueError("multi-track not supported yet")` if there's more than one track.
 - Done when: `pytest tests/plan -q` passes. Write the tests: a round trip of
-  `tests/fixtures/tickets/medley-demo/.../plan.json`, plus the multi-lane error.
+  `tests/fixtures/tickets/medley-demo/.../plan.json`, plus the multi-track error and a bad unit string (`"1/7"`) rejected with a clear message.
 
 ### A2 — Multi-source compose
 Change `compose()` to accept `sources: dict[str, tuple[MusicMap, Audio]]` and resolve
@@ -65,41 +65,71 @@ line to `$RECUT_SESSION/events.jsonl`:
 - Done when: a test with `tmp_path` checks the lines are written, and a test with the env
   unset checks nothing is written.
 
-### A7 — Timeline compose: overlaps, ring-out, scoped effects (ending transplant)
-This is the operator's most common manual fix (PLAN §2 "Ending transplant"). Change `compose()` so it
-**places clips on a timeline buffer and adds up overlaps**, instead of concatenating them.
-Then add these plan fields (PLAN §3.2):
-- `XFade.out_curve` / `in_curve`, which default to `curve`. `"hold"` means full volume for
-  the whole overlap.
-- `Clip.ring_out`: pad the clip for its effect tail (reuse `_reverb_tail_padding`, which
-  today only applies to the **last** clip), and mix the tail under the following
-  material.
-- `Effect.scope = {"last_beats": n} | {"first_beats": n}`: apply the effect only to that
-  part, with a 20 ms equal-power blend at the scope edge so nothing clicks. Closes issue
-  #53.
-- Master limiter (`pedalboard.Limiter`), applied only if the peak exceeds -1 dBFS. Set
-  `render.json.peak_dbfs` and `limiter_applied`.
-- New validator rule `peak_clip` (warn): the summed peak before the limiter is above
+### A7 — Timeline engine: tracks, joins, returns/sends, master (ending transplant core)
+This is the operator's most common manual fix (PLAN §2 "Ending transplant") and the
+engine half of the Ableton-style model (PLAN §3.2). Do it after A4 (it changes what A4
+reports).
+- `compose()` **places clips on a timeline buffer and adds up overlaps**, instead of
+  concatenating them.
+- Clip `gain` and `fade_in`/`fade_out` handles.
+- `xfade` with `length` + `shape`, or `out_shape`/`in_shape` (`hold` = full level for
+  the whole overlap).
+- **Return tracks:** each clip's `sends` (dB) feed a timeline-length send buffer for each
+  return. The return's device chain runs once over that buffer, and the result is added
+  to the mix. Extend the output so the return tails can die out (stop at -60 dB or at
+  10 s at most), then set `returns_tail_end`.
+- Track `volume`/`pan`, then the master chain. The default master is a `limiter` at -1 dB
+  ceiling, and `render.json` gets `peak_dbfs` and `limiter_applied`.
+- New validator rule `peak_clip` (warn): the summed peak before the master chain is above
   0 dBFS.
-- `render.json` splices report `overlap_ms`, `out_curve`, `in_curve`, `ring_out_ms`.
-
-Then add the recipe `skills/cutting/references/ending-transplant.md` with the three
-variants the operator uses, each as a plan.json snippet:
-1. hit on top + tail rings (`ring_out` on the previous clip, short `xfade`, `in_curve: "hold"`)
-2. reverb wash into the ending (`reverb` scoped `last_beats: 1–2` + `ring_out`)
-3. normal crossfade + reverb on the ending clip
-
-Link the recipe from `skills/cutting/SKILL.md` step 6 and from
-`references/exit-design.md`.
+- `render.json` splices report `overlap_ms`, `out_shape`, `in_shape`.
+- The Python API mirrors the JSON names, so code reads like the plan:
+  `Clip("verse", index=2, bars=4, gain=-1.5, sends={"A": "-inf"}, fade_out=Fade("2 bars", "exp"))`,
+  `XFade("30ms", out_shape="hold")`.
 - Done when:
-  - all existing tests pass unchanged (plain concatenation and xfade output stay within
-    1e-6 of today's)
-  - new tests cover: `hold` overlap length, ring-out tail energy after the splice > 0,
-    a scoped effect leaving the earlier samples untouched, the limiter only kicking in
-    when the peak is too high
+  - existing tests pass. A plain concatenation or a symmetric xfade plan must produce
+    the same samples as today (within 1e-6), going through the old-format adapter
+    (A8) or a direct equivalent.
+  - new tests cover: `hold` overlap length; a send opened on the last beat leaving return
+    energy after the clip ends (> -40 dB for 1 s); the limiter only applied when the
+    peak is too high
   - the fixture's ending-transplant plan renders without clicks (no sample-to-sample
     jump > 0.5)
-- Model: Sonnet. Do it after A4 (it changes what A4 reports).
+- Model: Sonnet.
+
+### A8 — Devices, automation, old-format adapter, skill docs
+- Devices with Ableton parameter names, as in the PLAN §3.2 table:
+  - `utility`, `eq` (pedalboard HighpassFilter/LowpassFilter/PeakFilter), `auto_filter`
+  - `reverb`: pedalboard Reverb plus a pre-delay line and a hi-cut. Map `decay` to room
+    size with a documented table.
+  - `delay`: tempo-synced `time`, `ping_pong`, filters
+  - `limiter`
+- **Automation engine:** ramps and points become a per-sample parameter curve. Gain and
+  send levels are applied per sample. For device parameters that pedalboard can't change
+  per sample, process in blocks of ≤ 512 samples with the parameter updated per block
+  (the same approach `reverb_sweep` uses today; reuse it).
+- **Old-format adapter:** saved compositions that use `Fade`, `Reverb`, `ReverbSweep`,
+  `Delay`, `FilterSweep` or `XFade(ms, curve)` load into the new model. `qsin` maps to
+  `equal_power`, and `vol_*` values convert linear → dB. Mark the old classes deprecated
+  but keep them working.
+- **Skill docs:** rewrite `skills/cutting/SKILL.md` and
+  `references/effects-cheatsheet.md` in the new vocabulary. Add
+  `references/ending-transplant.md` with the operator's three variants as `plan.json`
+  snippets:
+  1. hit on top + tail rings: send open on the outgoing clip, short `xfade` with
+     `in_shape: "hold"`
+  2. reverb wash into the ending: `sends.A` ramp `-inf → 0` over the last 1–2 beats
+     `at: "end"`
+  3. normal crossfade + reverb on a return
+  
+  Link the recipe from SKILL.md step 6 and `references/exit-design.md`. Update
+  `README.md`'s code example.
+- Done when:
+  - `pytest tests/ -q` passes, including `tests/skills`
+  - every device has a test checking its parameters have an audible, correctly signed
+    effect (e.g. `auto_filter` lowpass at 500 Hz reduces energy above 2 kHz by > 12 dB)
+  - one test loads each old-format effect through the adapter
+- Model: Sonnet. Do it after A7.
 
 ## Out of scope
-Multi-lane mixing, stem separation and time-stretch (week 2). Don't start them.
+Multi-track mixing, stem separation and time-stretch (week 2). Don't start them.

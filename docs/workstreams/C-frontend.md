@@ -30,9 +30,12 @@ Vite app in `web/`. `npm run dev` proxies `/api` and `/media` to `localhost:8000
 ### C3 — Composition view (from the mockup's waveform view)
 - Segments come from `render.json.segments`, coloured by source, with waveforms from
   `.peaks.json`.
-- A crossfade "bowtie" at each splice, using its `overlap_ms`, `out_curve` and `in_curve`
-  (draw a flat line for `hold`). Draw ring-out tails as a faded extension under the next
-  segment. Segments can overlap in time, so stack overlapping parts in two rows.
+- A crossfade "bowtie" at each splice, using its `overlap_ms`, `out_shape` and `in_shape`
+  (draw a flat line for `hold`). Segments can overlap in time, so stack overlapping parts
+  in two rows.
+- Draw `render.json.automation` as a thin Ableton-style automation strip under the clip it
+  belongs to (e.g. "Send A" ramping up). Draw the return tail as a faded band up to
+  `returns_tail_end`.
 - Playhead, click to seek, zoom. Space toggles play.
 - Audio plays through wavesurfer.
 
