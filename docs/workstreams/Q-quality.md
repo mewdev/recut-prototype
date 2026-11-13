@@ -33,10 +33,11 @@ Rule names are prefixed `qc_`.
 
 **Backends (decision 2026-11-13: the prototype is non-commercial, so Essentia (AGPL) is
 allowed):**
-- **Essentia** (`pip install essentia`; wheels exist for macOS arm64 py3.10–3.12 and
-  Linux) is the primary detector for clicks, discontinuities, saturation and gaps. Use
+- **Essentia** (`pip install essentia`) is the primary detector. Prebuilt wheels
+  (checked 2026-11-13): Intel macOS py3.10–3.11, Apple Silicon py3.10–3.12, Linux x86_64
+  incl. py3.13. Use Python 3.10 or 3.11 for the `recut` env to cover all of them. It for clicks, discontinuities, saturation and gaps. Use
   `ClickDetector`, `DiscontinuityDetector`, `SaturationDetector` and `GapsDetector` on
-  frames of the mono render. Report each hit with its time and the nearest splice id
+  runs on frames of the mono render. Report each hit with its time and the nearest splice id
   (within 50 ms).
 - **pyloudnorm (MIT) + numpy/scipy** for loudness/true peak and the splice-relative
   checks (`qc_gain_jump`, `qc_tilt_jump`), and as the **fallback** when `import essentia`
