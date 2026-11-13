@@ -35,6 +35,10 @@ with the strongest model, in a fresh session. The operator approves every change
    ~60 lines so cutting agents can afford to read it.
 6. Add a Log entry to `docs/STATUS.md` with the before/after success rate from the report.
 
+## Principle
+Every fix must improve recut **in general** (AGENTS.md, "Core principle"). One session's
+failure is evidence for a general cause: fix the cause, not the session.
+
 ## What not to do
 - Don't change the skills or the validator based on a single session unless the operator
   asks.

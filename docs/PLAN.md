@@ -34,6 +34,10 @@ raise that.
 | Intake | Free-text request + target duration. | |
 | Data | Ticket folders in git-ignored `.appdata/tickets/`, synced nightly to cloud storage (R2 or Drive). **Client audio never goes into git.** | |
 
+**Principle (operator, 2026-11-13):** every code or architecture change is a general
+improvement, never a workaround for one session, track or ticket. Sessions are evidence
+for general causes (AGENTS.md, "Core principle").
+
 **Cut list if the week slips:** inspector editing (already week 2), then public
 hosting (localhost only). The client upload page, the full validator and
 multi-song sequencing all stay in.

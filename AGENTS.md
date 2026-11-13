@@ -2,6 +2,19 @@
 
 Music cutting system ("Remotion for audio"): analysis pipeline → JSON music map → primitives → LLM orchestration → specialized cutting model.
 
+## Core principle: general improvements only, never per-session workarounds
+
+Every code, architecture, skill or rule change must improve recut **in general**: for any
+track, any ticket, any future session. Never patch something to make one session, one
+track or one review pass.
+- A failure in a session is **evidence**. Find the general cause (missing primitive,
+  wrong default, weak rule, gap in a skill), fix that, and prove it with a test or
+  regression fixture that represents the *class* of problem.
+- If the only fix you can find is specific to one track or ticket, don't commit it:
+  write it up under *Blockers* in `docs/STATUS.md` for the operator.
+- Inside a ticket, an agent may tune that ticket's `plan.json` freely: that's the cut
+  itself, not a code change.
+
 ## Building the prototype (week 1): start here
 
 If you were given a build task (an ID like A3, B2 or C5), read these in order and nothing else unless the task needs it:
