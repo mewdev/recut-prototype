@@ -35,7 +35,7 @@ agent won't know it.
 | B7 `recut report` | todo | Haiku; needed by day 7 |
 | B8 Docker image | todo | Haiku, after A8. Intel Mac / Arch / VPS from one image |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
-| A9 musical linter rules | todo | Sonnet; docs/workstreams/Q-quality.md |
+| A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
 | Q1 audio QC after render | todo | Sonnet; Essentia + pyloudnorm |
 | M1 stems + instrument activity (Demucs on Modal) | todo | Sonnet; docs/workstreams/M-music-data.md |
 | M2 pace + key ranges + short-term loudness | todo | Sonnet |
@@ -56,6 +56,10 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-13 — Linter (A9): the map's `phrases` are 2-bar groups (`phrase_in`), so `phrase_align`
+  accepts any map phrase start or section edge rather than strictly 4/8 bars. Loudness uses the
+  section's `loudness_db_end`/`_start` only when the clip reaches that edge, else the section
+  mean. An xfade shorter than 100 ms doesn't count as smoothing for `energy_drop`.
 - 2026-11-13 — Upload quality: block, then ask for a better file (with an override).
   Accepted: lossless, MP3/AAC ≥ 256 kbps, and real bandwidth ≥ 18 kHz whatever the
   bitrate says (Q0).
@@ -98,6 +102,11 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — A9 done. `validator/linter.py`: `phrase_align` (splice point within 30 ms of a map
+  phrase or section edge, outgoing and incoming source), `ending` (last clip stops mid-section
+  with no `fade_out`), `energy_drop` (> 6 dB across a splice, no fade_in/fade_out and overlap
+  < 100 ms; clip `gain` counts), `duration` (moved out of the engine: warn > 2 s, error only if
+  also > 10 % of target). All carry `splice`/`node` ids. Demo renders: no lint issues.
 - 2026-11-13 — A7 + A8 reviewed (lead session): 174 tests pass. Fresh demo ticket rendered
   end to end; the browser page shows no `not_rendered` left. The demo 02 wash: the return
   tail rings ~4.7 s past the ending splice, peak held at -1.0 dBFS by the limiter. Follow-up

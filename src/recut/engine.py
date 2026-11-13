@@ -35,6 +35,7 @@ from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment, par
 from recut.map.schema import MusicMap
 from recut.primitives.curves import make_envelope
 from recut.validator import validate
+from recut.validator.linter import lint_plan
 from recut.validator.rules import RULES
 
 
@@ -381,11 +382,8 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
 
     peak = float(np.abs(mix).max()) if total else 0.0
     issues = _validator_issues(plan, sources) + issues
-    if plan.target_duration_s:
-        diff = total / sr - plan.target_duration_s
-        if abs(diff) > 2.0:
-            issues.append(Issue(severity="warn", rule="duration",
-                                message=f"duration {total / sr:.1f}s vs target {plan.target_duration_s:.0f}s ({diff:+.1f}s)"))
+    issues += lint_plan(plan, {sid: s.music_map for sid, s in sources.items()}, segments, splices,
+                        total / sr)
 
     info = RenderInfo(
         duration_s=total / sr,
