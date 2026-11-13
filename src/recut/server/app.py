@@ -78,7 +78,9 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
             its = []
             for k in tickets.iteration_numbers(tid, n, root):
                 d = tickets.iteration_dir(tid, n, k, root)
+                it_review = tickets.load_iteration_review(tid, n, k, root)
                 its.append({"k": k, "has_plan": (d / "plan.json").exists(),
+                            "review": it_review.model_dump() if it_review else None,
                             "rendered": (d / "render.json").exists(),
                             "error": (d / "render_error.json").exists()})
             sessions.append({"n": n, "meta": json.loads(meta_p.read_text()) if meta_p.exists() else None,

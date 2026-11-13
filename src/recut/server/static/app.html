@@ -197,7 +197,8 @@ async function refreshIteration() {
   // keep an unsaved review across live reloads of the same iteration
   if (!(S.reviewDirty && S.review?.iteration === S.k)) {
     const sess = S.ticket.sessions.find((s) => s.n === S.n);
-    S.review = sess?.review && sess.review.iteration === S.k ? structuredClone(sess.review)
+    const itRev = sess?.iterations.find((i) => i.k === S.k)?.review;
+    S.review = itRev ? structuredClone(itRev)
       : { iteration: S.k, verdict: null, splices: {}, tags: [], note: "" };
     S.reviewDirty = false;
   }

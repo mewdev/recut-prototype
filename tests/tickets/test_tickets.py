@@ -53,3 +53,12 @@ def test_render_error_written_and_cleared(demo, tmp_path):
 def _demo_map(root, tid):
     from recut.map.parser import parse_recut_map
     return parse_recut_map(root / tid / "maps" / "a.json")
+
+
+def test_each_iteration_keeps_its_review(demo):
+    root, tid = demo
+    tickets.save_review(tid, 1, Review(iteration=1, verdict="reject", tags=["abrupt"]), root)
+    tickets.save_review(tid, 1, Review(iteration=2, verdict="fixable"), root)
+    assert tickets.load_iteration_review(tid, 1, 1, root).verdict == "reject"
+    assert tickets.load_iteration_review(tid, 1, 2, root).verdict == "fixable"
+    assert tickets.load_review(tid, 1, root).iteration == 2  # session copy = latest

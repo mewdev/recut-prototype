@@ -237,7 +237,10 @@ def render_stale(ticket_id: str, root: Path = TICKETS_DIR) -> list[tuple[int, in
 
 
 def save_review(ticket_id: str, n: int, review: Review, root: Path = TICKETS_DIR) -> None:
+    """Every iteration keeps its own review (iterations/<k>/review.json); the session's
+    review.json is a copy of the latest one saved (what the next agent session reads)."""
     review.reviewed_at = now()
+    _write(iteration_dir(ticket_id, n, review.iteration, root) / "review.json", review.model_dump())
     _write(session_dir(ticket_id, n, root) / "review.json", review.model_dump())
     log_event(ticket_id, n, {"op": "review", "iteration": review.iteration,
                              "verdict": review.verdict}, root)
@@ -245,8 +248,17 @@ def save_review(ticket_id: str, n: int, review: Review, root: Path = TICKETS_DIR
 
 
 def load_review(ticket_id: str, n: int, root: Path = TICKETS_DIR) -> Optional[Review]:
+    """Latest review saved in session n."""
     p = session_dir(ticket_id, n, root) / "review.json"
     return Review.model_validate_json(p.read_text()) if p.exists() else None
+
+
+def load_iteration_review(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR) -> Optional[Review]:
+    p = iteration_dir(ticket_id, n, k, root) / "review.json"
+    if p.exists():
+        return Review.model_validate_json(p.read_text())
+    latest = load_review(ticket_id, n, root)  # reviews saved before per-iteration storage
+    return latest if latest and latest.iteration == k else None
 
 
 # ---- demo ------------------------------------------------------------------------------

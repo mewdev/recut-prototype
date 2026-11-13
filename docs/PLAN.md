@@ -55,6 +55,7 @@ multi-song sequencing all stay in.
       plan.json                # 3.2
       render.json              # 3.3 (or render_error.json {message, at} if the plan can't render)
       audio.wav
+      review.json              # 3.5, this iteration's review (session review.json = latest copy)
     review.json                # 3.5 (operator, per session's latest iteration)
   share.json                   # {token, session, iteration, created_at, client_decision?, client_note?}
 ```
