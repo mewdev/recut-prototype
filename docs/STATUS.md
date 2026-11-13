@@ -32,7 +32,7 @@ agent won't know it.
 | B4 waveform peaks | done | on request, cached in memory |
 | B5 share links | todo | |
 | B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
-| B7 `recut report` | todo | Haiku; needed by day 7 |
+| B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
@@ -123,6 +123,7 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — B7 done (Haiku build agent): `recut report` (`src/recut/report.py`, read-only). Five sections: success rate (overall / per model / single vs multi-song; reviewed sessions only, result = highest reviewed iteration's verdict), failure tags (grouped per B-backend, `fx_wrong` under engine), validator misses (bad splices with no render issue on that splice), worst 5 sessions, and check accuracy (per issue rule: flagged splices marked bad vs ok). `--json` prints the same data. Per-iteration reviews are used. Tests: `tests/report/test_report.py` (12, hand-built fixture: ship/fixable/reject, single/multi-song, two models, one unreviewed session, a validator miss, a check-accuracy case). Suite: 245 pass.
 - 2026-11-13 — Improvement pass 1, task 3 (enforce the agent process; evidence: the s2 agent wrote no `intent.json`, kept no
   transcript, and its plan `notes` were the only record). `recut ticket render` prints `WARNING (process)` lines for a missing or
   invalid `intent.json` and for `plan.notes` empty / identical to the previous iteration's (CLI only: no render.json change, no

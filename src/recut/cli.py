@@ -13,6 +13,7 @@ from recut.compositor import compose
 from recut.map.make_map import run as make_map
 from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR, RENDERS_DIR, TICKETS_DIR
 from recut.project import Composition, Source, load_compositions, load_project_sources
+from recut.report import parse_date
 from recut.validator import validate
 
 WELCOME = """
@@ -29,6 +30,7 @@ Commands:
   validate  Validate a saved composition against its music map
   render    Validate and render a saved composition to audio
   ticket    Client edit tickets: new, list, work, iterate, render, demo
+  report    Numbers for the weekly improvement pass (reads tickets only)
   serve     Review server with live browser preview (http://localhost:8000)
 
 Run `recut <command> --help` for command-specific usage.
@@ -257,6 +259,16 @@ def cmd_ticket(args) -> None:
             print(f"  WARNING (process): {w}")
 
 
+def cmd_report(args) -> None:
+    from recut import report
+
+    data = report.build(args.root, since=args.since)
+    if args.json:
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+    else:
+        print(report.format_text(data))
+
+
 def _starter_plan(tid: str) -> dict:
     """Minimal valid plan for a fresh ticket: first source, first section. The agent replaces it."""
     from recut import tickets
@@ -330,6 +342,14 @@ def main() -> None:
     t_r.add_argument("--session", type=int)
     t_r.add_argument("--iteration", type=int)
     ticket_cmd.set_defaults(func=cmd_ticket)
+
+    report_cmd = sub.add_parser("report", help="Numbers for the weekly improvement pass (reads only)")
+    report_cmd.add_argument("--since", type=parse_date,
+                            metavar="YYYY-MM-DD", help="only sessions started on or after this date")
+    report_cmd.add_argument("--json", action="store_true", help="print one JSON object (for agents)")
+    report_cmd.add_argument("--root", type=pathlib.Path, default=TICKETS_DIR,
+                            help="tickets folder (default: .appdata/tickets)")
+    report_cmd.set_defaults(func=cmd_report)
 
     serve_cmd = sub.add_parser("serve", help="Review server with live browser preview")
     serve_cmd.add_argument("--host", default="127.0.0.1")
