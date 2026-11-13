@@ -33,6 +33,7 @@ agent won't know it.
 | B5 share links | todo | |
 | B6 CLI + transcript hook | partial | CLI done; hook todo (put it in `scripts/hooks/`) |
 | B7 `recut report` | todo | Haiku; needed by day 7 |
+| B8 Docker image | todo | Haiku, after A8. Intel Mac / Arch / VPS from one image |
 | C1 scaffold | todo | |
 | C2 ticket list/page | todo | |
 | C3 composition view | todo | |

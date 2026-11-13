@@ -4,7 +4,7 @@
 `src/recut/server/app.py` exist: B1 is done, B2 is done except the share routes, B3 is
 done (SSE by polling mtimes every 0.5 s, no `watchfiles`), and B4 is done (peaks served
 on request, not written as files). The `recut ticket new|list|work|iterate|render|demo`
-and `recut serve` commands exist. Left: B5, the transcript hook in B6, and B7.
+and `recut serve` commands exist. Left: B5, the transcript hook in B6, B7 and B8 (Docker).
 
 **Read first:** `AGENTS.md` → `docs/PLAN.md` §3 → this file → `docs/STATUS.md`.
 **Owns:** `src/recut/server/`, `src/recut/tickets.py`, the `recut ticket …` CLI commands, `scripts/hooks/`.
@@ -95,6 +95,30 @@ Output sections:
 `--json` prints the same data as one JSON object, for agents to read.
 - Done when: `pytest tests/report -q` passes against a fixture with ≥4 tickets covering
   ship/fixable/reject, single- and multi-song, two models, and one unreviewed session.
+
+### B8 — Docker image (wide platform support + deploy)
+One image for every machine: the operator's Intel Mac (Docker Desktop), Arch Linux, and
+later the Hetzner VPS, unchanged.
+- `Dockerfile`:
+  - `python:3.11-slim` (linux/amd64; Essentia ships wheels for it)
+  - `apt-get install ffmpeg libsndfile1`
+  - `pip install -e ".[dev,qc]"`, so the `qc` extra brings Essentia (see
+    `docs/workstreams/Q-quality.md`). Until Q1 adds that extra, use `.[dev]`.
+  - no secrets in the image
+- `compose.yaml`:
+  - service `recut` runs `recut serve --host 0.0.0.0 --port 8000` on port 8000
+  - mounts `./.appdata:/app/.appdata`
+  - mounts `~/.modal.toml:/root/.modal.toml:ro` so `recut ticket work` can run the Modal
+    analysis
+  - `restart: unless-stopped`
+- `.dockerignore`: `.appdata/`, `.git/`, `__pycache__/`, `*.wav`, `node_modules/`.
+- README section "Run with Docker" with three commands: `docker compose up -d`,
+  `docker compose exec recut recut ticket demo`, then open http://localhost:8000.
+- Done when: `docker build .` succeeds, `docker compose run --rm recut python -m pytest
+  tests/ -q` passes inside the container, and `curl localhost:8000/api/tickets` answers
+  after `docker compose up`. If Docker isn't available where you run, write the files,
+  mark the task `blocked: needs docker to verify` in STATUS, and say so.
+- Model: Haiku. Do it after A8.
 
 ## Out of scope
 Authentication (share tokens are the only access control), databases (the folders *are*
