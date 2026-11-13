@@ -34,6 +34,7 @@ from recut.contracts.units import db_to_gain, parse_time, ramp_in
 from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment, parse_recut_map
 from recut.map.schema import MusicMap
 from recut.primitives.curves import make_envelope
+from recut.qc import RenderInfoQC, run_qc
 from recut.validator import validate
 from recut.validator.linter import lint_plan
 from recut.validator.rules import RULES
@@ -327,7 +328,6 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
             if m and isinstance(g, np.ndarray):
                 g = np.concatenate([g, np.full(m, g[-1])])
             returns_in[rid][:, p.start:p.start + n + m] += full * g
-    clip_peak = max(float(np.abs(p.samples).max()) for p in placed)
 
     _check_targets(track.automation, f"track {track.id}", {d.id: d for d in track.devices}, return_ids)
     try:
@@ -371,21 +371,15 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     mix = np.ascontiguousarray(mix, dtype=np.float32)
 
     # ---- master ------------------------------------------------------------------------
-    peak_pre = float(np.abs(mix).max()) if total else 0.0
-    peak_pre_db = 20 * math.log10(peak_pre) if peak_pre > 0 else -math.inf
     mctx = dev_mod.Ctx(sr, bpm0, bpb0, total / sr)
+    pre_master = mix
     mix = dev_mod.apply_devices(plan.master.devices, mix, mctx)
-    # only flag clipping the edit created (overlaps, returns), not a source that is already hot
-    if peak_pre_db > 0 and peak_pre > clip_peak * 1.06:
-        issues.append(Issue(severity="warn", rule="peak_clip",
-                            message=f"overlapping audio sums to {peak_pre_db:+.1f} dBFS before the master chain"))
-
     peak = float(np.abs(mix).max()) if total else 0.0
     issues = _validator_issues(plan, sources) + issues
     issues += lint_plan(plan, {sid: s.music_map for sid, s in sources.items()}, segments, splices,
                         total / sr)
 
-    info = RenderInfo(
+    info = RenderInfoQC(
         duration_s=total / sr,
         segments=segments,
         splices=splices,
@@ -403,4 +397,9 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
         peak_dbfs=20 * math.log10(peak) if peak > 0 else -120.0,
         limiter_applied=mctx.limited,
     )
-    return Audio(mix, sr), info
+    out = Audio(mix, sr)
+    fade_outs = [(seg.out_end - parse_time(p.node.fade_out.length, p.bpm, sources[p.node.source].music_map.beats_per_bar), seg.out_end)
+                 for p, seg in zip(placed, segments) if p.node.fade_out]
+    info.issues += run_qc(out, info, pre_master=pre_master,
+                          sources={sid: s.audio for sid, s in sources.items()}, fade_outs=fade_outs)
+    return out, info
