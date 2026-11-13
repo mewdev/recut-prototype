@@ -33,7 +33,7 @@ agent won't know it.
 | B5 share links | todo | |
 | B6 CLI + transcript hook | partial | CLI done; hook todo (put it in `scripts/hooks/`) |
 | B7 `recut report` | todo | Haiku; needed by day 7 |
-| B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run (no docker daemon in this session) |
+| B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | todo | Sonnet; docs/workstreams/Q-quality.md |
 | Q1 audio QC after render | todo | Sonnet; Essentia + pyloudnorm |
