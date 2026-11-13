@@ -34,10 +34,11 @@ A **static** filter (high-pass the low end, dull the top) is the `eq` device: `{
 ## `reverb` — when and how
 
 - **Reverb-on-reverb = bloom.** If a clip's tail already carries reverb (from the source recording, or a second reverb on the same signal), another reverb accumulates into mud. One return, used sparingly.
-- A section with prominent low end (bass-heavy, kick-driven) blooms in the low-mids: put an `eq` `low_cut` (150 to 250 Hz) on the clip, or on the return before the reverb, so only the highs feed the wash.
-- High sends (0 dB, `dry_wet: 100` on the return) read as "dissolving into space", appropriate for exits, not mid-song.
+- **Return recipe (any track).** Put an `eq` `low_cut` of 200 to 300 Hz *before* the `reverb` on the return: low end in the reverb is what pumps the master limiter on a loud master. Use a moderate `decay` (1.5 to 2.5 s for a wash into an ending), `size` 50 to 60, `hi_cut` 4500 to 6000, `pre_delay` 20 to 30 ms.
+- **Send level.** Peak around -9 to -13 dB. Never 0 dB on a `dry_wet: 100` return: the wet signal is as loud as the dry, and the limiter pays for it. A reverb that "squashes" is almost always a low-cut, level or decay problem, not a reason to drop the reverb.
 - **Tails are kept.** A return rings out after the last clip that feeds it (up to 10 s, cut where it falls below -60 dB); `returns_tail_end` in `render.json` says when. You no longer need to pad the last clip.
-- **No sudden onset.** Don't switch a send on at a constant level mid-cut: ramp it (`from: "-inf"`, `over` a beat or two) so the reverb doesn't "suddenly appear". For a clip-insert reverb, automate `devices.<id>.dry_wet` the same way.
+- **No audible onset.** Don't ramp a send from `"-inf"` (true silence) and don't switch it on at a constant level mid-cut: the reverb is heard "turning on". Set a low base send (-24 to -30 dB) for the clip and ramp from it to the peak over at least 2 beats. For a clip-insert reverb, automate `devices.<id>.dry_wet` the same way, from a small non-zero value.
+- Evidence (ticket 20261113-mbyv, loud EDM master): a full-range 3.5 s return with the send ramped -inf to 0 dB in 1 beat squashed (3.4 dB of limiting, rejected); low cut + 2 s + peak -9 dB cleared the limiter; a -26 dB base rising to -13 dB was accepted. Full recipes: `ending-transplant.md`.
 
 ## `delay`
 

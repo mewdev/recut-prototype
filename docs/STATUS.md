@@ -50,6 +50,7 @@ agent won't know it.
 | C6 review panel | todo | |
 | C7 client pages | todo | |
 | I1 integration + real tickets | todo | Day 6–7, strongest model |
+| R1 convolution reverb (pedalboard Convolution + freely licensed IRs, reverb `type`) | candidate — wait for real tickets | operator on s2·it3 (low-cut return, -26 dB base send rising to -13 dB): "okay for now, needs real cases". Build only when a real ticket shows the algorithmic reverb is the limit |
 
 ## Blockers
 - Music maps can contain `NaN` loudness (zero-length segments), which isn't valid JSON for
@@ -122,6 +123,13 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — Improvement pass 1, task 1 (reverb recipe rules; evidence ticket 20261113-mbyv, s1·it2 "reverb squash" 3.4 dB
+  limiting, s2·it2 "much better, still turned on", s2·it3 "okay for now"). `ending-transplant.md`, `effects-routing.md`,
+  `effects-cheatsheet.md`: return `eq` low_cut 200-300 Hz before the reverb, decay 1.5-2.5 s, send peak -9 to -13 dB (never 0 dB
+  on a 100 % wet return), no ramp from `-inf` (base -24 to -30 dB, ramp >= 2 beats). Variant snippets updated. Tests in
+  `test_ending_transplant_doc.py`: every variant renders on the loud demo source with no `qc_limiting` and gain reduction <= 3 dB
+  (2.3-2.8 dB; the source alone limits 2.3-2.5 dB), the doc follows the recipe, and the old 3.5 s / -inf to 0 dB wash limits
+  harder (3.44 dB, matches the ticket). `examples/summer-party/plans/02-ending-transplant.json` is the old recipe, left as is.
 - 2026-11-13 — First real review (operator, demo ticket): it2 s3 bad, "reverb squashes,
   needs to be more subtle, probably reverb type + automation". `qc_limiting` (3.4 dB) agreed
   with the ear; `qc_tilt_jump` at s3 wasn't mentioned (likely noise). No tag fitted, so
