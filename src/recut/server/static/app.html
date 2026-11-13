@@ -58,6 +58,11 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const fmt = (t) => { t = Math.max(0, t || 0); const m = Math.floor(t / 60); const s = (t % 60).toFixed(1).padStart(4, "0"); return `${m}:${s}`; };
 const api = async (url, opts) => { const r = await fetch(url, opts); if (!r.ok) throw new Error(`${r.status} ${await r.text()}`); return r.json(); };
 let TAGS = [];
+const VERDICT_HELP = {
+  ship: "ship: I'd send it to the client exactly as it is, without changing anything.",
+  fixable: "fixable: right direction, but I'd still change something before sending.",
+  reject: "reject: wrong approach, start over rather than tweak.",
+};
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), 1800); }
 
 // ------------------------------------------------------------------ routing
@@ -368,7 +373,8 @@ function renderReview() {
         ${r.ok === false ? `<div class="tags">${tagBtns(r.tags || [], `data-st-${sp.id}`)}</div><input type="text" data-note="${sp.id}" placeholder="note (optional)" value="${esc(r.note || "")}" style="margin-top:4px">` : ""}
       </div>`; }).join("") || `<p class="muted">No splices (single clip).</p>`}
     <div style="margin-top:10px"><b>Verdict</b>
-      <div class="row" style="margin:4px 0">${["ship", "fixable", "reject"].map((v) => `<button data-v="${v}" class="${rv.verdict === v ? "on" : ""}">${v}</button>`).join("")}</div></div>
+      <div class="row" style="margin:4px 0">${["ship", "fixable", "reject"].map((v) => `<button data-v="${v}" title="${VERDICT_HELP[v]}" class="${rv.verdict === v ? "on" : ""}">${v}</button>`).join("")}</div>
+      <div class="muted" style="font-size:12px">${rv.verdict ? VERDICT_HELP[rv.verdict] : "Would you send it to the client exactly as it is? Unsure → pick the stricter one."}</div></div>
     <div><b>Overall tags</b><div class="tags">${tagBtns(rv.tags, "data-gt")}</div></div>
     <p><textarea id="rnote" rows="3" placeholder="What should the agent change? (one or two sentences)">${esc(rv.note || "")}</textarea></p>
     <button class="on" id="save">Save review</button> <span id="rst" class="muted"></span>`;
