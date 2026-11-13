@@ -30,7 +30,9 @@ Vite app in `web/`. `npm run dev` proxies `/api` and `/media` to `localhost:8000
 ### C3 — Composition view (from the mockup's waveform view)
 - Segments come from `render.json.segments`, coloured by source, with waveforms from
   `.peaks.json`.
-- A crossfade "bowtie" at each splice, using its `xfade_ms`.
+- A crossfade "bowtie" at each splice, using its `overlap_ms`, `out_curve` and `in_curve`
+  (draw a flat line for `hold`). Draw ring-out tails as a faded extension under the next
+  segment. Segments can overlap in time, so stack overlapping parts in two rows.
 - Playhead, click to seek, zoom. Space toggles play.
 - Audio plays through wavesurfer.
 
@@ -61,7 +63,8 @@ composition to that segment.
 ### C7 — Client pages
 - `/new`: upload form (files, request text, target duration) → `POST /api/tickets` →
   confirmation page.
-- `/s/:token`: a simple player with Original / Cut tabs and Approve / Request changes
+- `/s/:token`: a simple player (audio only from `/s/{token}/audio/cut|original`) with
+  Original / Cut tabs and Approve / Request changes
   (with a note). No operator UI or internal data on this page.
 - Must work on a phone.
 

@@ -65,5 +65,41 @@ line to `$RECUT_SESSION/events.jsonl`:
 - Done when: a test with `tmp_path` checks the lines are written, and a test with the env
   unset checks nothing is written.
 
+### A7 — Timeline compose: overlaps, ring-out, scoped effects (ending transplant)
+This is the operator's most common manual fix (PLAN §2 "Ending transplant"). Change `compose()` so it
+**places clips on a timeline buffer and adds up overlaps**, instead of concatenating them.
+Then add these plan fields (PLAN §3.2):
+- `XFade.out_curve` / `in_curve`, which default to `curve`. `"hold"` means full volume for
+  the whole overlap.
+- `Clip.ring_out`: pad the clip for its effect tail (reuse `_reverb_tail_padding`, which
+  today only applies to the **last** clip), and mix the tail under the following
+  material.
+- `Effect.scope = {"last_beats": n} | {"first_beats": n}`: apply the effect only to that
+  part, with a 20 ms equal-power blend at the scope edge so nothing clicks. Closes issue
+  #53.
+- Master limiter (`pedalboard.Limiter`), applied only if the peak exceeds -1 dBFS. Set
+  `render.json.peak_dbfs` and `limiter_applied`.
+- New validator rule `peak_clip` (warn): the summed peak before the limiter is above
+  0 dBFS.
+- `render.json` splices report `overlap_ms`, `out_curve`, `in_curve`, `ring_out_ms`.
+
+Then add the recipe `skills/cutting/references/ending-transplant.md` with the three
+variants the operator uses, each as a plan.json snippet:
+1. hit on top + tail rings (`ring_out` on the previous clip, short `xfade`, `in_curve: "hold"`)
+2. reverb wash into the ending (`reverb` scoped `last_beats: 1–2` + `ring_out`)
+3. normal crossfade + reverb on the ending clip
+
+Link the recipe from `skills/cutting/SKILL.md` step 6 and from
+`references/exit-design.md`.
+- Done when:
+  - all existing tests pass unchanged (plain concatenation and xfade output stay within
+    1e-6 of today's)
+  - new tests cover: `hold` overlap length, ring-out tail energy after the splice > 0,
+    a scoped effect leaving the earlier samples untouched, the limiter only kicking in
+    when the peak is too high
+  - the fixture's ending-transplant plan renders without clicks (no sample-to-sample
+    jump > 0.5)
+- Model: Sonnet. Do it after A4 (it changes what A4 reports).
+
 ## Out of scope
 Multi-lane mixing, stem separation and time-stretch (week 2). Don't start them.

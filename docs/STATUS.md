@@ -24,6 +24,7 @@ agent won't know it.
 | A4 render.json | todo | |
 | A5 cross-song validator rules | todo | |
 | A6 session logging | todo | |
+| A7 timeline compose / ending transplant | todo | Sonnet, after A4. Operator's most common manual fix |
 | B1 ticket store | todo | |
 | B2 FastAPI app | todo | |
 | B3 SSE live reload | todo | |
@@ -47,5 +48,8 @@ _(none)_
 _(none yet; see docs/PLAN.md §2 for planning decisions)_
 
 ## Log
+- 2026-11-13 — Added A7 (ending transplant: overlaps, ring-out, scoped fx, limiter) and the
+  hosting decision (named tunnel on the operator's domain + Cloudflare Access; share-page
+  audio routes). The plan format was extended before D1, so nothing frozen was broken.
 - 2026-11-12 — Plan, workstream briefs and this log created. Waiting on: the operator's
   past-session export (prompt in chat) and contracts day (D1).

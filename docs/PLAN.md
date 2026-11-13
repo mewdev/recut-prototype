@@ -20,10 +20,11 @@ raise that.
 | GUI purpose (week 1) | **Review station**: play/A-B original vs. cut, a timeline showing which source parts were joined, validator hits, per-splice feedback. Editing in the inspector comes in week 2 and is saved as a *correction* diff, never as a silent change. | Precise feedback is the learning signal. Silent edits would pollute the agent's success data. |
 | Preview engine | **Server render + reload.** Python `compose()` renders the file, the browser plays it, and the server pushes an update over SSE so the player reloads at the same playhead. **No WebAudio engine, FAUST or preview-schedule IR for now.** | Measured: composing a 62s cut takes 0.06s and writing it 0.07s. One engine means preview and final render can't drift apart. |
 | Stack | **React** (reuse `recut-wireframe.tsx`, shadcn) + **FastAPI** JSON API around the recut library. | The mockup is already most of the layout, and agents build React/shadcn reliably. |
-| Hosting (week 1) | **Mac + Cloudflare Tunnel.** Move to a Hetzner VPS (same Docker setup) once clients depend on it. | Free, HTTPS, no billing risk. |
-| Multi-song | **In scope.** Week 1: sequencing (medley A→B, several files of the same song). Mashup/layering: the plan format has **lanes** from day 1, but only one lane renders in week 1. Week 2 adds multi-lane mixing and stem separation (clients send full mixes only). | Real tickets failed here and needed a human. Lanes now avoid a rewrite later. |
+| Hosting (week 1) | **Mac + named Cloudflare Tunnel on `app.<operator's domain>`** (the domain's DNS moves to Cloudflare, free). **Cloudflare Access** (email login, only the operator) protects everything except the client paths (§3.6). Move to a Hetzner VPS (same Docker setup) once clients depend on it. | Free, HTTPS, permanent share links, no billing risk. Without Access, anyone guessing a ticket id could open client audio and transcripts. |
+| Multi-song | **In scope.** Week 1: sequencing (medley A→B, several versions of the same song). Mashup/layering: the plan format has **lanes** from day 1, but only one lane renders in week 1. Week 2 adds multi-lane mixing and stem separation (clients send full mixes only). | Real tickets failed here and needed a human. Lanes now avoid a rewrite later. |
 | Tempo mismatch | **Choose compatible join points** (breakdowns, outros, longer crossfades). No time-stretching in week 1. | Matches what the human did by hand. |
 | Loudness | **Auto LUFS-match** every source at load time (pyloudnorm). | Removes the "volume jumps at the splice" class of failures. |
+| Ending transplant | **In scope for week 1 (task A7).** The operator's most common manual fix: take the ending from the end of the same song and place it mid-song. Done three ways: (1) the ending hit lands on top while the previous part's tail rings out, (2) a reverb wash on the last beat(s) going into the ending, (3) a normal crossfade + reverb. Needs `compose()` to place clips on a timeline and add up overlaps, instead of only concatenating them. | Single-song, already the main cause of manual work. The timeline core is also what week-2 layering needs. |
 | Validator, cross-song splice | Downbeat alignment (**error**), BPM gap > ~3% and not near 2:1 (warn), key not Camelot-adjacent (warn), short-term loudness jump across the splice (warn). | |
 | Feedback unit | **Per splice**: ok/bad + tags. **Overall**: verdict `ship`/`fixable`/`reject` + a note. | Splices are where cuts fail. |
 | Success metric | **Primary:** operator ships the agent's cut with zero edits. **Check:** the client approves it on the share link. | The operator's verdict stands in for the client's; client approval confirms it. |
@@ -82,7 +83,12 @@ It keeps the musical units (sections, bars, beats); free timecodes are not allow
       {"id": "n2", "type": "clip", "source": "a", "segment": "chorus", "index": 1, "bars": 8},
       {"id": "x1", "type": "xfade", "beats": 4, "curve": "qsin"},
       {"id": "n3", "type": "clip", "source": "b", "segment": "chorus", "index": 2,
-       "offset_beats": 0, "fx": [{"type": "fade", "vol_start": 1, "vol_end": 0, "curve": "qsin"}]}
+       "offset_beats": 0, "fx": [{"type": "fade", "vol_start": 1, "vol_end": 0, "curve": "qsin"}]},
+      {"id": "n4", "type": "clip", "source": "b", "segment": "verse", "index": 2, "bars": 4,
+       "ring_out": true,
+       "fx": [{"type": "reverb", "wetness": 0.6, "scope": {"last_beats": 1}}]},
+      {"id": "x2", "type": "xfade", "ms": 30, "out_curve": "hold", "in_curve": "qsin"},
+      {"id": "n5", "type": "clip", "source": "b", "segment": "outro", "index": 1}
     ]}
   ],
   "target_duration_s": 150
@@ -91,6 +97,18 @@ It keeps the musical units (sections, bars, beats); free timecodes are not allow
 
 Week 1: `compose()` raises an error if there is more than one lane. Clip field
 names follow `recut.compositor.nodes.Clip`.
+
+**Overlap and ending fields** (all optional, so existing plans keep working; implemented in A7).
+`n4 → x2 → n5` above is an ending transplant: a reverb wash on the verse's last beat, with
+the song's real outro landing on top while the wash rings out.
+- `xfade.out_curve` / `xfade.in_curve`: the fade shape for each side of the join. They
+  default to `curve`. `"hold"` keeps that side at full volume for the whole overlap.
+  - `out_curve: "hold"` + `in_curve: "hold"`: a short overlap with both sides at full
+    volume.
+- `clip.ring_out` (default `false`): the clip's reverb/delay tail keeps playing under the
+  following material instead of being cut off at the clip's end.
+- `effect.scope` (default: the whole clip): `{"last_beats": n}` or `{"first_beats": n}`
+  applies the effect to only that part of the clip. This fixes issue #53.
 
 ### 3.3 Render output (`render.json`)
 
@@ -105,15 +123,21 @@ This is what the GUI needs to draw "what the cut did". It is produced by the sam
   ],
   "splices": [
     {"id": "s1", "out_time": 24.8, "from": "n2", "to": "n3",
-     "cross_source": true, "xfade_ms": 2069, "curve": "qsin"}
+     "cross_source": true, "overlap_ms": 2069, "out_curve": "qsin", "in_curve": "qsin",
+     "ring_out_ms": 0}
   ],
   "issues": [
     {"severity": "warn", "rule": "bpm_gap", "splice": "s1", "node": null,
      "message": "a 116 BPM → b 124 BPM (6.9%)"}
   ],
-  "sources": {"a": {"bpm": 116, "key": "F#m", "lufs_in": -9.1, "lufs_target": -14}}
+  "sources": {"a": {"bpm": 116, "key": "F#m", "lufs_in": -9.1, "lufs_target": -14}},
+  "peak_dbfs": -1.2,
+  "limiter_applied": false
 }
 ```
+
+Segments can overlap in output time (crossfades, ring-out tails). `out_time` is the point
+where the incoming clip starts. `ring_out_ms` is how long the outgoing tail rings past it.
 
 ### 3.4 Session logging
 
@@ -152,7 +176,17 @@ GET  /api/tickets/{id}/events             SSE: "iteration_created" / "render_upd
 PUT  /api/tickets/{id}/sessions/{n}/review
 POST /api/tickets/{id}/share              → {token, url}  (only if verdict == ship)
 GET  /s/{token}                           client page: player, original vs. cut
+GET  /s/{token}/audio/cut                 shared render only (Range requests)
+GET  /s/{token}/audio/original            shared original only (Range requests)
 POST /api/share/{token}/decision          {approved: bool, note}
+POST /api/tickets                         (also public: the client upload form)
+```
+
+**Public paths** (no login): `/new`, `POST /api/tickets`, `/s/*`, `/api/share/*`, and the
+frontend's static assets. **Everything else is behind Cloudflare Access** (operator
+only). The client page must never reference `/media/...` or ticket ids.
+
+```
 ```
 
 Waveform peaks: the server precomputes them for every audio file (`<file>.peaks.json`).
@@ -238,6 +272,8 @@ How to save tokens:
   testing but block a paid hosted service. See `README.md`.
 - Chord and segment timestamps can differ by a few hundred ms. The downbeat rule
   must use the beat grid, not segment boundaries.
+- Ending transplants make overlapping audio add up, which can clip. A7 adds a master
+  limiter (only applied when the peak exceeds -1 dBFS) and the `peak_clip` validator rule.
 - Old docs (preview architecture notes, mockup comments) say xfade isn't wired
   in and there are no effects. Both are outdated: `XFade` and
   Fade/Reverb/Delay/FilterSweep already work.
