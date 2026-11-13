@@ -12,6 +12,7 @@ If you were given a build task (an ID like A3, B2 or C5), read these in order an
 Rules:
 - Do **one task**, make its *Done when* check pass, update `docs/STATUS.md`, then commit.
 - Never edit files outside your workstream. Never change `src/recut/contracts/`.
+- Weekly improvement pass (turning session data into fixes): follow `docs/IMPROVEMENT_LOOP.md`.
 - If something is unclear, **don't guess**: write it under *Blockers* in `docs/STATUS.md` and stop or move to the next task.
 
 ## Cutting or editing an audio track

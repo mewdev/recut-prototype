@@ -57,7 +57,12 @@ multi-song sequencing all stay in.
   share.json                   # {token, session, iteration, created_at, client_decision?, client_note?}
 ```
 
-`status`: `new → in_progress → in_review → shipped → client_approved | client_changes`.
+`status`: `new → in_progress → in_review → (needs_rework → in_progress → in_review)* → shipped → client_approved | client_changes`.
+
+Saving a review with verdict `fixable` or `reject` sets `needs_rework`. In week 1 the
+operator restarts the agent by hand (`recut ticket work <id>`). Later, a watcher can start
+an agent on every `needs_rework` ticket automatically, so the operator only reviews.
+Nothing in these formats needs to change for that.
 
 ### 3.2 Plan v2 (`plan.json`)
 
@@ -219,7 +224,10 @@ How to save tokens:
 - Multi-lane mixing + stem separation (Demucs on Modal) for mashups.
 - Time-stretch.
 - A replay eval suite built from failed tickets.
-- A weekly improvement pass: failed tags → validator rule / skill edit / primitive.
+- Hands-off rework loop: a watcher starts an agent on every `needs_rework` ticket, so the
+  operator only reviews (see §3.1 status).
+- The weekly improvement pass starts on day 7 (not deferred). The procedure is in
+  `docs/IMPROVEMENT_LOOP.md`, and it uses `recut report` (task B7).
 - A curated `docs/LEARNINGS.md`.
 - Hetzner VPS.
 - The customer-facing agent in a sandbox.

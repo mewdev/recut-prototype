@@ -25,6 +25,7 @@ Until workstream A merges, use the fixture files in `tests/fixtures/tickets/medl
 models from `recut.contracts`.
 - `/media/...` serves files with HTTP Range support (`FileResponse` does this).
 - Add `fastapi`, `uvicorn` and `python-multipart` to `pyproject.toml`.
+- `PUT .../review` sets the ticket status: `fixable`/`reject` → `needs_rework`, `ship` → stays `in_review` until it's shared (PLAN §3.1).
 - Run it with `recut serve --port 8000`.
 - Done when: `pytest tests/server -q` passes (`TestClient`, one test per route) and
   `/docs` shows the API.
@@ -56,6 +57,38 @@ Whenever a source or render is written, also write `<file>.peaks.json`:
 - `.claude/hooks/copy_transcript.sh` is a Claude Code Stop hook that copies the session
   transcript to `$RECUT_SESSION/transcript.jsonl`.
 - Done when: CLI tests pass and the hook is documented in AGENTS.md.
+
+### B7 — `recut report`
+`recut report [--since YYYY-MM-DD] [--json]` reads every ticket and prints the numbers the
+weekly improvement pass (`docs/IMPROVEMENT_LOOP.md`) works from. It only reads files and
+never writes anything.
+
+Definitions (use exactly these):
+- A **session** has a **result**: the verdict of its latest `review.json`. Sessions with
+  no review count as `unreviewed` and are left out of rates.
+- **Success** means the result is `ship`.
+- **Iterations to ship**: the iteration number in the `ship` review.
+- **Multi-song**: the latest iteration's `plan.json` has more than one source.
+- **Model**: `meta.json.model`.
+
+Output sections:
+1. **Success rate**: overall, per model, and single-song vs. multi-song. For each:
+   `n`, `ship`, `fixable`, `reject`, success %, median iterations to ship.
+2. **Failure tags**: counts of every tag (splice tags + overall tags, across all reviewed
+   iterations), sorted descending. Group them as:
+   - **analysis**: `map_wrong`
+   - **engine**: `missing_primitive`, `artifact`
+   - **validator-catchable**: `off_beat`, `harmonic_clash`, `abrupt`, `duration_miss`
+   - **judgement**: `intent_misread`, `wrong_section`, `energy_drop`, `bad_ending`
+3. **Validator misses**: splices you marked bad that had **no** validator issue in
+   `render.json`. These are the best candidates for new validator rules.
+4. **Worst sessions** (top 5): most iterations without a `ship`, then most bad splices.
+   Each shows the ticket id, model, tags, the operator's note, and the GUI link
+   `http://localhost:8000/t/<ticket_id>`.
+
+`--json` prints the same data as one JSON object, for agents to read.
+- Done when: `pytest tests/report -q` passes against a fixture with ≥4 tickets covering
+  ship/fixable/reject, single- and multi-song, two models, and one unreviewed session.
 
 ## Out of scope
 Authentication (share tokens are the only access control), databases (the folders *are*

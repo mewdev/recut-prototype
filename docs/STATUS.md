@@ -30,6 +30,7 @@ agent won't know it.
 | B4 waveform peaks | todo | |
 | B5 share links | todo | |
 | B6 CLI + transcript hook | todo | |
+| B7 `recut report` | todo | Haiku; needed by day 7 |
 | C1 scaffold | todo | |
 | C2 ticket list/page | todo | |
 | C3 composition view | todo | |
