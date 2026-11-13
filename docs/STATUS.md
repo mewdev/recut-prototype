@@ -34,6 +34,13 @@ agent won't know it.
 | B6 CLI + transcript hook | partial | CLI done; hook todo (put it in `scripts/hooks/`) |
 | B7 `recut report` | todo | Haiku; needed by day 7 |
 | B8 Docker image | todo | Haiku, after A8. Intel Mac / Arch / VPS from one image |
+| Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
+| A9 musical linter rules | todo | Sonnet; docs/workstreams/Q-quality.md |
+| Q1 audio QC after render | todo | Sonnet; Essentia + pyloudnorm |
+| M1 stems + instrument activity (Demucs on Modal) | todo | Sonnet; docs/workstreams/M-music-data.md |
+| M2 pace + key ranges + short-term loudness | todo | Sonnet |
+| M3 map schema fields + linter rules + GUI lanes | todo | Sonnet, after M1/M2 |
+| M4 Apple Music Understanding (Swift CLI) | later | needs an Apple-silicon Mac on macOS 27+ |
 | C1 scaffold | todo | |
 | C2 ticket list/page | todo | |
 | C3 composition view | todo | |
@@ -49,6 +56,12 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-13 — Upload quality: block, then ask for a better file (with an override).
+  Accepted: lossless, MP3/AAC ≥ 256 kbps, and real bandwidth ≥ 18 kHz whatever the
+  bitrate says (Q0).
+- 2026-11-13 — Richer music data: Demucs stems + onsets on Modal now (M1–M3). Apple Music
+  Understanding later as a second source; it needs macOS 27 on Apple silicon, and the
+  operator's Mac is Intel.
 - 2026-11-13 — `effects-cheatsheet.md` stays in `skills/cutting/assets/` (SKILL.md and the
   link checker already point there); the A8 brief said `references/`.
 - 2026-11-13 — Not built: a Python builder API that mirrors the JSON (`Clip(..., sends=...)`,

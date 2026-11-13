@@ -18,6 +18,43 @@ review tags:
 **Read first:** `AGENTS.md` → `docs/PLAN.md` §3.3 → this file → `docs/STATUS.md`.
 **Suggested model:** Sonnet. Do this after A7/A8 (it touches `engine.py`).
 
+## Q0 — Intake check: block poor-quality uploads before analysis
+`src/recut/intake.py`: `check_audio(path) -> IntakeResult{ok, problems: [{code, message}], info}`.
+It must take under 1 s for a 5-minute file, because it runs while the client waits.
+
+**Policy (operator decision 2026-11-13):** block, then ask for a better file, with an
+override.
+- Accepted: lossless (WAV/FLAC/AIFF), MP3 ≥ 256 kbps, AAC/M4A ≥ 256 kbps.
+- **The bitrate in the file can lie** (a 128 kbps MP3 re-saved as 320). Always also
+  measure the **real bandwidth**: the highest frequency where the long-term spectrum is
+  within 40 dB of its median level, using 30 s from the middle of the track.
+
+| code | condition | message to the client (plain words) |
+|---|---|---|
+| `undecodable` | ffprobe/decoding fails | "We couldn't read this file. Please export it again." |
+| `low_bitrate` | lossy with a bitrate below 256 kbps (from ffprobe) | "This is a {n} kbps file. Please send WAV/FLAC, or an MP3/AAC of at least 256 kbps." |
+| `low_bandwidth` | real bandwidth < 18 kHz, **whatever the container** (catches fake 320 and MP3-to-WAV) | "This file sounds like it came from a low-quality MP3 (nothing above {f} kHz). Do you have the original?" |
+| `low_samplerate` | < 44.1 kHz | … |
+| `too_short` / `too_long` | < 20 s or > 15 min | … |
+| `fake_stereo` (info) | L = R (correlation > 0.999) | not blocking |
+| `clipped_source` (info) | Essentia SaturationDetector / fallback clip runs | not blocking: shown to the operator only |
+
+- `POST /api/tickets` runs the check on every file. If any **blocking** problem is
+  found, it answers `422 {problems per file}` and creates no ticket. With form field
+  `override=true` it creates the ticket and records the problems + override in
+  `request.json` (a new optional field; log a Blocker if the contract needs it) and in
+  the first session's `events.jsonl`.
+- `/new` page: show the problems next to each file in plain words, with "Upload a
+  different file" and "Use anyway" buttons.
+- CLI: `recut check-audio <files>` prints the same result. `recut ticket new` refuses
+  blocked files unless `--override`.
+- Real music can legitimately have no high frequencies (lo-fi, old recordings), which is
+  why the override exists. Thresholds get tuned from overrides that turn out fine.
+- Done when: tests with synthetic files (white noise low-passed at 15 kHz saved as WAV
+  → `low_bandwidth`; a 128 kbps MP3 made with ffmpeg → `low_bitrate`; a clean 44.1 kHz
+  WAV → ok) pass, and the `/new` flow is checked in a browser.
+- Model: Sonnet.
+
 ## A9 — Musical linter rules (`src/recut/validator/`, called from `engine.py`)
 Issue severity is `warn` unless noted. Each rule: one passing and one failing test.
 

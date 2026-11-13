@@ -6,7 +6,7 @@ Music cutting system ("Remotion for audio"): analysis pipeline → JSON music ma
 
 If you were given a build task (an ID like A3, B2 or C5), read these in order and nothing else unless the task needs it:
 1. `docs/PLAN.md`: decisions (§2) and **contracts (§3), which are frozen**
-2. `docs/workstreams/<A-engine|B-backend|C-frontend>.md`: your task list, the files you own, and what you must not touch
+2. `docs/workstreams/<A-engine|B-backend|C-frontend|Q-quality|M-music-data>.md`: your task list, the files you own, and what you must not touch
 3. `docs/STATUS.md`: current state, blockers, and the handoff log
 
 Rules:
