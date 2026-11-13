@@ -15,6 +15,24 @@ Rules:
 - Weekly improvement pass (turning session data into fixes): follow `docs/IMPROVEMENT_LOOP.md`.
 - If something is unclear, **don't guess**: write it under *Blockers* in `docs/STATUS.md` and stop or move to the next task.
 
+## Working a client ticket (cutting agents)
+
+Tickets live in `.appdata/tickets/<id>/` (format: `docs/PLAN.md` §3). To work one:
+1. `recut ticket work <id> --model <your model>` starts a session (it analyzes unmapped
+   tracks via Modal) and prints the paths.
+2. Read `request.json` and the previous session's `review.json` if there is one: its
+   per-splice tags and note are what to fix.
+3. Write `intent.json` (how you read the request) **before** cutting.
+4. Edit the iteration's `plan.json` (§3.2: sections + bars/beats, Ableton-style units).
+   `recut ticket render <id>` renders it and prints issues; with `recut serve` running,
+   the operator's browser updates live.
+5. For a new attempt, run `recut ticket iterate <id>` instead of overwriting: every
+   attempt is kept, failures included.
+
+The `cutting`/`music-theory` skills below give the musical judgment. Their code examples
+still use the older Python API until task A8 rewrites them; `plan.json` is the source of
+truth.
+
 ## Cutting or editing an audio track
 
 If the request is to trim, cut, loop, crossfade, or otherwise edit an existing song via the recut framework, use the `cutting` skill (`skills/cutting/SKILL.md`) — it covers the `Clip`/`XFade`/`compose()`/`validate()` API and the CLI. Pair it with the `music-theory` skill (`skills/music-theory/SKILL.md`) for musical judgment (hook selection, cadence quality, energy arcs).
@@ -24,13 +42,16 @@ If your harness doesn't auto-discover skills from `.claude/skills/`, load those 
 Not covered by either skill: composing new melodies/lyrics/orchestration (out of scope), or generating/enriching a music map (`recut analyze` / `recut map`, `src/analysis/`, `src/recut/map/make_map.py`).
 
 ## Python Environment
-Always use `/Users/michal/miniconda3/envs/recut/bin/python` — never `conda run -n recut` (picks up wrong system Python).
+Use the `recut` environment's Python directly, never `conda run -n recut` (it picks up the
+wrong system Python). On the operator's Mac that's
+`/Users/michal/miniconda3/envs/recut/bin/python`. In other environments (cloud sessions,
+CI), use the Python where `pip install -e ".[dev]"` was run.
 
 ## Before Every Commit
-Run both — fix all errors before committing:
+Run both and fix all errors before committing (with the environment's `ruff`/`python`):
 ```
-/Users/michal/miniconda3/envs/recut/bin/ruff check .
-/Users/michal/miniconda3/envs/recut/bin/python -m pytest tests/
+ruff check .
+python -m pytest tests/
 ```
 
 ## Key Files

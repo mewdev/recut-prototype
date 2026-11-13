@@ -53,8 +53,8 @@ multi-song sequencing all stay in.
     transcript.jsonl           # Claude Code transcript, copied by a Stop hook
     iterations/<k>/
       plan.json                # 3.2
-      render.json              # 3.3
-      audio.mp3
+      render.json              # 3.3 (or render_error.json {message, at} if the plan can't render)
+      audio.wav
     review.json                # 3.5 (operator, per session's latest iteration)
   share.json                   # {token, session, iteration, created_at, client_decision?, client_note?}
 ```
@@ -234,7 +234,9 @@ GET  /api/tickets                         list + status
 GET  /api/tickets/{id}                    request + sessions + iterations
 GET  /api/tickets/{id}/sessions/{n}/iterations/{k}      plan + render.json
 GET  /media/tickets/{id}/...              audio (originals + renders), Range requests supported
-GET  /api/tickets/{id}/events             SSE: "iteration_created" / "render_updated"
+GET  /api/tickets/{id}/events             SSE: "changed" (renders stale iterations first)
+GET  /api/tickets/{id}/maps/{source_id}   music map as strict JSON (NaN → null)
+GET  /api/tickets/{id}/peaks/{path}?n=    waveform min/max peaks for any audio file in the ticket
 PUT  /api/tickets/{id}/sessions/{n}/review
 POST /api/tickets/{id}/share              → {token, url}  (only if verdict == ship)
 GET  /s/{token}                           client page: player, original vs. cut
@@ -251,7 +253,7 @@ only). The client page must never reference `/media/...` or ticket ids.
 ```
 ```
 
-Waveform peaks: the server precomputes them for every audio file (`<file>.peaks.json`).
+Waveform peaks: the server computes them on request (`/peaks/...`, cached in memory).
 The browser doesn't decode the whole file just to draw it.
 
 ## 4. Week schedule

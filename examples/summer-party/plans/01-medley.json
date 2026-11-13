@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "sources": {
+    "a": {"file": "inputs/a.mp3", "map": "maps/a.json"},
+    "b": {"file": "inputs/b.wav", "map": "maps/b.json"}
+  },
+  "tracks": [
+    {"id": "main", "clips": [
+      {"id": "n1", "type": "clip", "source": "a", "segment": "intro", "index": 1,
+       "fade_in": {"length": "1 beat", "shape": "linear"}},
+      {"id": "n2", "type": "clip", "source": "a", "segment": "verse", "index": 1},
+      {"id": "x1", "type": "xfade", "length": "2 beats", "shape": "equal_power"},
+      {"id": "n3", "type": "clip", "source": "b", "segment": "chorus", "index": 1},
+      {"id": "n4", "type": "clip", "source": "b", "segment": "inst", "index": 1, "bars": 4}
+    ]}
+  ],
+  "target_duration_s": 55,
+  "notes": "Demo iteration 1: two-source medley (b is a -6 dB copy of the same song). Ends abruptly mid-section on purpose."
+}

@@ -23,6 +23,16 @@ conda activate recut
 pip install -e .
 ```
 
+Use `pip install -e ".[dev]"` to also get the test tools (pytest, ruff, httpx).
+
+**Try the review GUI (no Modal needed):**
+```bash
+recut ticket demo     # demo ticket from examples/summer-party, 2 rendered iterations
+recut serve           # → http://localhost:8000
+```
+Edit a `plan.json` under `.appdata/tickets/<id>/sessions/1/iterations/2/` and the browser
+re-renders and reloads at the same playhead. Workflow and formats: `docs/PLAN.md`.
+
 **3. Set up Modal (for audio analysis)**
 
 Requires a [Modal account](https://modal.com) — free tier is sufficient.

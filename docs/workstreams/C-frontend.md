@@ -1,5 +1,12 @@
 # Workstream C — Frontend (review GUI, client upload + share pages)
 
+**State after the thin slice (2026-11-13):** a no-build operator page already works:
+`src/recut/server/static/app.html` (vanilla JS + canvas). It covers C2–C6 in basic form
+(ticket list, iteration picker, composition + source-map timeline, A/B, live reload,
+per-splice review with keyboard shortcuts) and the `/new` upload form. **Ask the operator
+before starting C1:** a React rebuild may not be worth the budget while this page is
+enough. Extending `app.html` is the cheap alternative.
+
 **Read first:** `AGENTS.md` → `docs/PLAN.md` §2–3 → this file → `docs/STATUS.md`.
 **Owns:** `web/` only.
 **Does not touch:** anything under `src/`. If the API is missing something, add it to

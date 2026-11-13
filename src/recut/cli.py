@@ -4,19 +4,16 @@ import argparse
 import json
 import pathlib
 import shutil
-import time
 
 import soundfile as sf
-from modal import Function
 
+from recut.analysis_client import analyze_raw
 from recut.audio import Audio
 from recut.compositor import compose
 from recut.map.make_map import run as make_map
-from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR, RENDERS_DIR
+from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR, RENDERS_DIR, TICKETS_DIR
 from recut.project import Composition, Source, load_compositions, load_project_sources
 from recut.validator import validate
-
-_APP = "recut-analysis"
 
 WELCOME = """
 recut — declarative audio editing
@@ -31,6 +28,8 @@ Commands:
   compositions  List saved compositions in .appdata/compositions
   validate  Validate a saved composition against its music map
   render    Validate and render a saved composition to audio
+  ticket    Client edit tickets: new, list, work, iterate, render, demo
+  serve     Review server with live browser preview (http://localhost:8000)
 
 Run `recut <command> --help` for command-specific usage.
 """
@@ -44,52 +43,7 @@ def cmd_analyze(args) -> None:
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RAW_DIR / f"{audio_path.stem}.json"
-
-    audio_bytes = audio_path.read_bytes()
-    filename = audio_path.name
-
-    print(f"Sending {filename} → Modal (beats + chords + structure + key)...")
-    t0 = time.time()
-
-    run_beats = Function.from_name(_APP, "run_beats")
-    run_chords = Function.from_name(_APP, "run_chords")
-    run_structure = Function.from_name(_APP, "run_structure")
-    run_key = Function.from_name(_APP, "run_key")
-
-    beats_call = run_beats.spawn(audio_bytes, filename)
-    chords_call = run_chords.spawn(audio_bytes, filename)
-    structure_call = run_structure.spawn(audio_bytes, filename)
-    key_call = run_key.spawn(audio_bytes, filename)
-
-    beats = beats_call.get()
-    print(f"  ✓ beats      bpm={beats['bpm']}  ({time.time() - t0:.0f}s)")
-
-    chords = chords_call.get()
-    print(f"  ✓ chords     {len(chords['chords'])} chords  ({time.time() - t0:.0f}s)")
-
-    structure = structure_call.get()
-    print(f"  ✓ structure  {len(structure['segments'])} segments  ({time.time() - t0:.0f}s)")
-
-    key = key_call.get()
-    print(f"  ✓ key        {key['key']}  ({time.time() - t0:.0f}s)")
-
-    result = {
-        "path": filename,
-        "bpm": beats["bpm"],
-        "beats_per_bar": beats["beats_per_bar"],
-        "beats": beats["beats"],
-        "downbeats": beats["downbeats"],
-        "segments": structure["segments"],
-        "chords": chords["chords"],
-        "key": key["key"],
-        "_sources": {
-            "beats": "madmom",
-            "chords": "chord-cnn-lstm (full)",
-            "structure": "songformer",
-            "key": "essentia-key-extractor",
-        },
-    }
-
+    result = analyze_raw(audio_path)
     out_path.write_text(json.dumps(result, indent=2))
     print(f"Saved: {out_path.resolve()}")
 
@@ -203,6 +157,108 @@ def cmd_compositions(args) -> None:
         print(f"{composition.name} (created: {composition.created})")
 
 
+def cmd_serve(args) -> None:
+    import uvicorn
+
+    print(f"recut review server → http://{args.host}:{args.port}  (tickets: {TICKETS_DIR.resolve()})")
+    uvicorn.run("recut.server.app:app", host=args.host, port=args.port, reload=args.reload,
+                log_level="warning")
+
+
+def _print_work_instructions(tid: str, n: int, k: int) -> None:
+    from recut import tickets
+
+    d = tickets.ticket_dir(tid)
+    sd = tickets.session_dir(tid, n)
+    review = None
+    if n > 1:
+        review = tickets.load_review(tid, n - 1)
+    print(f"""
+Ticket {tid} · session {n} · iteration {k}
+
+  request:   {d / "request.json"}
+  sources:   {json.dumps(tickets.sources(tid))}
+  last review: {sd.parent / str(n - 1) / "review.json" if review else "(none)"}
+  edit plan: {tickets.iteration_dir(tid, n, k) / "plan.json"}
+  write intent first: {sd / "intent.json"}
+
+  export RECUT_SESSION={sd.resolve()}
+
+Edit plan.json (format: docs/PLAN.md §3.2) — the browser preview re-renders on save.
+Check without the browser:  recut ticket render {tid}
+Next attempt:               recut ticket iterate {tid}
+""")
+
+
+def cmd_ticket(args) -> None:
+    from recut import tickets
+
+    if args.action == "new":
+        files = [(pathlib.Path(f).name, pathlib.Path(f)) for f in args.files]
+        for _, f in files:
+            if not f.exists():
+                print(f"Error: file not found: {f}")
+                raise SystemExit(1)
+        tid = tickets.create_ticket(args.text, files, args.duration)
+        print(f"Created ticket {tid}")
+    elif args.action == "list":
+        for r in tickets.list_tickets():
+            print(f"{r.id}  {r.status:<14} {r.text[:70]}")
+    elif args.action == "demo":
+        tid = tickets.create_demo_ticket()
+        print(f"Created demo ticket {tid} with 2 rendered iterations.\n"
+              f"Run `recut serve` and open http://localhost:8000/t/{tid}")
+    elif args.action == "work":
+        tid = args.id
+        mapped = tickets.ensure_maps(tid)
+        if mapped:
+            print(f"Analyzed + mapped sources: {', '.join(mapped)}")
+        n = tickets.new_session(tid, agent=args.agent, model=args.model)
+        k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
+        _print_work_instructions(tid, n, k)
+    elif args.action == "iterate":
+        tid = args.id
+        sessions = tickets.session_numbers(tid)
+        if not sessions:
+            print(f"No session yet — run `recut ticket work {tid}` first")
+            raise SystemExit(1)
+        n = sessions[-1]
+        k = tickets.new_iteration(tid, n)
+        print(f"New iteration: {tickets.iteration_dir(tid, n, k) / 'plan.json'} (copied from the previous one)")
+    elif args.action == "render":
+        tid = args.id
+        n = args.session or tickets.session_numbers(tid)[-1]
+        k = args.iteration or tickets.iteration_numbers(tid, n)[-1]
+        out = tickets.render_iteration(tid, n, k)
+        if "error" in out:
+            print(f"Render FAILED: {out['error']}")
+            raise SystemExit(1)
+        print(f"Rendered s{n}·it{k}: {out['duration_s']:.1f}s, {len(out['splices'])} splices")
+        for i in out["issues"]:
+            where = i.get("splice") or i.get("node") or ""
+            print(f"  {i['severity']:<5} {i['rule']:<14} {where:<4} {i['message']}")
+
+
+def _starter_plan(tid: str) -> dict:
+    """Minimal valid plan for a fresh ticket: first source, first section. The agent replaces it."""
+    from recut import tickets
+    from recut.map.parser import parse_recut_map
+
+    srcs = tickets.sources(tid)
+    d = tickets.ticket_dir(tid)
+    sid = next(iter(srcs))
+    m = parse_recut_map(d / srcs[sid]["map"])
+    first = next(s for s in m.segments if s.segment_name != "silence")
+    return {
+        "version": 2,
+        "sources": {k: {"file": v["file"], "map": v["map"]} for k, v in srcs.items()},
+        "tracks": [{"id": "main", "clips": [
+            {"id": "n1", "type": "clip", "source": sid, "segment": first.segment_name, "index": 1}]}],
+        "target_duration_s": tickets.load_request(tid).target_duration_s,
+        "notes": "starter plan — replace with the real edit",
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="recut",
@@ -236,6 +292,32 @@ def main() -> None:
         "--force", action="store_true", help="render despite error-severity validation issues"
     )
     render_cmd.set_defaults(func=cmd_render)
+
+    ticket_cmd = sub.add_parser("ticket", help="Client edit tickets")
+    tsub = ticket_cmd.add_subparsers(dest="action", required=True)
+    t_new = tsub.add_parser("new", help="Create a ticket from audio files + request text")
+    t_new.add_argument("files", nargs="+")
+    t_new.add_argument("--text", required=True, help="the client's request, verbatim")
+    t_new.add_argument("--duration", type=float, help="target duration in seconds")
+    tsub.add_parser("list", help="List tickets")
+    tsub.add_parser("demo", help="Create a demo ticket from examples/summer-party")
+    t_work = tsub.add_parser("work", help="Start an agent session (analyzes unmapped sources)")
+    t_work.add_argument("id")
+    t_work.add_argument("--agent", default="claude-code")
+    t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
+    t_it = tsub.add_parser("iterate", help="New iteration in the latest session (copies the plan)")
+    t_it.add_argument("id")
+    t_r = tsub.add_parser("render", help="Render an iteration and print issues")
+    t_r.add_argument("id")
+    t_r.add_argument("--session", type=int)
+    t_r.add_argument("--iteration", type=int)
+    ticket_cmd.set_defaults(func=cmd_ticket)
+
+    serve_cmd = sub.add_parser("serve", help="Review server with live browser preview")
+    serve_cmd.add_argument("--host", default="127.0.0.1")
+    serve_cmd.add_argument("--port", type=int, default=8000)
+    serve_cmd.add_argument("--reload", action="store_true", help="auto-reload on code changes (dev)")
+    serve_cmd.set_defaults(func=cmd_serve)
 
     args = parser.parse_args()
 

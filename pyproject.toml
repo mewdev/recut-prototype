@@ -8,8 +8,15 @@ dependencies = [
     "scipy",
     "pedalboard",
     "modal",
-    "pydantic"
+    "pydantic",
+    "soundfile",
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
 ]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "httpx"]
 
 [project.scripts]
 recut = "recut.cli:main"

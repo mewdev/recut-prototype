@@ -1,7 +1,13 @@
 # Workstream B — Backend (tickets, API, SSE, share links, CLI)
 
+**State after the thin slice (2026-11-13):** `src/recut/tickets.py` and
+`src/recut/server/app.py` exist: B1 is done, B2 is done except the share routes, B3 is
+done (SSE by polling mtimes every 0.5 s, no `watchfiles`), and B4 is done (peaks served
+on request, not written as files). The `recut ticket new|list|work|iterate|render|demo`
+and `recut serve` commands exist. Left: B5, the transcript hook in B6, and B7.
+
 **Read first:** `AGENTS.md` → `docs/PLAN.md` §3 → this file → `docs/STATUS.md`.
-**Owns:** `src/recut/server/`, `src/recut/tickets.py`, the `recut ticket …` CLI commands, `.claude/hooks/`.
+**Owns:** `src/recut/server/`, `src/recut/tickets.py`, the `recut ticket …` CLI commands, `scripts/hooks/`.
 **Does not touch:** `src/recut/contracts/` (frozen), `src/recut/compositor/`,
 `src/recut/validator/`, `web/`.
 **Suggested model:** Sonnet. B1, B5 and B6 are fine for Haiku.
@@ -54,7 +60,7 @@ Whenever a source or render is written, also write `<file>.peaks.json`:
   (`agent`, `model`, `recut_git_sha`, `started_at`), and prints the
   `export RECUT_SESSION=...` line plus the paths to the request and latest review for
   the agent.
-- `.claude/hooks/copy_transcript.sh` is a Claude Code Stop hook that copies the session
+- `scripts/hooks/copy_transcript.sh` (not under `.claude/`, which is git-ignored) is a Claude Code Stop hook that copies the session
   transcript to `$RECUT_SESSION/transcript.jsonl`.
 - Done when: CLI tests pass and the hook is documented in AGENTS.md.
 

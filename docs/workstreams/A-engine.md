@@ -1,5 +1,12 @@
 # Workstream A — Engine (multi-source compose, render.json, validator, logging)
 
+**State after D1 + thin slice (2026-11-13):** `src/recut/engine.py` renders plan v2 on a
+timeline (sources, one track, clip selection/loop/gain/fade handles, xfade incl. `hold`,
+master limiter) and writes `render.json`. A1, A2 and A4 are **done** there. Extend
+`engine.py` for A3/A5/A7/A8; don't build a second renderer in `compositor/`. Features
+not rendered yet show up as `not_rendered` warnings in `render.json`; remove each warning
+when you implement the feature.
+
 **Read first:** `AGENTS.md` → `docs/PLAN.md` §3 (contracts) → this file → `docs/STATUS.md`.
 **Owns:** `src/recut/` except `src/recut/server/` and `src/recut/contracts/`.
 **Does not touch:** `src/recut/contracts/` (frozen; if you need a change, add it to *Blockers* in
@@ -93,8 +100,9 @@ reports).
   - new tests cover: `hold` overlap length; a send opened on the last beat leaving return
     energy after the clip ends (> -40 dB for 1 s); the limiter only applied when the
     peak is too high
-  - the fixture's ending-transplant plan renders without clicks (no sample-to-sample
-    jump > 0.5)
+  - the fixture's ending-transplant plan renders without clicks: no sample-to-sample jump
+    within ±5 ms of a splice larger than the source's own largest jump (music has sharp
+    transients, so an absolute threshold doesn't work; see `tests/engine/test_engine.py`)
 - Model: Sonnet.
 
 ### A8 — Devices, automation, old-format adapter, skill docs
