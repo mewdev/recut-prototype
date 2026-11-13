@@ -45,6 +45,20 @@ modal deploy src/analysis/pipeline.py
 
 Models are cloned automatically at deploy time — no manual download needed.
 
+## Run with Docker
+
+One image runs on Intel Mac (Docker Desktop), Arch Linux, and the VPS. Create `~/.modal.toml`
+first (step 3 above); the compose file mounts it so `recut ticket work` can run analysis on Modal.
+
+```bash
+docker compose up -d                                # build and start the review server
+docker compose exec recut recut ticket demo         # create the demo ticket
+# then open http://localhost:8000
+```
+
+Tickets and renders are stored in `./.appdata` on the host. The container restarts unless stopped.
+To run the tests inside the image: `docker compose run --rm recut python -m pytest tests/ -q`.
+
 ## CLI
 
 ```bash

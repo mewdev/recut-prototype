@@ -33,7 +33,7 @@ agent won't know it.
 | B5 share links | todo | |
 | B6 CLI + transcript hook | partial | CLI done; hook todo (put it in `scripts/hooks/`) |
 | B7 `recut report` | todo | Haiku; needed by day 7 |
-| B8 Docker image | todo | Haiku, after A8. Intel Mac / Arch / VPS from one image |
+| B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run (no docker daemon in this session) |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | todo | Sonnet; docs/workstreams/Q-quality.md |
 | Q1 audio QC after render | todo | Sonnet; Essentia + pyloudnorm |
@@ -98,6 +98,13 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — B8 files written (Haiku build agent, worktree on claude/audio-edit-app-workflow-uu5tee): `Dockerfile`
+  (python:3.11-slim, ffmpeg + libsndfile1, `pip install -e ".[dev]"`, no secrets), `compose.yaml` (service `recut`,
+  `recut serve --host 0.0.0.0 --port 8000`, mounts `./.appdata` and `~/.modal.toml:ro`, restart unless-stopped),
+  `.dockerignore`, README "Run with Docker". Verified: `docker compose config` resolves; `ruff check .` clean; 174 tests pass
+  locally. NOT verified: `docker build`, tests in the container, `curl localhost:8000/api/tickets`. Docker CLI is
+  installed but the daemon is not running here (no /var/run/docker.sock). Needs a run on a host with Docker before B8 is done.
+  Note: `~/.modal.toml` must exist on the host before `docker compose up`, or Docker creates a directory in its place.
 - 2026-11-13 — A7 + A8 reviewed (lead session): 174 tests pass. Fresh demo ticket rendered
   end to end; the browser page shows no `not_rendered` left. The demo 02 wash: the return
   tail rings ~4.7 s past the ending splice, peak held at -1.0 dBFS by the limiter. Follow-up
