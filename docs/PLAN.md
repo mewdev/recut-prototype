@@ -338,7 +338,7 @@ How to save tokens:
 - Chord and segment timestamps can differ by a few hundred ms. The downbeat rule
   must use the beat grid, not segment boundaries.
 - Ending transplants make overlapping audio add up, which can clip. A7 adds a master
-  limiter (only applied when the peak exceeds -1 dBFS) and the `peak_clip` validator rule.
+  limiter (only applied when the peak exceeds -1 dBFS); `peak_clip` was replaced by `qc_limiting` (Q1).
 - Old docs (preview architecture notes, mockup comments) say xfade isn't wired
   in and there are no effects. Both are outdated: `XFade` and
   Fade/Reverb/Delay/FilterSweep already work.

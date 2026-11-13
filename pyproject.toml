@@ -13,10 +13,12 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "python-multipart",
+    "pyloudnorm",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff", "httpx"]
+qc = ["essentia"]   # AGPL: non-commercial prototype only; see src/recut/qc_essentia.py
 
 [project.scripts]
 recut = "recut.cli:main"

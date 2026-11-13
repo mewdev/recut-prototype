@@ -124,11 +124,10 @@ xfade or lower the sends; for a drier ending, remove the `sends` on `n2`.
 
 ## Checks before you ship it
 
-- `recut ticket render <id>` and read the issues. A `peak_clip` warning is normal here: the
-  overlap and the reverb add up, and the master limiter (on by default at -1 dB) brings the
-  mix back. Treat it as a problem only if `limiter_applied` is true *and* the message says
-  the sum is more than about +6 dBFS: lower a send by 3 dB or the clip `gain` by 2 to 3 dB,
-  or the ending will sound squashed.
+- `recut ticket render <id>` and read the issues. The overlap and the reverb add up, and the
+  master limiter (on by default at -1 dB) brings the mix back. A `qc_limiting` warning means
+  the limiter pulled the level down by more than 3 dB somewhere (audible squash): lower a send
+  by 3 dB or the clip `gain` by 2 to 3 dB, or the ending will sound squashed.
 - `returns_tail_end` in `render.json` is when the reverb dies out. If it is far past the last
   clip, the final tail is longer than you want: shorten `decay`.
 - The validator's "cut starts at ..." / "ends abruptly" notes are about the cut's first and

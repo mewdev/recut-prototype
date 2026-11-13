@@ -89,12 +89,14 @@ def test_limiter_only_applied_when_the_peak_is_too_high(base):
     assert li.peak_dbfs == pytest.approx(-1.0, abs=0.05) and np.abs(loud.samples).max() <= 10 ** (-0.99 / 20)
 
 
-def test_peak_clip_warns_when_overlaps_sum_past_0dbfs(base):
+def test_qc_limiting_replaces_peak_clip_when_overlaps_sum_hot(base):
     d, p = base
     both = {"id": "x", "type": "xfade", "length": "1 bar", "out_shape": "hold", "in_shape": "hold"}
     clips = [clip("n1", "chorus", bars=4, gain=6), both, clip("n2", "chorus", bars=4, gain=6)]
     _, info = render_plan(_plan(clips, p), d)
-    assert "peak_clip" in {i.rule for i in info.issues}
+    rules = {i.rule for i in info.issues}
+    assert "peak_clip" not in rules and "qc_limiting" in rules
+    assert info.qc["max_gain_reduction_db"] > 3
 
 
 def test_track_volume_and_constant_power_pan(base):

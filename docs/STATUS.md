@@ -35,8 +35,9 @@ agent won't know it.
 | B7 `recut report` | todo | Haiku; needed by day 7 |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
-| A9 musical linter rules | todo | Sonnet; docs/workstreams/Q-quality.md |
-| Q1 audio QC after render | todo | Sonnet; Essentia + pyloudnorm |
+| A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
+| Q1 audio QC after render | done | `src/recut/qc.py` (+ `qc_essentia.py`, switch `RECUT_QC_ESSENTIA`); engine calls `run_qc`; tests `tests/engine/test_qc.py` |
+| Q2 QC follow-ups | todo | Sonnet. (a) Run the Essentia part of QC **after** render.json is written and append its issues, so the live preview isn't slowed: today render+QC on the 46 s demo takes 2.2 s with Essentia vs 0.56 s without, and a 3-min track adds ~3.5 s. (b) Make the master limiter true-peak aware (oversampled detection, or a −1.5 dB internal ceiling), so `qc_true_peak` stops firing on every limited render. |
 | M1 stems + instrument activity (Demucs on Modal) | todo | Sonnet; docs/workstreams/M-music-data.md |
 | M2 pace + key ranges + short-term loudness | todo | Sonnet |
 | M3 map schema fields + linter rules + GUI lanes | todo | Sonnet, after M1/M2 |
@@ -56,6 +57,24 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-13 — Q1: the frozen `RenderInfo` has no `qc` field, so the engine returns
+  `recut.qc.RenderInfoQC` (a subclass with `qc: dict`); `render.json` carries it and readers
+  that validate with `RenderInfo` ignore it. No contract edit, no blocker.
+- 2026-11-13 — Q1: loudness uses pyloudnorm's K-weighting filters but evaluates them per 100 ms
+  block in the frequency domain (within 0.01 LU of `Meter.integrated_loudness`, ~6x faster: that
+  one takes 0.55 s per 3 min). True peak oversamples only around the 800 largest local maxima
+  (checked against full 4x oversampling in a test).
+- 2026-11-13 — Q1: click checks look only where a step can exist: a hard cut, or a `hold` xfade
+  side. A cut that is contiguous in one source (the song plays on) or a smooth ramp is skipped:
+  the downbeat onset there triggered the HF-energy rule (+6 dB) every time. Essentia hits away
+  from such splices are one `info` `qc_click` ("click-like transients"), not warnings: on the
+  demo they are the source's own hi-hat/sample transients (7 hits, identical in both renders).
+- 2026-11-13 — Q1: `qc_bandwidth` reference level is the median of 100 Hz-8 kHz (not the median of
+  all bins: a band-limited source pulls that median down and reads too wide).
+- 2026-11-13 — Linter (A9): the map's `phrases` are 2-bar groups (`phrase_in`), so `phrase_align`
+  accepts any map phrase start or section edge rather than strictly 4/8 bars. Loudness uses the
+  section's `loudness_db_end`/`_start` only when the clip reaches that edge, else the section
+  mean. An xfade shorter than 100 ms doesn't count as smoothing for `energy_drop`.
 - 2026-11-13 — Upload quality: block, then ask for a better file (with an override).
   Accepted: lossless, MP3/AAC ≥ 256 kbps, and real bandwidth ≥ 18 kHz whatever the
   bitrate says (Q0).
@@ -98,6 +117,22 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — A9 + Q1 merged and reviewed (lead session): 210 tests pass with and without
+  Essentia. Demo it2 issues: qc_loudness −8.9 LUFS, qc_limiting 3.4 dB, qc_true_peak +0.1
+  dBTP, qc_tilt_jump at s3 (chorus → inst contrast); Essentia's 7 source transients become
+  one info issue. Follow-ups logged as Q2.
+- 2026-11-13 — Q1 done. `qc.run_qc(audio, info, pre_master=, sources=, fade_outs=)` runs at the end of
+  `render_plan`; rules `qc_loudness`, `qc_limiting` (replaces `peak_clip`, removed), `qc_true_peak`,
+  `qc_clipping` (error), `qc_click`, `qc_gain_jump`, `qc_gap`, `qc_bandwidth` (info), `qc_tilt_jump`,
+  `qc_dc`, `qc_phase`, plus `qc_backend` (info) when essentia is missing. Numbers go to
+  `render.json` under `qc` (incl. `timings_ms`). 210 tests pass with and without essentia
+  (`RECUT_QC_ESSENTIA=0`, and with the package uninstalled). Demo renders: no `qc_*` error.
+  Timing on a 3-min track: ~250-300 ms for the basic checks together, Essentia adds ~3.5 s.
+- 2026-11-13 — A9 done. `validator/linter.py`: `phrase_align` (splice point within 30 ms of a map
+  phrase or section edge, outgoing and incoming source), `ending` (last clip stops mid-section
+  with no `fade_out`), `energy_drop` (> 6 dB across a splice, no fade_in/fade_out and overlap
+  < 100 ms; clip `gain` counts), `duration` (moved out of the engine: warn > 2 s, error only if
+  also > 10 % of target). All carry `splice`/`node` ids. Demo: iteration 1 gets `ending` (it stops mid-inst with no fade: real).
 - 2026-11-13 — B8 files written (Haiku build agent, worktree on claude/audio-edit-app-workflow-uu5tee): `Dockerfile`
   (python:3.11-slim, ffmpeg + libsndfile1, `pip install -e ".[dev]"`, no secrets), `compose.yaml` (service `recut`,
   `recut serve --host 0.0.0.0 --port 8000`, mounts `./.appdata` and `~/.modal.toml:ro`, restart unless-stopped),
