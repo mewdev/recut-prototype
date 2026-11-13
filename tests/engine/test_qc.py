@@ -67,7 +67,7 @@ def test_integrated_lufs_matches_pyloudnorm():
     assert ours == pytest.approx(pyln.Meter(SR).integrated_loudness(x.T), abs=0.05)
 
 
-def test_loudness_warns_outside_range_only(backend):
+def test_loudness_absolute_fallback_without_sources(backend):
     quiet = run(music(6, 0.01))[0]
     loud = run(np.clip(music(6, 1.4), -1, 1))[0]
     assert "qc_loudness" in rules(quiet) and "qc_loudness" in rules(loud)
@@ -76,13 +76,92 @@ def test_loudness_warns_outside_range_only(backend):
     assert "qc_loudness" not in rules(run(music(6, ok))[0])
 
 
+def _lufs_info(x, src_secs):
+    """A render info that says: all of `x` is source 'a' from 0 to src_secs."""
+    seg = RenderSegment(node_id="n1", source="a", label="x#1", src_start=0, src_end=src_secs,
+                        out_start=0, out_end=x.shape[-1] / SR)
+    return RenderInfoQC(duration_s=x.shape[-1] / SR, segments=[seg], splices=[], peak_dbfs=-1.0,
+                        limiter_applied=False)
+
+
+def _loudness_rules(render, source):
+    inf = _lufs_info(render, source.shape[-1] / SR)
+    issues = qc.run_qc(Audio(render, SR), inf, sources={"a": Audio(source, SR)})
+    return [i for i in issues if i.rule == "qc_loudness"], inf
+
+
+def loud_master(sec=8.0):
+    """A loud, dense signal (-8 LUFS or so), like a mastered EDM track."""
+    x = np.clip(music(sec, 0.9) * 1.6, -0.9, 0.9)
+    return x.astype(np.float32)
+
+
+def test_loud_source_rendered_unchanged_is_not_flagged_for_loudness():
+    src = loud_master()
+    assert (qc.integrated_lufs(src, SR) or -99) > -9.0  # outside the old absolute window
+    issues, inf = _loudness_rules(src.copy(), src)
+    assert not issues
+    assert inf.qc["lufs_vs_source"] == pytest.approx(0.0, abs=0.05)
+    assert inf.qc["source_lufs"]["a"] == pytest.approx(inf.qc["lufs"], abs=0.05)
+
+
+def test_cut_boosted_by_3_db_is_flagged_louder_than_its_source():
+    src = music(8, 0.2)
+    issues, inf = _loudness_rules(src * 10 ** (3 / 20), src)
+    assert len(issues) == 1 and "louder" in issues[0].message
+    assert inf.qc["lufs_vs_source"] == pytest.approx(3.0, abs=0.1)
+
+
+def test_small_boost_and_small_drop_are_tolerated_big_drop_flagged():
+    src = music(8, 0.2)
+    assert not _loudness_rules(src * 10 ** (0.8 / 20), src)[0]
+    assert not _loudness_rules(src * 10 ** (-2.5 / 20), src)[0]
+    issues, _ = _loudness_rules(src * 10 ** (-4 / 20), src)
+    assert len(issues) == 1 and "quieter" in issues[0].message
+
+
+def test_loudness_compares_only_the_used_part_of_the_source():
+    """A cut of the loud part of a source that has a quiet intro matches its source."""
+    quiet, loud = music(6, 0.02), loud_master(6)
+    src = np.concatenate([quiet, loud], axis=-1)
+    seg = RenderSegment(node_id="n1", source="a", label="x#1", src_start=6, src_end=12, out_start=0, out_end=6)
+    inf = RenderInfoQC(duration_s=6, segments=[seg], splices=[], peak_dbfs=-1.0, limiter_applied=False)
+    issues = qc.run_qc(Audio(loud.copy(), SR), inf, sources={"a": Audio(src, SR)})
+    assert "qc_loudness" not in rules(issues)
+
+
+def test_limiter_output_true_peak_is_at_or_below_the_ceiling():
+    """Sample peaks held at the ceiling still reconstruct above it; the limiter trims that."""
+    for ceiling in (-1.0, -0.3, -3.0):
+        pre = loud_master(6) * 2.0
+        out, trim = limit(pre.copy(), SR, ceiling)
+        full = float(np.abs(signal.resample_poly(out, 4, 1, axis=-1)).max())
+        assert 20 * np.log10(full) <= ceiling + 0.1, (ceiling, 20 * np.log10(full))
+        issues, inf = run(out, pre_master=pre, limiter=True, trim_db=trim)
+        if ceiling <= -1.0:
+            assert "qc_true_peak" not in rules(issues), inf.qc
+
+
+def test_limiter_trims_a_pure_intersample_overshoot():
+    from recut import devices as D
+
+    n = np.arange(SR)
+    x = np.stack([np.sin(2 * np.pi * (SR / 4) * n / SR + np.pi / 4)] * 2).astype(np.float32) * 0.99
+    y, trim = D.trim_true_peak(x, -1.0)  # sample peak 0.70 (-3 dB) but true peak ~0.99 (-0.1 dBTP)
+    full = float(np.abs(signal.resample_poly(y, 4, 1, axis=-1)).max())
+    assert 20 * np.log10(full) <= -1.0 + 0.1
+    assert -1.5 < trim < 0
+    y2, trim2 = D.trim_true_peak(x * 0.5, -1.0)
+    assert trim2 == 0 and np.array_equal(y2, x * 0.5)  # already under: untouched
+
+
 def test_limiting_warns_on_deep_gain_reduction_only(backend):
     pre = music(4, 0.9) * 2.5
-    out = limit(pre.copy(), SR, -1.0)
+    out = limit(pre.copy(), SR, -1.0)[0]
     issues, inf = run(out, pre_master=pre, limiter=True)
     assert "qc_limiting" in rules(issues) and inf.qc["max_gain_reduction_db"] > 3
     mild = music(4, 0.3) * 1.2
-    issues, inf = run(limit(mild.copy(), SR, -1.0), pre_master=mild, limiter=True)
+    issues, inf = run(limit(mild.copy(), SR, -1.0)[0], pre_master=mild, limiter=True)
     assert "qc_limiting" not in rules(issues)
 
 

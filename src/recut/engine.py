@@ -401,5 +401,6 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     fade_outs = [(seg.out_end - parse_time(p.node.fade_out.length, p.bpm, sources[p.node.source].music_map.beats_per_bar), seg.out_end)
                  for p, seg in zip(placed, segments) if p.node.fade_out]
     info.issues += run_qc(out, info, pre_master=pre_master,
-                          sources={sid: s.audio for sid, s in sources.items()}, fade_outs=fade_outs)
+                          sources={sid: s.audio for sid, s in sources.items()}, fade_outs=fade_outs,
+                          trim_db=mctx.trim_db)
     return out, info

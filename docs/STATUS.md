@@ -37,7 +37,7 @@ agent won't know it.
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
 | Q1 audio QC after render | done | `src/recut/qc.py` (+ `qc_essentia.py`, switch `RECUT_QC_ESSENTIA`); engine calls `run_qc`; tests `tests/engine/test_qc.py` |
-| Q2 QC follow-ups | todo | Sonnet. (a) Run the Essentia part of QC **after** render.json is written and append its issues, so the live preview isn't slowed: today render+QC on the 46 s demo takes 2.2 s with Essentia vs 0.56 s without, and a 3-min track adds ~3.5 s. (b) Make the master limiter true-peak aware (oversampled detection, or a −1.5 dB internal ceiling), so `qc_true_peak` stops firing on every limited render. |
+| Q2 QC follow-ups | partial: (b) done, (a) todo | Sonnet. (a) Run the Essentia part of QC **after** render.json is written and append its issues, so the live preview isn't slowed: today render+QC on the 46 s demo takes 2.2 s with Essentia vs 0.56 s without, and a 3-min track adds ~3.5 s. (b) **done in improvement pass 1** (task 2): the master limiter is true-peak aware, see Q-quality.md Q2b. |
 | M1 stems + instrument activity (Demucs on Modal) | todo | Sonnet; docs/workstreams/M-music-data.md |
 | M2 pace + key ranges + short-term loudness | todo | Sonnet |
 | M3 map schema fields + linter rules + GUI lanes | todo | Sonnet, after M1/M2 |
@@ -123,6 +123,13 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-13 — Improvement pass 1, task 2 (QC relative to the source; evidence: every render of the loud demo gave
+  `qc_loudness` -8.9 LUFS and `qc_true_peak` +0.06 dBTP). `qc_loudness` now compares the render with the source ranges it
+  uses (warn > 1 LU louder than the loudest, > 3 LU quieter than the weighted mean; absolute window only when there is no source);
+  numbers `lufs`, `source_lufs`, `lufs_vs_source` in `render.json.qc`. `devices.limit` trims the 4x true peak to the ceiling with
+  one static gain (about 1 dB on the demo; `limit()` now returns `(audio, trim_db)`; QC discounts the trim from `qc_limiting`, so
+  the sample peak of a limited render is now ~1 dB under the ceiling). Demo variants: no qc_loudness / qc_true_peak left. Tests:
+  `test_qc.py` (unchanged loud source: no warning; +3 dB: warning; limited render: true peak <= ceiling + 0.1 dB), `test_timeline.py`.
 - 2026-11-13 — Improvement pass 1, task 1 (reverb recipe rules; evidence ticket 20261113-mbyv, s1·it2 "reverb squash" 3.4 dB
   limiting, s2·it2 "much better, still turned on", s2·it3 "okay for now"). `ending-transplant.md`, `effects-routing.md`,
   `effects-cheatsheet.md`: return `eq` low_cut 200-300 Hz before the reverb, decay 1.5-2.5 s, send peak -9 to -13 dB (never 0 dB

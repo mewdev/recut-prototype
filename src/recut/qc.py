@@ -25,7 +25,9 @@ from recut.contracts.render import Issue, RenderInfo
 from recut.qc_essentia import dedupe_times as _dedupe_times
 
 # ---- thresholds (tuned later from review tags; see docs/workstreams/Q-quality.md) ----------
-LUFS_RANGE = (-16.0, -9.0)
+LUFS_RANGE = (-16.0, -9.0)  # absolute fallback, only when no source is available to compare with
+LOUDER_THAN_SOURCE_LU = 1.0  # warn: the cut is louder than the loudest source it uses by more than this
+QUIETER_THAN_SOURCE_LU = 3.0  # warn: the cut is quieter than its sources (duration-weighted) by more
 LIMITING_DB = 3.0           # max gain reduction (50 ms windows)
 TRUE_PEAK_DBTP = -1.0
 CLIP_LEVEL = 0.999
@@ -113,6 +115,35 @@ def integrated_lufs(x: np.ndarray, sr: int) -> Optional[float]:
     thr = -0.691 + 10 * np.log10(z[:, gated].mean(1).sum()) - 10
     gated &= lk > thr
     return float(-0.691 + 10 * np.log10(z[:, gated].mean(1).sum())) if gated.any() else None
+
+
+def source_loudness(info: RenderInfo, sources: dict[str, Audio]) -> Optional[dict]:
+    """Integrated loudness of the parts of each source the cut actually uses (the segments'
+    source ranges, concatenated per source), and each source's share of the used duration.
+    Returns {"per_source": {id: lufs}, "weights": {id: seconds}, "loudest": lufs, "weighted": lufs}
+    or None when no used source is long enough to measure."""
+    used: dict[str, list[tuple[float, float]]] = {}
+    for s in info.segments:
+        if s.source in sources and s.src_end > s.src_start:
+            used.setdefault(s.source, []).append((s.src_start, s.src_end))
+    per: dict[str, float] = {}
+    weights: dict[str, float] = {}
+    for sid, spans in used.items():
+        a = sources[sid]
+        x = a.samples if a.samples.ndim == 2 else np.stack([a.samples, a.samples])
+        parts = [x[:, int(lo * a.sr): int(hi * a.sr)] for lo, hi in spans]
+        parts = [q for q in parts if q.shape[-1]]
+        if not parts:
+            continue
+        lufs = integrated_lufs(np.concatenate(parts, axis=-1).astype(np.float32), a.sr)
+        if lufs is not None:
+            per[sid] = lufs
+            weights[sid] = sum(hi - lo for lo, hi in spans)
+    if not per:
+        return None
+    tot = sum(weights.values())
+    return {"per_source": per, "weights": weights, "loudest": max(per.values()),
+            "weighted": sum(per[k] * weights[k] for k in per) / tot}
 
 
 def _momentary(x: np.ndarray, sr: int, a: int, b: int) -> Optional[float]:
@@ -262,12 +293,14 @@ def _nearest_splice(info: RenderInfo, t: float, within: float = CLICK_NEAR_S, st
 
 def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] = None,
            sources: Optional[dict[str, Audio]] = None,
-           fade_outs: Optional[list[tuple[float, float]]] = None) -> list[Issue]:
+           fade_outs: Optional[list[tuple[float, float]]] = None,
+           trim_db: float = 0.0) -> list[Issue]:
     """All `qc_*` checks on the rendered audio.
 
     `pre_master`: the mix before the master chain (for `qc_limiting`; skipped without it).
     `sources`: source id -> Audio (for `qc_bandwidth`). `fade_outs`: output-time spans of
-    deliberate clip fade-outs, which `qc_gap` ignores. Fills `info.qc` when it has that field.
+    deliberate clip fade-outs, which `qc_gap` ignores. `trim_db`: the master limiter's static
+    true-peak trim (<= 0), discounted from `qc_limiting` (a level offset, not squash). Fills `info.qc` when it has that field.
     """
     x = audio.samples
     if x.ndim == 1:
@@ -291,20 +324,37 @@ def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] =
         issues.append(Issue(severity="info", rule="qc_backend",
                             message="essentia not installed, using basic detectors"))
 
-    # -- loudness
+    # -- loudness: relative to the sources the cut uses. A loud master is not a defect in itself;
+    # what matters is that the edit didn't make it louder (gain, reverb build-up) or drop its level.
     with tm("loudness"):
         lufs = integrated_lufs(x, sr)
+        ref = source_loudness(info, sources) if sources else None
     qc["lufs"] = None if lufs is None else round(lufs, 2)
-    if lufs is not None and not LUFS_RANGE[0] <= lufs <= LUFS_RANGE[1]:
+    if ref is not None:
+        qc["source_lufs"] = {k: round(v, 2) for k, v in ref["per_source"].items()}
+    if lufs is not None and ref is not None:
+        qc["lufs_vs_source"] = round(lufs - ref["weighted"], 2)
+        if lufs - ref["loudest"] > LOUDER_THAN_SOURCE_LU:
+            issues.append(Issue(severity="warn", rule="qc_loudness",
+                                message=f"the cut is {lufs - ref['loudest']:.1f} LU louder than its loudest "
+                                        f"source ({lufs:.1f} vs {ref['loudest']:.1f} LUFS): lower a gain "
+                                        f"or a send"))
+        elif ref["weighted"] - lufs > QUIETER_THAN_SOURCE_LU:
+            issues.append(Issue(severity="warn", rule="qc_loudness",
+                                message=f"the cut is {ref['weighted'] - lufs:.1f} LU quieter than its "
+                                        f"sources ({lufs:.1f} vs {ref['weighted']:.1f} LUFS): unintended "
+                                        f"level drop?"))
+    elif lufs is not None and not LUFS_RANGE[0] <= lufs <= LUFS_RANGE[1]:
         issues.append(Issue(severity="warn", rule="qc_loudness",
                             message=f"integrated loudness {lufs:.1f} LUFS (expected "
-                                    f"{LUFS_RANGE[0]:.0f} to {LUFS_RANGE[1]:.0f})"))
+                                    f"{LUFS_RANGE[0]:.0f} to {LUFS_RANGE[1]:.0f}; no source to compare with)"))
 
     # -- limiting (pre-master vs output, 50 ms windows)
     if pre_master is not None and info.limiter_applied:
         with tm("limiting"):
-            gr = max_gain_reduction(pre_master, env, sr)
+            gr = max_gain_reduction(pre_master, env * 10 ** (-trim_db / 20), sr)
         qc["max_gain_reduction_db"] = round(gr, 2)
+        qc["true_peak_trim_db"] = round(trim_db, 2)
         if gr > LIMITING_DB:
             issues.append(Issue(severity="warn", rule="qc_limiting",
                                 message=f"the master limiter pulls the level down by up to {gr:.1f} dB "

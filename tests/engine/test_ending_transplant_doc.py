@@ -39,6 +39,8 @@ def test_variant_does_not_squash_the_limiter_on_a_loud_master(demo, i):
     _, info = render_plan(plan, root / tid)
     assert not [x for x in info.issues if x.rule == "qc_limiting"], info.issues
     assert info.qc["max_gain_reduction_db"] <= 3.0, info.qc
+    # a loud master is not a defect: loudness and true peak are judged against the source / the ceiling
+    assert not [x for x in info.issues if x.rule in ("qc_loudness", "qc_true_peak")], info.issues
 
 
 def test_the_doc_follows_the_return_recipe():

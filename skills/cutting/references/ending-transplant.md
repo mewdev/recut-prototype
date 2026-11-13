@@ -150,6 +150,10 @@ xfade or lower the sends; for a drier ending, remove the `sends` on `n2`.
   the limiter pulled the level down by more than 3 dB somewhere (audible squash): first check the
   return has the `eq` `low_cut` above, then lower the send peak by 3 dB or the clip `gain`
   by 2 to 3 dB.
+- `qc_loudness` compares the render with the sources it uses (warns if it is more than 1 LU louder
+  than the loudest one, or more than 3 LU quieter than them), so a loud master is not flagged by
+  itself: if it fires, the cut really got louder or quieter. The master limiter also holds the
+  true peak (not just the sample peak) at the ceiling, so `qc_true_peak` should stay silent.
 - `returns_tail_end` in `render.json` is when the reverb dies out. If it is far past the last
   clip, the final tail is longer than you want: shorten `decay`.
 - The validator's "cut starts at ..." / "ends abruptly" notes are about the cut's first and

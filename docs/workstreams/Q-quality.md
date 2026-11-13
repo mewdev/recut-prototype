@@ -86,9 +86,9 @@ allowed):**
 
 | rule | how | default threshold |
 |---|---|---|
-| `qc_loudness` | integrated LUFS (pyloudnorm) | warn outside −16…−9 LUFS |
-| `qc_limiting` | replaces the engine's `peak_clip`: maximum limiter gain reduction (pre-master peak minus output peak, measured in 50 ms windows) | warn > 3 dB (audible squash). `peak_clip` fires on nearly every reverb wash over mastered sources, so it's noise. |
-| `qc_true_peak` | peak of a 4× oversampled signal (`scipy.signal.resample_poly`) | warn > −1.0 dBTP |
+| `qc_loudness` | integrated LUFS (pyloudnorm) of the render vs the **sources it uses** (the used source ranges, concatenated per source). Absolute numbers stay in `render.json.qc`: `lufs`, `source_lufs`, `lufs_vs_source` | warn if the cut is > 1 LU louder than the loudest source used, or > 3 LU quieter than the duration-weighted mean of the sources (unintended level drop). Only without any source to compare (direct `run_qc` calls): the old absolute window −16…−9 LUFS. A loud master (−8 LUFS) is not a defect in itself (ticket 20261113-mbyv: every render warned) |
+| `qc_limiting` | replaces the engine's `peak_clip`: maximum limiter gain reduction (pre-master peak minus output peak, measured in 50 ms windows) | warn > 3 dB (audible squash). `peak_clip` fires on nearly every reverb wash over mastered sources, so it's noise. The master limiter's static true-peak trim (`qc.true_peak_trim_db`) is discounted: it is a level offset, not squash. |
+| `qc_true_peak` | peak of a 4× oversampled signal (`scipy.signal.resample_poly`) | warn > −1.0 dBTP. The master `limiter` is true-peak aware (Q2b, below), so on a limited render this only fires if something after the limiter raises the level |
 | `qc_clipping` | Essentia `SaturationDetector`; fallback: runs of ≥ 3 consecutive samples with \|x\| ≥ 0.999 | error if any |
 | `qc_click` | Essentia `ClickDetector` + `DiscontinuityDetector` over the whole file; fallback: for each splice, high-passed (> 4 kHz) energy in ±10 ms vs. the median of ten 20 ms windows around it | warn (fallback: > 4×, ≈ +6 dB). Hits within 50 ms of a splice name the splice. |
 | `qc_gain_jump` | momentary loudness (400 ms) just before vs. just after each splice | warn > 3 LU |
@@ -96,6 +96,19 @@ allowed):**
 | `qc_bandwidth` | per **source**: the frequency above which energy drops 40 dB below the median spectrum level | info < 15 kHz ("low-quality source") |
 | `qc_tilt_jump` | spectral centroid in 1 s windows either side of a splice | warn if the ratio > 1.6 (EQ/brightness mismatch) |
 | `qc_dc` / `qc_phase` | mean offset; L/R correlation over the whole file | warn \|DC\| > 0.01; warn correlation < 0 |
+
+### Q2b — true-peak-aware master limiter (`devices.limit`)
+Decision (2026-11-13): pedalboard's Limiter holds the **sample** peak at the ceiling, and on a
+loud master the 4× oversampled peak then sits 0.2 to 1 dB above it (demo: +0.06 dBTP at a −1 dB
+ceiling), so `qc_true_peak` fired on every limited render. After limiting, the limiter measures
+the 4× true peak (`qc.true_peak`, `top=50000` candidate maxima) and, when it is over the ceiling
+(−0.01 dB margin), applies **one static gain trim** that puts it at the ceiling. Why static and
+not an oversampled look-ahead limiter or a lower internal ceiling: it is exact for every track
+(a fixed −1.5 dB ceiling either over- or under-corrects), costs one oversampling pass, and a
+whole-render offset of about 1 dB is inaudible; the price is that the sample peak sits that much
+under the ceiling. The trim is recorded in `Ctx.trim_db` / `render.json.qc.true_peak_trim_db` and
+is discounted by `qc_limiting`. A limiter whose sample peaks are already under the ceiling but
+whose true peak is over it is trimmed too.
 
 - Each check stays under ~50 ms on a 3-minute track (the live preview depends on it).
 - `render.json` gains `qc: {lufs, true_peak_dbtp, ...}` as **extra info**. If a contract
