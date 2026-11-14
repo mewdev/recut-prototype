@@ -35,6 +35,20 @@ class ShareRequest(BaseModel):
     iteration: Optional[int] = None
 
 
+def _intake_checks(payload: list[tuple[str, bytes]]):
+    import tempfile
+
+    from recut import intake
+
+    out = []
+    with tempfile.TemporaryDirectory() as td:
+        for i, (name, data) in enumerate(payload):
+            p = Path(td) / f"{i}{Path(name).suffix.lower()}"
+            p.write_bytes(data)
+            out.append((Path(name).name, intake.check_audio(p)))
+    return out
+
+
 def create_app(root: Path = TICKETS_DIR) -> FastAPI:
     app = FastAPI(title="recut review server")
 
@@ -143,9 +157,16 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
 
     @app.post("/api/tickets")
     async def create(text: str = Form(...), target_duration_s: Optional[float] = Form(None),
-                     client_name: Optional[str] = Form(None), files: list[UploadFile] = File(...)):
+                     client_name: Optional[str] = Form(None), override: bool = Form(False),
+                     files: list[UploadFile] = File(...)):
         payload = [(f.filename or "upload", await f.read()) for f in files]
+        checks = await asyncio.to_thread(_intake_checks, payload)
+        blocked = any(not r.ok for _, r in checks)
+        if blocked and not override:
+            raise HTTPException(422, detail={"error": "intake", "problems": [
+                {"file": n, **p} for n, r in checks for p in r.problems]})
         tid = tickets.create_ticket(text, payload, target_duration_s, client_name, root=root)
+        tickets.record_intake(tid, checks, override=blocked and override, root=root)
         sync.request_sync(f"new ticket {tid}", root)
         return {"id": tid}
 

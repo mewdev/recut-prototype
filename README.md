@@ -56,6 +56,8 @@ kept there.
 
 ```bash
 recut ticket new song.mp3 --text "make it 2:30, end on the real ending" --duration 150
+# `ticket new` first runs the intake check (`recut check-audio`) on every file and refuses blocking problems
+# (low bitrate/bandwidth, short, ...) unless `--override`; the problems are kept in intake.json + the timeline.
 recut ticket work <id> --model sonnet     # analyzes new tracks (Modal), starts a session, prints paths
 ```
 
@@ -188,7 +190,8 @@ misses**. Those are the input for new rules.
 
 ```bash
 # tickets
-recut ticket new <files...> --text "..." [--duration S]   # create a ticket
+recut ticket new <files...> --text "..." [--duration S] [--override]   # create a ticket (intake check first)
+recut check-audio <files...>                              # intake check only: bitrate, real bandwidth, length
 recut ticket list                                         # all tickets + status
 recut ticket work <id> [--model M]                        # analyze new tracks, start an agent session
 recut ticket iterate <id>                                 # new attempt (copies the last plan)

@@ -96,13 +96,26 @@ function newPage() {
       <p><label>The client's request (their words)<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
       <p><label>Target duration (seconds, optional)<br><input type="number" name="target_duration_s" min="1" step="1"></label></p>
       <p><label>Client name (optional)<br><input type="text" name="client_name"></label></p>
+      <div id="intake" class="card" hidden style="border-color:var(--bad,#c33)"></div>
+      <p id="ov" hidden><label><input type="checkbox" name="override" value="true"> Upload anyway</label></p>
       <button class="on" type="submit">Create ticket</button> <span id="st" class="muted"></span>
     </form>`;
   $("#f").onsubmit = async (e) => {
     e.preventDefault(); $("#st").textContent = "Uploading…";
     const fd = new FormData(e.target); if (!fd.get("target_duration_s")) fd.delete("target_duration_s");
+    if (!fd.get("override")) fd.delete("override");
     try { const r = await api("/api/tickets", { method: "POST", body: fd }); location = `/t/${encodeURIComponent(r.id)}`; }
-    catch (err) { $("#st").textContent = "Upload failed: " + err.message; }
+    catch (err) {
+      let d = null; try { d = JSON.parse(err.message.replace(/^\d+ /, "")).detail; } catch (_) {}
+      if (d && d.error === "intake") {
+        const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+        $("#intake").hidden = false; $("#ov").hidden = false;
+        $("#intake").innerHTML = "<b>Audio quality problems</b> (you can forward these to the client):<ul>" +
+          d.problems.map((p) => `<li><b>${esc(p.file)}</b>: ${esc(p.message)}${p.blocking ? "" : " <span class=muted>(info)</span>"}</li>`).join("") +
+          "</ul>Tick <i>Upload anyway</i> to create the ticket with these files.";
+        $("#st").textContent = "Not created.";
+      } else $("#st").textContent = "Upload failed: " + err.message;
+    }
   };
 }
 

@@ -139,6 +139,18 @@ def cmd_validate(args) -> None:
         raise SystemExit(1)
 
 
+def cmd_check_audio(args) -> None:
+    from recut import intake
+
+    bad = 0
+    for f in args.files:
+        res = intake.check_audio(f)
+        print(intake.format_result(pathlib.Path(f).name, res))
+        bad += not res.ok
+    if bad:
+        raise SystemExit(1)
+
+
 def cmd_render(args) -> None:
     """Validate a saved composition, then render it to audio.
 
@@ -267,7 +279,20 @@ def _cmd_ticket(args) -> None:
             if not f.exists():
                 print(f"Error: file not found: {f}")
                 raise SystemExit(1)
+        from recut import intake
+
+        checks = [(name, intake.check_audio(f)) for name, f in files]
+        for name, res in checks:
+            if res.problems:
+                print(intake.format_result(name, res))
+        if any(not r.ok for _, r in checks):
+            if not args.override:
+                print("\nNot created: fix the blocking problems above (the messages can be forwarded to the "
+                      "client), or re-run with --override to use these files anyway.")
+                raise SystemExit(1)
+            print("\n--override: creating the ticket despite the blocking problems.")
         tid = tickets.create_ticket(args.text, files, args.duration)
+        tickets.record_intake(tid, checks, override=bool(args.override and any(not r.ok for _, r in checks)))
         print(f"Created ticket {tid}")
     elif args.action == "list":
         waiting = {it["id"] for it in tickets.awaiting_client()}
@@ -457,12 +482,18 @@ def main() -> None:
     )
     render_cmd.set_defaults(func=cmd_render)
 
+    ca = sub.add_parser("check-audio", help="Intake check: bitrate, real bandwidth, sample rate, length")
+    ca.add_argument("files", nargs="+")
+    ca.set_defaults(func=cmd_check_audio)
+
     ticket_cmd = sub.add_parser("ticket", help="Client edit tickets")
     tsub = ticket_cmd.add_subparsers(dest="action", required=True)
     t_new = tsub.add_parser("new", help="Create a ticket from audio files + request text")
     t_new.add_argument("files", nargs="+")
     t_new.add_argument("--text", required=True, help="the client's request, verbatim")
     t_new.add_argument("--duration", type=float, help="target duration in seconds")
+    t_new.add_argument("--override", action="store_true",
+                       help="create the ticket even if the intake check finds blocking problems")
     tsub.add_parser("list", help="List tickets")
     t_aw = tsub.add_parser("awaiting", help="Shipped cuts with no client feedback logged yet")
     t_aw.add_argument("--quiet", action="store_true", help="print nothing when none (for hooks)")
