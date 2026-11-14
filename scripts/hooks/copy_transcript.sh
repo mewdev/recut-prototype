@@ -33,10 +33,17 @@ fi
 dest="${RECUT_SESSION:-}"
 if [ -z "$dest" ]; then
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  root="${RECUT_TICKETS_DIR:-${RECUT_HOME:-$here/../..}/.appdata/tickets}"
+  repo_dir="${RECUT_HOME:-$here/../..}"
+  if [ -n "${RECUT_TICKETS_DIR:-}" ]; then root="$RECUT_TICKETS_DIR"
+  elif [ -d "$repo_dir/../recut-data/.git" ]; then root="$repo_dir/../recut-data/tickets"
+  else root="$repo_dir/.appdata/tickets"; fi
   [ -f "$root/.current_session" ] && dest="$(head -n1 "$root/.current_session")"
 fi
 [ -n "$dest" ] && [ -d "$dest" ] || exit 0
 
 cp -f "$src" "$dest/transcript.jsonl.tmp" 2>/dev/null && mv -f "$dest/transcript.jsonl.tmp" "$dest/transcript.jsonl" 2>/dev/null
+# save to the data repo (recut-data) in the background; never blocks or fails the agent
+if [ "${RECUT_AUTOSYNC:-1}" != "0" ] && command -v recut >/dev/null 2>&1; then
+  (recut sync --quiet -m "sync: transcript $(basename "$(dirname "$dest")")/$(basename "$dest")" >/dev/null 2>&1 &)
+fi
 exit 0

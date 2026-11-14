@@ -162,7 +162,12 @@ def cmd_compositions(args) -> None:
 def cmd_serve(args) -> None:
     import uvicorn
 
+    from recut import sync
+
+    repo = sync.repo_root(TICKETS_DIR)
     print(f"recut review server → http://{args.host}:{args.port}  (tickets: {TICKETS_DIR.resolve()})")
+    print(f"data repo: {repo} (auto-sync {'on' if sync.enabled() else 'off'})" if repo
+          else "data repo: none — tickets stay local (clone mewdev/recut-data next to this repo)")
     uvicorn.run("recut.server.app:app", host=args.host, port=args.port, reload=args.reload,
                 log_level="warning")
 
@@ -207,7 +212,29 @@ your transcript is copied to {sd / "transcript.jsonl"} automatically.
 """)
 
 
+def cmd_sync(args) -> None:
+    from recut import sync
+
+    res = sync.sync(TICKETS_DIR, message=args.message)
+    if not args.quiet or res["status"] not in ("pushed", "clean", "committed", "no-data-repo"):
+        print(f"sync: {res['status']}" + (f" ({res['error']})" if res.get("error") else "")
+              + ("" if res["status"] != "no-data-repo" else
+                 f" — tickets are in {TICKETS_DIR}; clone mewdev/recut-data next to this repo to save them remotely"))
+
+
 def cmd_ticket(args) -> None:
+    try:
+        _cmd_ticket(args)
+    finally:
+        if args.action in ("new", "demo", "work", "iterate", "render"):
+            from recut import sync
+
+            res = sync.request_sync(f"ticket {args.action} {getattr(args, 'id', '') or ''}".strip(), TICKETS_DIR, wait=True)
+            if res and res["status"] in ("push-failed", "error"):
+                print(f"(data sync failed: {res.get('error', '')[:200]} — run `recut sync` to retry)")
+
+
+def _cmd_ticket(args) -> None:
     from recut import tickets
 
     if args.action == "new":
@@ -350,6 +377,11 @@ def main() -> None:
     report_cmd.add_argument("--root", type=pathlib.Path, default=TICKETS_DIR,
                             help="tickets folder (default: .appdata/tickets)")
     report_cmd.set_defaults(func=cmd_report)
+
+    sync_cmd = sub.add_parser("sync", help="Commit + push ticket data to the data repo (recut-data)")
+    sync_cmd.add_argument("-m", "--message")
+    sync_cmd.add_argument("--quiet", action="store_true")
+    sync_cmd.set_defaults(func=cmd_sync)
 
     serve_cmd = sub.add_parser("serve", help="Review server with live browser preview")
     serve_cmd.add_argument("--host", default="127.0.0.1")

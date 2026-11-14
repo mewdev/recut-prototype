@@ -29,7 +29,9 @@ track → analysis (Modal) → music map → agent writes plan.json → render +
 ## Quick start
 
 ```bash
-git clone https://github.com/mewdev/recut-prototype.git && cd recut-prototype
+git clone https://github.com/mewdev/recut-prototype.git
+git clone https://github.com/mewdev/recut-data.git        # private: ticket data, auto-saved
+cd recut-prototype
 conda create -n recut python=3.11 -y && conda activate recut
 pip install -e ".[dev,qc]"          # Intel Mac: see "Setup details"
 
@@ -187,6 +189,7 @@ recut ticket render <id> [--session N --iteration K]      # render + print issue
 recut ticket demo                                         # demo ticket from examples/summer-party
 recut serve [--port 8000]                                 # review server + live preview
 recut report [--since DATE] [--json]                      # numbers for the improvement pass
+recut sync                                                # commit + push ticket data to recut-data
 
 # analysis + legacy compositions
 recut analyze <track>        # Modal analysis → raw JSON
@@ -197,12 +200,19 @@ recut compositions | validate <name> | render <name>      # old compose() workfl
 
 ## Data layout
 
-Everything recut generates lives in `.appdata/` **in the repo folder**, whichever folder
-you run `recut` from. Set `RECUT_HOME=/some/folder` to use `/some/folder/.appdata/`
-instead.
+**Tickets are saved to the private data repo [`mewdev/recut-data`](https://github.com/mewdev/recut-data)**
+when it's cloned next to this repo (`git clone https://github.com/mewdev/recut-data.git`
+in the same parent folder). Every ticket action is then committed and pushed
+automatically, from the CLI, the review server and the transcript hook alike. Audio is
+never committed. `recut serve` shows `data repo: … (auto-sync on)`. Use `recut sync` to
+sync by hand, `RECUT_AUTOSYNC=0` to turn it off, and `RECUT_TICKETS_DIR=/path` to put
+tickets elsewhere. Without a data repo, tickets stay local in `.appdata/tickets/`.
+
+Everything else recut generates (analysis, legacy compositions) lives in `.appdata/` in
+the repo folder. Set `RECUT_HOME=/some/folder` to use `/some/folder/.appdata/`.
 
 ```
-.appdata/tickets/<id>/
+recut-data/tickets/<id>/            (or .appdata/tickets/<id>/ without a data repo)
   request.json                       client text, target duration, files, status
   inputs/<a|b|…>.<ext>  maps/<a|b|…>.json
   sessions/<n>/meta.json             agent, model, git sha

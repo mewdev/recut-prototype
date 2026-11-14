@@ -30,7 +30,10 @@ Rules:
 
 ## Working a client ticket (cutting agents)
 
-Tickets live in `.appdata/tickets/<id>/` (format: `docs/PLAN.md` §3). To work one:
+Tickets live in the private data repo `recut-data/tickets/<id>/`, cloned next to this repo
+(format: `docs/PLAN.md` §3; without it they're in `.appdata/tickets/`). Every ticket command
+auto-commits and pushes there. **For cloud sessions, attach both repos**, `recut-prototype`
+and `recut-data`, so the work is saved. To work one:
 1. `recut ticket work <id> --model <your model>` starts a session (it analyzes unmapped
    tracks via Modal) and prints the paths.
 2. Read `request.json` and the previous session's `review.json` if there is one: its
