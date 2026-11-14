@@ -247,7 +247,7 @@ def cmd_ticket(args) -> None:
     try:
         _cmd_ticket(args)
     finally:
-        if args.action in ("new", "demo", "work", "iterate", "render", "client"):
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage"):
             from recut import sync
 
             res = sync.request_sync(f"ticket {args.action} {getattr(args, 'id', '') or ''}".strip(), TICKETS_DIR, wait=True)
@@ -319,6 +319,31 @@ def _cmd_ticket(args) -> None:
               f"→ {'client_approved' if fb.decision == 'approved' else 'client_changes'}")
         if fb.note:
             print(f"  note: {fb.note}")
+    elif args.action in ("usage", "show"):
+        from recut import usage
+
+        tid = args.id
+        try:
+            tickets.ticket_dir(tid)
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        usage.refresh_stale(TICKETS_DIR, tid)
+        if args.action == "show":
+            print(f"{tid}  {tickets.load_request(tid).status}")
+            for ev in tickets.ticket_timeline(tid):
+                extra = " ".join(f"{k}={v}" for k, v in ev.items()
+                                 if k not in ("ts", "op", "derived") and v is not None)
+                print(f"  {ev['ts']}  {ev['op']:<16}{extra}{'  (derived)' if ev.get('derived') else ''}")
+        for n in tickets.session_numbers(tid):
+            u = usage.load_usage(tickets.session_dir(tid, n))
+            if u is None:
+                print(f"s{n}: no usage (no transcript)")
+                continue
+            cost = f"${u['cost_usd']:.2f}" if u.get("cost_usd") is not None else "cost n/a"
+            print(f"s{n}: {u.get('model')}  in {u['input_tokens']:,} out {u['output_tokens']:,} "
+                  f"cache r/w {u['cache_read_tokens']:,}/{u['cache_write_tokens']:,}  "
+                  f"{u['duration_s'] / 60:.1f} min  {u['turns']} turns  {cost}")
     elif args.action == "render":
         tid = args.id
         n = args.session or tickets.session_numbers(tid)[-1]
@@ -437,6 +462,10 @@ def main() -> None:
     t_c.add_argument("--note", help="what the client said, verbatim when possible")
     t_c.add_argument("--session", type=int, help="session (default: the latest shipped iteration)")
     t_c.add_argument("--iteration", type=int, help="iteration (default: the latest shipped iteration)")
+    t_sh = tsub.add_parser("show", help="Ticket timeline + per-session token use and cost")
+    t_sh.add_argument("id")
+    t_us = tsub.add_parser("usage", help="Compute usage.json (tokens, duration, cost) from session transcripts")
+    t_us.add_argument("id")
     t_r = tsub.add_parser("render", help="Render an iteration and print issues")
     t_r.add_argument("id")
     t_r.add_argument("--session", type=int)

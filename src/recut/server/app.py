@@ -14,7 +14,7 @@ import soundfile as sf
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 
-from recut import sync, tickets
+from recut import sync, tickets, usage
 from recut.audio import Audio
 from recut.contracts import TAGS, Review
 from recut.paths import TICKETS_DIR
@@ -87,9 +87,11 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
                             "rendered": (d / "render.json").exists(),
                             "error": (d / "render_error.json").exists()})
             sessions.append({"n": n, "meta": json.loads(meta_p.read_text()) if meta_p.exists() else None,
-                             "review": review.model_dump() if review else None, "iterations": its})
+                             "review": review.model_dump() if review else None, "iterations": its,
+                             "usage": usage.load_usage(sd)})
         return {"request": tickets.load_request(tid, root).model_dump(),
                 "sources": tickets.sources(tid, root), "sessions": sessions,
+                "timeline": tickets.ticket_timeline(tid, root),
                 "client_feedback": [fb.model_dump() for fb in tickets.load_client_feedback(tid, root)]}
 
     @app.get("/api/tickets/{tid}/sessions/{n}/iterations/{k}")

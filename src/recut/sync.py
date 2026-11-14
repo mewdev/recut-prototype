@@ -72,6 +72,12 @@ def _branch(repo: Path) -> str:
 
 def sync(tickets_dir: Path = TICKETS_DIR, message: Optional[str] = None, push: bool = True) -> dict:
     """Commit all ticket data (no audio) and push. Returns {"status": ..., ...}."""
+    from recut import usage
+
+    try:
+        usage.refresh_stale(tickets_dir)  # usage.json for transcripts copied since the last sync
+    except Exception:
+        pass  # cost numbers are a nicety: never block saving the data
     repo = repo_root(tickets_dir)
     if repo is None:
         return {"status": "no-data-repo"}

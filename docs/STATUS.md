@@ -34,7 +34,7 @@ agent won't know it.
 | B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
 | M0 map fixes from the baseline session | done | first section starts at 0.0 (lead-in kept); `bpm` from the beat grid (+ optional `bpm_raw`, load-time guard); `recut map --force [stem...]`; no NaN loudness / zero-length segments. Tests: `tests/map/test_m0.py` (15) |
-| L1 ticket timeline + cost | todo | Sonnet: ticket-level status events with timestamps; token use + duration summed from transcripts |
+| L1 ticket timeline + cost | done | `tickets.ticket_timeline(id, root)` merges real `<ticket>/events.jsonl` with entries derived (`"derived": true`) from old timestamps; `src/recut/usage.py` (`parse_transcript`, `write_usage`, `load_usage`, `refresh_stale`, price dict `PRICES_PER_MTOK`) writes `sessions/<n>/usage.json`; `recut sync` refreshes stale usage; `recut ticket show/usage <id>`; `GET /api/tickets/{id}` has `timeline` + per-session `usage`. L2 can call `ticket_timeline` and `usage.load_usage`. The Stop hook does not compute usage itself (next `recut sync` does). Tests: `tests/tickets/test_timeline_usage.py` |
 | C0 manual client feedback logging | done | `recut ticket client <id> --approved/--changes [--rating --note]` → `client_feedback.jsonl`; `recut report` section 6 (approval rate, rounds, rating, agreement); ticket page header shows the latest reaction. Tests: `tests/tickets/test_client_feedback.py`, `tests/cli/test_client_cli.py`, `tests/report/test_client_report.py`, `tests/server/test_server.py` |
 | B5+ client loop | todo | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
 | L2 report v2 + presentation | todo | Sonnet: client metrics, turnaround, cost, weekly trend, `recut report --html` |
@@ -221,3 +221,4 @@ agent won't know it.
   audio routes). The plan format was extended before D1, so nothing frozen was broken.
 - 2026-11-12 — Plan, workstream briefs and this log created. Waiting on: the operator's
   past-session export (prompt in chat) and contracts day (D1).
+- 2026-11-14 — L1: ticket timeline (events.jsonl, derived backfill) and session usage/cost from transcripts; CLI `ticket show|usage`, API fields.
