@@ -46,7 +46,7 @@ def test_review_roundtrip_sets_status(client):
 
 def test_upload_creates_ticket(client, tmp_path):
     c, tid = client
-    r = c.post("/api/tickets", data={"text": "shorter please", "target_duration_s": "60"},
+    r = c.post("/api/tickets", data={"text": "shorter please", "target_duration_s": "60", "override": "true"},  # fake bytes: intake blocks
                files=[("files", ("x.mp3", b"ID3fake", "audio/mpeg"))])
     new = r.json()["id"]
     assert c.get(f"/api/tickets/{new}").json()["request"]["files"] == {"a": "x.mp3"}

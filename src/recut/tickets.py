@@ -87,6 +87,24 @@ def create_ticket(
     return ticket_id
 
 
+INTAKE_FILE = "intake.json"
+
+
+def record_intake(ticket_id: str, checks: list[tuple[str, "IntakeResult"]], override: bool,  # noqa: F821
+                  root: Path = TICKETS_DIR) -> None:
+    """Keep the intake problems and the operator's override: `<ticket>/intake.json` + a timeline event.
+
+    Not in request.json: the `Request` contract is frozen and forbids extra fields. `checks` is
+    [(original filename, IntakeResult)]; files are keyed by source id (a, b, ...) like request.files.
+    """
+    files = {}
+    for i, (name, res) in enumerate(checks):
+        files[chr(ord("a") + i)] = {"name": name, **res.to_dict()}
+    problems = [{"file": name, **p} for name, res in checks for p in res.problems]
+    _write(root / ticket_id / INTAKE_FILE, {"override": override, "problems": problems, "files": files})
+    ticket_event(ticket_id, "intake", root, problems=problems, override=override)
+
+
 def load_request(ticket_id: str, root: Path = TICKETS_DIR) -> Request:
     return Request.model_validate_json((ticket_dir(ticket_id, root) / "request.json").read_text())
 
