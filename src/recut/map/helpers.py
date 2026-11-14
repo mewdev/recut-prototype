@@ -77,3 +77,29 @@ def loudness_rms_db(audio: np.ndarray) -> float:
     rms = np.sqrt(np.mean(audio**2))
     rms = max(rms, 1e-10)
     return float(20 * np.log10(rms))
+
+
+def key_at(music_map, t: float) -> tuple[str, str] | None:
+    """(tonic, mode) in force at time `t`: from `key_ranges` when the map has them, else the
+    global key, else None. Linter rules (`key_compat`) should call this, not read `map.key`."""
+    for r in music_map.key_ranges or []:
+        if r.start <= t < r.end:
+            return r.tonic, r.mode
+    if music_map.key_ranges and t >= music_map.key_ranges[-1].end:
+        r = music_map.key_ranges[-1]
+        return r.tonic, r.mode
+    if music_map.key_ranges and t < music_map.key_ranges[0].start:
+        r = music_map.key_ranges[0]
+        return r.tonic, r.mode
+    k = music_map.key
+    return (k.tonic, k.mode) if k else None
+
+
+def pace_at(music_map, t: float, normalized: bool = True) -> float | None:
+    """Pace at time `t` (0-1 normalized by default, else onset events/min), or None when the map
+    has no pace series. Nearest sample; `t` outside the track clamps to the ends."""
+    p = music_map.pace
+    series = (p.normalized if normalized else p.events_per_min) if p else None
+    if not series:
+        return None
+    return series[min(len(series) - 1, max(0, round(t / p.hop_s)))]

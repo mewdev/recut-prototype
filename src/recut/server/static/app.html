@@ -96,20 +96,33 @@ function newPage() {
       <p><label>The client's request (their words)<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
       <p><label>Target duration (seconds, optional)<br><input type="number" name="target_duration_s" min="1" step="1"></label></p>
       <p><label>Client name (optional)<br><input type="text" name="client_name"></label></p>
+      <div id="intake" class="card" hidden style="border-color:var(--bad,#c33)"></div>
+      <p id="ov" hidden><label><input type="checkbox" name="override" value="true"> Upload anyway</label></p>
       <button class="on" type="submit">Create ticket</button> <span id="st" class="muted"></span>
     </form>`;
   $("#f").onsubmit = async (e) => {
     e.preventDefault(); $("#st").textContent = "Uploading…";
     const fd = new FormData(e.target); if (!fd.get("target_duration_s")) fd.delete("target_duration_s");
+    if (!fd.get("override")) fd.delete("override");
     try { const r = await api("/api/tickets", { method: "POST", body: fd }); location = `/t/${encodeURIComponent(r.id)}`; }
-    catch (err) { $("#st").textContent = "Upload failed: " + err.message; }
+    catch (err) {
+      let d = null; try { d = JSON.parse(err.message.replace(/^\d+ /, "")).detail; } catch (_) {}
+      if (d && d.error === "intake") {
+        const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+        $("#intake").hidden = false; $("#ov").hidden = false;
+        $("#intake").innerHTML = "<b>Audio quality problems</b> (you can forward these to the client):<ul>" +
+          d.problems.map((p) => `<li><b>${esc(p.file)}</b>: ${esc(p.message)}${p.blocking ? "" : " <span class=muted>(info)</span>"}</li>`).join("") +
+          "</ul>Tick <i>Upload anyway</i> to create the ticket with these files.";
+        $("#st").textContent = "Not created.";
+      } else $("#st").textContent = "Upload failed: " + err.message;
+    }
   };
 }
 
 // ------------------------------------------------------------------ ticket page
 const S = {
   tid: null, ticket: null, n: null, k: null, it: null, render: null, maps: {}, peaks: {}, cutPeaks: null,
-  cut: new Audio(), orig: {}, mode: "cut", origSeg: null, selSplice: null, review: null, follow: true, audioVersion: null,
+  cut: new Audio(), orig: {}, mode: "cut", origSeg: null, selSplice: null, review: null, follow: true, audioVersion: null, curves: false,
 };
 
 async function ticketPage(tid) {
@@ -124,6 +137,7 @@ async function ticketPage(tid) {
       <span id="time" class="muted" style="min-width:110px">0:00.0</span>
       <span class="row" style="gap:0"><button id="mCut" class="on">Cut</button><button id="mOrig">Original</button></span>
       <label class="muted"><input type="checkbox" id="follow" checked> follow latest iteration</label>
+      <label class="muted"><input type="checkbox" id="curves"> pace / loudness</label>
       <span class="muted" style="margin-left:auto"><kbd>space</kbd> play · <kbd>a</kbd> cut/original · <kbd>n</kbd>/<kbd>p</kbd> splice · <kbd>g</kbd>/<kbd>b</kbd> ok/bad</span>
     </div>
     <canvas id="cv" height="300"></canvas>
@@ -140,6 +154,7 @@ async function ticketPage(tid) {
   $("#mCut").onclick = () => setMode("cut");
   $("#mOrig").onclick = () => setMode("orig");
   $("#follow").onchange = (e) => { S.follow = e.target.checked; };
+  $("#curves").onchange = (e) => { S.curves = e.target.checked; draw(); };
   const cv = $("#cv");
   cv.onclick = onCanvasClick;
   new ResizeObserver(() => draw()).observe(cv);
@@ -252,11 +267,11 @@ function tick() {
 }
 
 // ------------------------------------------------------------------ timeline canvas
-const L = { compY: 26, compH: 96, gap: 54, srcH: 58, srcGap: 26 };
+const L = { compY: 26, compH: 96, gap: 54, srcH: 58, srcGap: 26, curveH: 22 };
 function layout() {
   const sids = Object.keys(S.it?.plan?.sources || {});
   const rows = {}; let y = L.compY + L.compH + L.gap;
-  sids.forEach((sid, i) => { rows[sid] = { y, color: COLORS[i % 5] }; y += L.srcH + L.srcGap; });
+  sids.forEach((sid, i) => { rows[sid] = { y, color: COLORS[i % 5] }; y += L.srcH + L.srcGap + (S.curves ? L.curveH : 0); });
   return { rows, height: y };
 }
 function wave(ctx, pk, x0, x1, y, h, color, from = 0, to = null) {
@@ -269,6 +284,24 @@ function wave(ctx, pk, x0, x1, y, h, color, from = 0, to = null) {
     const mx = pk.max[i], mn = pk.min[i];
     ctx.fillRect(px, y + h / 2 - mx * h / 2, 1, Math.max(1, (mx - mn) * h / 2));
   }
+}
+// thin pace (solid) and short-term loudness (dashed) lines under a source row; maps without them draw nothing
+function drawCurves(ctx, m, row, W, SX) {
+  const y0 = row.y + L.srcH + 2, h = L.curveH - 4, dur = m.duration || 1;
+  ctx.fillStyle = "#f6f7f9"; ctx.fillRect(0, y0 - 1, W, h + 2);
+  const line = (vals, hop, norm, dash) => {
+    if (!vals?.length) return;
+    ctx.beginPath(); ctx.setLineDash(dash);
+    vals.forEach((v, i) => { const x = SX(Math.min(dur, i * hop)), y = y0 + h - norm(v) * h; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke(); ctx.setLineDash([]);
+  };
+  ctx.lineWidth = 1; ctx.strokeStyle = row.color;
+  line(m.pace?.normalized, m.pace?.hop_s || 1, (v) => v, []);
+  ctx.strokeStyle = "#6b7280";  // LUFS -40..-5 mapped to the strip
+  line(m.loudness_short_term?.lufs, m.loudness_short_term?.hop_s || 1, (v) => Math.min(1, Math.max(0, (v + 40) / 35)), [3, 2]);
+  (m.key_ranges || []).slice(1).forEach((r) => { ctx.fillStyle = "#b45309"; ctx.fillRect(SX(r.start), y0, 1, h); });
+  ctx.fillStyle = "#6b7280"; ctx.font = "9px system-ui";
+  ctx.fillText(m.pace ? "pace ─  loudness ┄  key change |" : "no pace data (recut ticket enrich)", 4, y0 + 8); ctx.font = "11px system-ui";
 }
 function draw() {
   const cv = $("#cv"); if (!cv) return;
@@ -322,6 +355,7 @@ function draw() {
     if (m) m.segments.forEach((g) => { if (g.end - g.start < 0.05) return; const x = SX(g.start);
       ctx.fillStyle = "#9ca3af"; ctx.fillRect(x, row.y, 1, L.srcH); ctx.fillStyle = "#4b5563"; ctx.fillText(`${g.segment_name}`, x + 4, row.y + 11); });
     ctx.fillStyle = row.color; ctx.font = "bold 11px system-ui"; ctx.fillText(`${sid} · ${S.ticket.request.files[sid] || ""}`, 4, row.y - 5); ctx.font = "11px system-ui";
+    if (S.curves && m) drawCurves(ctx, m, row, W, SX);
     if (S.mode === "orig" && S.origSeg?.source === sid) { const x = SX(S.orig[sid].currentTime); ctx.fillStyle = "#111827"; ctx.fillRect(x, row.y - 2, 2, L.srcH + 4); }
   });
   // playhead

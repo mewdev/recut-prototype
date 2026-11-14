@@ -87,6 +87,24 @@ def create_ticket(
     return ticket_id
 
 
+INTAKE_FILE = "intake.json"
+
+
+def record_intake(ticket_id: str, checks: list[tuple[str, "IntakeResult"]], override: bool,  # noqa: F821
+                  root: Path = TICKETS_DIR) -> None:
+    """Keep the intake problems and the operator's override: `<ticket>/intake.json` + a timeline event.
+
+    Not in request.json: the `Request` contract is frozen and forbids extra fields. `checks` is
+    [(original filename, IntakeResult)]; files are keyed by source id (a, b, ...) like request.files.
+    """
+    files = {}
+    for i, (name, res) in enumerate(checks):
+        files[chr(ord("a") + i)] = {"name": name, **res.to_dict()}
+    problems = [{"file": name, **p} for name, res in checks for p in res.problems]
+    _write(root / ticket_id / INTAKE_FILE, {"override": override, "problems": problems, "files": files})
+    ticket_event(ticket_id, "intake", root, problems=problems, override=override)
+
+
 def load_request(ticket_id: str, root: Path = TICKETS_DIR) -> Request:
     return Request.model_validate_json((ticket_dir(ticket_id, root) / "request.json").read_text())
 
@@ -133,6 +151,18 @@ def ensure_maps(ticket_id: str, root: Path = TICKETS_DIR, analyze=None) -> list[
         _write(d / "maps" / f"{sid}.json", music_map.model_dump())
         done.append(sid)
     return done
+
+
+def enrich_maps(ticket_id: str, root: Path = TICKETS_DIR, force: bool = False) -> list[str]:
+    """Add pace / short-term loudness / key ranges to the ticket's existing maps from the input
+    audio and the map's own beat grid (no re-analysis). Returns the source ids it rewrote."""
+    from recut.map.enrich import enrich_map_file
+
+    d = ticket_dir(ticket_id, root)
+    return [
+        sid for sid, s in sources(ticket_id, root).items()
+        if s["map"] and enrich_map_file(d / s["map"], d / s["file"], force=force)
+    ]
 
 
 # ---- sessions & iterations ----------------------------------------------------------

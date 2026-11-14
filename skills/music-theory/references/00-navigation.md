@@ -11,6 +11,7 @@ Read this first, every time. Find the row, load only the listed file(s).
 | Where's the natural phrase/breath boundary *inside* a segment? Beat/bar alignment, groove feel changes | `phrase-boundaries-and-groove.md` |
 | How should energy/density arc across a sequence of clips? What shape (build, single arch, plateau)? | `energy-arcs-and-density.md` |
 | Which section is the strongest hook to keep in a short edit? | `hooks-and-highlights.md` |
+| How busy is this exit or join (pace)? Will a fade or join feel like a drop? | `exit-design.md` |
 | How do I read the map's `chords` field (`C:maj7` etc)? Translate to lead-sheet / Roman numeral | `../assets/chord-notation.md` |
 | Fast lookup: section type → density/cadence-risk/hook-likelihood | `../assets/section-role-quickref.md` |
 | "Can this skill do X" / how reliable is a cadence/function/instrument-activity read | `known-limitations.md` |

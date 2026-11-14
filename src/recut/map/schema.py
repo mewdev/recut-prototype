@@ -134,6 +134,10 @@ class EnrichedSegment(BaseModel):
     loudness_db: float
     loudness_db_start: float
     loudness_db_end: float
+    # summaries of the optional time series on MusicMap (None when the map predates them)
+    pace: Optional[float] = None  # mean normalized pace (0-1) over [start, end)
+    drum_activity: Optional[float] = None  # mean drum activity (0-1); filled by M1 (Demucs)
+    vocal_activity: Optional[float] = None  # mean vocal activity (0-1); filled by M1 (Demucs)
 
     @field_validator("loudness_db", "loudness_db_start", "loudness_db_end", mode="before")
     @classmethod
@@ -162,6 +166,45 @@ class Meta(BaseModel):
     map_version: str
 
 
+class Pace(BaseModel):
+    """Onset density over time. Sample i is centred on t = i * hop_s (window 4 s, clipped at the
+    track edges). `normalized` = events_per_min / the track's own 95th percentile, clipped to 0-1."""
+
+    hop_s: float = 1.0
+    events_per_min: list[float]
+    normalized: list[float]
+
+
+class LoudnessShortTerm(BaseModel):
+    """EBU R128 short-term loudness (3 s window, ungated). Sample i is centred on t = i * hop_s.
+    Floor -70 LUFS (silence); never -inf, which is not valid JSON."""
+
+    hop_s: float = 1.0
+    lufs: list[float]
+
+
+class KeyRange(BaseModel):
+    start: float
+    end: float
+    tonic: str
+    mode: str
+
+
+class StemActivity(BaseModel):
+    hop_s: float = 0.1
+    values: list[float]  # 0-1
+    ranges: list[tuple[float, float]] = []  # spans where activity stays above the threshold
+
+
+class InstrumentActivity(BaseModel):
+    """Per-stem activity (M1, Demucs). Defined here, not filled yet."""
+
+    drum: Optional[StemActivity] = None
+    bass: Optional[StemActivity] = None
+    vocal: Optional[StemActivity] = None
+    other: Optional[StemActivity] = None
+
+
 class MusicMap(BaseModel):
     path: str
     bpm: float  # derived from the beat grid (median inter-beat interval); see map/tempo.py
@@ -174,3 +217,10 @@ class MusicMap(BaseModel):
     sources: Sources
     meta: Meta
     key: Optional[KeySignature] = None  # None for maps predating key detection
+    # M2/M3: optional time series, so maps made before them keep loading
+    pace: Optional[Pace] = None
+    loudness_short_term: Optional[LoudnessShortTerm] = None
+    key_ranges: Optional[list[KeyRange]] = None
+    instrument_activity: Optional[InstrumentActivity] = None  # M1: not computed yet
+    # which method produced each optional field, e.g. {"pace": "librosa-onsets"}
+    analysis_sources: Optional[dict[str, str]] = None
