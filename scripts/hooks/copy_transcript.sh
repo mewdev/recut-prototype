@@ -44,6 +44,9 @@ fi
 cp -f "$src" "$dest/transcript.jsonl.tmp" 2>/dev/null && mv -f "$dest/transcript.jsonl.tmp" "$dest/transcript.jsonl" 2>/dev/null
 # save to the data repo (recut-data) in the background; never blocks or fails the agent
 if [ "${RECUT_AUTOSYNC:-1}" != "0" ] && command -v recut >/dev/null 2>&1; then
-  (recut sync --quiet -m "sync: transcript $(basename "$(dirname "$dest")")/$(basename "$dest")" >/dev/null 2>&1 &)
+  # sync exactly the tickets folder that holds this session (<tickets>/<ticket>/sessions/<n>)
+  tickets_root="$(cd "$dest/../../.." 2>/dev/null && pwd)"
+  [ -n "$tickets_root" ] && (RECUT_TICKETS_DIR="$tickets_root" recut sync --quiet \
+    -m "sync: transcript $(basename "$(dirname "$(dirname "$dest")")")/s$(basename "$dest")" >/dev/null 2>&1 &)
 fi
 exit 0

@@ -123,6 +123,7 @@ def test_mark_current_session(session):
 
 def run_hook(stdin: str, env: dict, tmp_path):
     e = {k: v for k, v in os.environ.items() if not k.startswith("RECUT_")}
+    e["RECUT_AUTOSYNC"] = "0"  # never sync a real data repo from tests
     e.update(env)
     return subprocess.run(["bash", str(HOOK)], input=stdin, text=True, env=e, capture_output=True, cwd=tmp_path)
 
@@ -166,3 +167,32 @@ def test_hook_test_override_env_and_quiet_failures(tmp_path):
         r = run_hook(stdin, env, tmp_path)
         assert r.returncode == 0 and r.stdout == ""
     assert not (tmp_path / "gone").exists()
+
+
+def test_hook_syncs_only_the_repo_holding_the_session(tmp_path):
+    """Regression: the hook used to sync whichever data repo recut found, not the session's."""
+    import shutil
+    if shutil.which("recut") is None:
+        import pytest
+        pytest.skip("recut CLI not on PATH")
+    remote = tmp_path / "remote.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(remote)], check=True)
+    data = tmp_path / "data"
+    subprocess.run(["git", "clone", "-q", str(remote), str(data)], check=True, capture_output=True)
+    for k, v in (("user.email", "t@t"), ("user.name", "t")):
+        subprocess.run(["git", "-C", str(data), "config", k, v], check=True)
+    session = data / "tickets" / "20261114-test" / "sessions" / "1"
+    session.mkdir(parents=True)
+    t = fake_transcript(tmp_path)
+    run_hook(json.dumps({"transcript_path": str(t)}),
+             {"RECUT_SESSION": str(session), "RECUT_AUTOSYNC": "1"}, tmp_path)
+    import time
+    for _ in range(50):  # the hook syncs in the background
+        log = subprocess.run(["git", "-C", str(remote), "log", "--oneline", "main"],
+                             capture_output=True, text=True).stdout
+        if "transcript" in log:
+            break
+        time.sleep(0.2)
+    files = subprocess.run(["git", "-C", str(remote), "ls-tree", "-r", "--name-only", "main"],
+                           capture_output=True, text=True).stdout.split()
+    assert "tickets/20261114-test/sessions/1/transcript.jsonl" in files
