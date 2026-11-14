@@ -119,3 +119,15 @@ def test_loudness_jump_warns_on_a_jump_over_3_db():
     assert r["loudness_jump"].severity == "warn" and r["loudness_jump"].splice == "s1"
     assert "loudness_jump" not in lint(audio={"a": tone(-20), "b": tone(-27)}, cross=False)
     assert "loudness_jump" not in lint()  # no audio: rule is skipped
+
+
+def test_key_compat_uses_the_key_at_the_join_when_the_song_modulates():
+    """Global key says compatible, but source b has modulated to a distant key where it's cut in."""
+    from recut.map.schema import KeyRange
+
+    b = mmap(key=("A", "minor"))  # global: same as a
+    b.key_ranges = [KeyRange(start=0.0, end=11.0, tonic="A", mode="minor"),
+                    KeyRange(start=11.0, end=60.0, tonic="F#", mode="minor")]
+    r = lint(b=b, in_start=12.0)
+    assert "key_compat" in r and "F#" in r["key_compat"].message
+    assert "key_compat" not in lint(b=b, in_start=10.0)  # cut in before the modulation

@@ -26,6 +26,7 @@ import numpy as np
 from recut.audio import Audio
 from recut.contracts.plan import ClipNode, Plan
 from recut.contracts.render import Issue, RenderSegment, Splice
+from recut.map.helpers import key_at
 from recut.map.parser import get_segment
 from recut.map.schema import EnrichedSegment, MusicMap
 from recut.qc import _momentary
@@ -89,12 +90,15 @@ def _cross_song(sp: Splice, prev: ClipNode, nxt: ClipNode, rp: RenderSegment, rn
         out.append(Issue(severity="warn", rule="bpm_gap", splice=sp.id, node=nxt.id,
                          message=f"{sp.id}: {prev.source!r} {ma.bpm:.0f} BPM → {nxt.source!r} "
                                  f"{mb.bpm:.0f} BPM ({gap * 100:.1f}%)"))
-    if ma.key and mb.key:
-        ka, kb = camelot(ma.key.tonic, ma.key.mode), camelot(mb.key.tonic, mb.key.mode)
+    # the key in force at the join in each source (key_ranges when the map has them, else the
+    # global key): a song that modulates is judged by where it's actually cut
+    a_key, b_key = key_at(ma, rp.src_end), key_at(mb, rn.src_start)
+    if a_key and b_key:
+        ka, kb = camelot(*a_key), camelot(*b_key)
         if ka and kb and not keys_compatible(ka, kb):
             out.append(Issue(severity="warn", rule="key_compat", splice=sp.id, node=nxt.id,
-                             message=f"{sp.id}: keys {ma.key.tonic} {ma.key.mode} ({ka[0]}{ka[1]}) → "
-                                     f"{mb.key.tonic} {mb.key.mode} ({kb[0]}{kb[1]}) are not "
+                             message=f"{sp.id}: keys {a_key[0]} {a_key[1]} ({ka[0]}{ka[1]}) → "
+                                     f"{b_key[0]} {b_key[1]} ({kb[0]}{kb[1]}) are not "
                                      f"the same, relative or adjacent on the Camelot wheel"))
     if audio and prev.source in audio and nxt.source in audio:
         w = LOUDNESS_WINDOW_S
