@@ -227,9 +227,11 @@ def _pan(x: np.ndarray, pan: float) -> np.ndarray:
     return out
 
 
-def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[float, str]] | None = None
-                ) -> tuple[Audio, RenderInfo]:
+def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[float, str]] | None = None,
+                deep_qc: bool = True) -> tuple[Audio, RenderInfo]:
     """Render a plan to audio + render.json info.
+
+    `deep_qc=False` skips the Essentia detectors (basic ones run; `info._deep()` runs the rest later).
 
     `_legacy_xfades` is internal (set by recut.legacy for old saved compositions): it maps an
     xfade node id to (ms, curve) so the old `qsin` fade-out (1 - sin, equal-gain) and the
@@ -431,5 +433,5 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
                  for p, seg in zip(placed, segments) if p.node.fade_out]
     info.issues += run_qc(out, info, pre_master=pre_master,
                           sources={sid: s.audio for sid, s in sources.items()}, fade_outs=fade_outs,
-                          trim_db=mctx.trim_db)
+                          trim_db=mctx.trim_db, deep=deep_qc)
     return out, info

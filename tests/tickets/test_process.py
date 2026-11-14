@@ -86,7 +86,7 @@ def test_render_prints_process_warnings(session, monkeypatch, capsys):
     monkeypatch.setattr(tickets, "iteration_numbers", lambda *a, **kw: [k])
     real = tickets.process_warnings
     monkeypatch.setattr(tickets, "process_warnings", lambda t, s, i: real(t, s, i, root))
-    cli.cmd_ticket(SimpleNamespace(action="render", id=tid, session=None, iteration=None))
+    cli.cmd_ticket(SimpleNamespace(action="render", id=tid, session=None, iteration=None, fast=False))
     out = capsys.readouterr().out
     assert "WARNING (process): no intent.json for session" in out
     assert "WARNING (process): plan.notes is empty" in out

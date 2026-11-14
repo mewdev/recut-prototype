@@ -14,9 +14,10 @@ peak, limiting, and the splice-relative checks are the same either way.
 import math
 import time
 from functools import lru_cache
-from typing import Optional
+from typing import Callable, Optional
 
 import numpy as np
+from pydantic import PrivateAttr
 from scipy import fft, signal
 
 from recut import qc_essentia
@@ -49,6 +50,7 @@ class RenderInfoQC(RenderInfo):
     validate against `RenderInfo` ignore it."""
 
     qc: dict = {}
+    _deep: Optional[Callable] = PrivateAttr(default=None)  # deferred Essentia pass (fast QC only)
 
 
 def _db(x: float) -> float:
@@ -291,16 +293,105 @@ def _nearest_splice(info: RenderInfo, t: float, within: float = CLICK_NEAR_S, st
     return best[1] if best else None
 
 
+DETECTOR_RULES = ("qc_clipping", "qc_click", "qc_gap", "qc_backend")  # issues the Essentia pass replaces
+
+
+def _detector_checks(info, env, mono, sr, total, fade_outs, det, qc, tm) -> list[Issue]:
+    """Clipping, click and gap checks; `det` = Essentia detections, or None for the basic detectors."""
+    issues: list[Issue] = []
+    # -- clipping
+    with tm("clipping"):
+        if det is not None:
+            clip_hits = [(a, max(1, int(round((b - a) * sr)))) for a, b in det.saturation]
+        else:
+            clip_hits = clip_runs(env, sr)
+    qc["clip_hits"] = len(clip_hits)
+    for t, n in clip_hits[:3]:
+        issues.append(Issue(severity="error", rule="qc_clipping", splice=_nearest_splice(info, t),
+                            message=f"clipped samples at {t:.2f}s ({n} in a row)"))
+    if len(clip_hits) > 3:
+        issues.append(Issue(severity="error", rule="qc_clipping",
+                            message=f"{len(clip_hits) - 3} more clipped runs"))
+
+    # -- clicks
+    with tm("click"):
+        if det is not None:
+            hits = _dedupe_times(det.clicks + det.discontinuities)
+            away = []
+            for t in hits:
+                sid = _nearest_splice(info, t, steps=True)
+                if sid is None:
+                    away.append(t)
+                else:
+                    issues.append(Issue(severity="warn", rule="qc_click", splice=sid,
+                                        message=f"{sid}: click or discontinuity at {t:.2f}s"))
+            if away:  # source transients, not edit artifacts: don't call them defects
+                shown = ", ".join(f"{t:.1f}s" for t in away[:MAX_UNATTACHED_HITS])
+                issues.append(Issue(severity="info", rule="qc_click",
+                                    message=f"{len(away)} click-like transients away from any splice "
+                                            f"(first: {shown})"))
+            qc["click_hits"] = len(hits)
+        else:
+            n_hits = 0
+            for sp_ in info.splices:
+                r = max((click_ratio(mono, sr, t) for t in _step_times(info, sp_)), default=0.0)
+                if r > CLICK_RATIO:
+                    n_hits += 1
+                    issues.append(Issue(severity="warn", rule="qc_click", splice=sp_.id,
+                                        message=f"{sp_.id}: possible click, high-frequency energy "
+                                                f"{10 * math.log10(r):.0f} dB above its surroundings"))
+            qc["click_hits"] = n_hits
+
+    # -- gaps
+    with tm("gap"):
+        ignore = [(a - 0.1, b + 0.5) for a, b in (fade_outs or [])]
+        if det is not None:
+            gaps = [(a, b) for a, b in det.gaps]
+        else:
+            n10 = max(1, int(0.010 * sr))
+            nb = mono.size // n10
+            rms_db = 10 * np.log10((mono[: nb * n10].reshape(nb, n10) ** 2).mean(1) + 1e-20)
+            quiet = np.concatenate([[0], (rms_db < GAP_DB).view(np.int8), [0]])
+            d = np.diff(quiet)
+            gaps = [(s * 0.010, e * 0.010) for s, e in zip(np.flatnonzero(d == 1), np.flatnonzero(d == -1))
+                    if (e - s) * 0.010 > GAP_MIN_S]
+        gaps = [(a, b) for a, b in gaps
+                if a > 0.5 and b < total - 0.5 and not any(a < hi and b > lo for lo, hi in ignore)]
+    qc["gap_hits"] = len(gaps)
+    for a, b in gaps[:5]:
+        issues.append(Issue(severity="warn", rule="qc_gap", splice=_nearest_splice(info, a, 0.25),
+                            message=f"near-silence from {a:.2f}s to {b:.2f}s ({(b - a) * 1000:.0f} ms)"))
+    return issues
+
+
+def deep_checks(info, env, mono, sr, total, fade_outs) -> Optional[tuple[list[Issue], dict]]:
+    """The Essentia pass of the QC, run after the fast render (see `run_qc(deep=False)`).
+
+    Returns (replacement issues for `DETECTOR_RULES`, qc number updates), or None when Essentia is
+    not available (the fast result stays as it is, marked `essentia: "skipped"`)."""
+    if not qc_essentia.available():
+        return None
+    tm = _Timer()
+    qc: dict = {"backend": "essentia", "essentia": "done"}
+    with tm("essentia"):
+        det = qc_essentia.detect(mono, sr)
+    issues = _detector_checks(info, env, mono, sr, total, fade_outs, det, qc, tm)
+    qc["deep_ms"] = round(sum(tm.ms.values()), 1)
+    return issues, qc
+
+
 def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] = None,
            sources: Optional[dict[str, Audio]] = None,
            fade_outs: Optional[list[tuple[float, float]]] = None,
-           trim_db: float = 0.0) -> list[Issue]:
+           trim_db: float = 0.0, deep: bool = True) -> list[Issue]:
     """All `qc_*` checks on the rendered audio.
 
     `pre_master`: the mix before the master chain (for `qc_limiting`; skipped without it).
     `sources`: source id -> Audio (for `qc_bandwidth`). `fade_outs`: output-time spans of
     deliberate clip fade-outs, which `qc_gap` ignores. `trim_db`: the master limiter's static
     true-peak trim (<= 0), discounted from `qc_limiting` (a level offset, not squash). Fills `info.qc` when it has that field.
+    `deep=False` is the fast path: basic detectors only, Essentia never touched (not even probed);
+    `info._deep()` then runs the Essentia pass later (`deep_checks`).
     """
     x = audio.samples
     if x.ndim == 1:
@@ -318,9 +409,9 @@ def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] =
         env = peak_env(x)
 
     # -- backend note
-    use_es = qc_essentia.available()
+    use_es = deep and qc_essentia.available()
     qc["backend"] = "essentia" if use_es else "basic"
-    if qc_essentia.enabled() and not use_es:
+    if deep and qc_essentia.enabled() and not use_es:
         issues.append(Issue(severity="info", rule="qc_backend",
                             message="essentia not installed, using basic detectors"))
 
@@ -386,74 +477,19 @@ def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] =
         issues.append(Issue(severity="warn", rule="qc_phase",
                             message=f"left/right correlation {corr:.2f}: mono sum will cancel"))
 
-    # -- Essentia, once on the mono render
+    # -- detector checks (clipping, clicks, gaps): Essentia when `deep`, numpy/scipy otherwise
     det = None
     if use_es:
         with tm("essentia"):
             det = qc_essentia.detect(mono, sr)
-
-    # -- clipping
-    with tm("clipping"):
-        if det is not None:
-            clip_hits = [(a, max(1, int(round((b - a) * sr)))) for a, b in det.saturation]
-        else:
-            clip_hits = clip_runs(env, sr)
-    qc["clip_hits"] = len(clip_hits)
-    for t, n in clip_hits[:3]:
-        issues.append(Issue(severity="error", rule="qc_clipping", splice=_nearest_splice(info, t),
-                            message=f"clipped samples at {t:.2f}s ({n} in a row)"))
-    if len(clip_hits) > 3:
-        issues.append(Issue(severity="error", rule="qc_clipping",
-                            message=f"{len(clip_hits) - 3} more clipped runs"))
-
-    # -- clicks
-    with tm("click"):
-        if det is not None:
-            hits = _dedupe_times(det.clicks + det.discontinuities)
-            away = []
-            for t in hits:
-                sid = _nearest_splice(info, t, steps=True)
-                if sid is None:
-                    away.append(t)
-                else:
-                    issues.append(Issue(severity="warn", rule="qc_click", splice=sid,
-                                        message=f"{sid}: click or discontinuity at {t:.2f}s"))
-            if away:  # source transients, not edit artifacts: don't call them defects
-                shown = ", ".join(f"{t:.1f}s" for t in away[:MAX_UNATTACHED_HITS])
-                issues.append(Issue(severity="info", rule="qc_click",
-                                    message=f"{len(away)} click-like transients away from any splice "
-                                            f"(first: {shown})"))
-            qc["click_hits"] = len(hits)
-        else:
-            n_hits = 0
-            for sp_ in info.splices:
-                r = max((click_ratio(mono, sr, t) for t in _step_times(info, sp_)), default=0.0)
-                if r > CLICK_RATIO:
-                    n_hits += 1
-                    issues.append(Issue(severity="warn", rule="qc_click", splice=sp_.id,
-                                        message=f"{sp_.id}: possible click, high-frequency energy "
-                                                f"{10 * math.log10(r):.0f} dB above its surroundings"))
-            qc["click_hits"] = n_hits
-
-    # -- gaps
-    with tm("gap"):
-        ignore = [(a - 0.1, b + 0.5) for a, b in (fade_outs or [])]
-        if det is not None:
-            gaps = [(a, b) for a, b in det.gaps]
-        else:
-            n10 = max(1, int(0.010 * sr))
-            nb = mono.size // n10
-            rms_db = 10 * np.log10((mono[: nb * n10].reshape(nb, n10) ** 2).mean(1) + 1e-20)
-            quiet = np.concatenate([[0], (rms_db < GAP_DB).view(np.int8), [0]])
-            d = np.diff(quiet)
-            gaps = [(s * 0.010, e * 0.010) for s, e in zip(np.flatnonzero(d == 1), np.flatnonzero(d == -1))
-                    if (e - s) * 0.010 > GAP_MIN_S]
-        gaps = [(a, b) for a, b in gaps
-                if a > 0.5 and b < total - 0.5 and not any(a < hi and b > lo for lo, hi in ignore)]
-    qc["gap_hits"] = len(gaps)
-    for a, b in gaps[:5]:
-        issues.append(Issue(severity="warn", rule="qc_gap", splice=_nearest_splice(info, a, 0.25),
-                            message=f"near-silence from {a:.2f}s to {b:.2f}s ({(b - a) * 1000:.0f} ms)"))
+    issues += _detector_checks(info, env, mono, sr, total, fade_outs, det, qc, tm)
+    if not deep:
+        # fast path: the Essentia pass is deferred; the caller may run `info._deep()` later
+        qc["essentia"] = "pending" if qc_essentia.enabled() else "skipped"
+        if isinstance(info, RenderInfoQC):
+            info._deep = lambda: deep_checks(info, env, mono, sr, total, fade_outs)
+    else:
+        qc["essentia"] = "done" if use_es else "skipped"
 
     # -- per-splice: gain jump, tilt jump
     with tm("splice_jumps"):
