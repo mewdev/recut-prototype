@@ -1,5 +1,7 @@
 # Build Status / Handoff Log
 
+**Current state (2026-11-14):** week-1 prototype is built and in use on real tickets (engine, QC + linter, ticket store, review GUI + client share page, data-repo sync, report, intake check); open: B8 (verify Docker on a host), M1 (Demucs stems) and the rest of M3, A6 `RECUT_SESSION` for direct `compose()`, I1 ongoing with real tickets.
+
 **Every agent reads this file before starting and updates it before ending.** It is the
 only memory shared between agent sessions. If something isn't written here, the next
 agent won't know it.
@@ -43,19 +45,19 @@ agent won't know it.
 | Q0 intake check (warn operator about low-quality files) | done | `src/recut/intake.py`, `recut check-audio`, `ticket new --override`, `/new` "Upload anyway". Tests `tests/intake/` |
 | A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
 | Q1 audio QC after render | done | `src/recut/qc.py` (+ `qc_essentia.py`, switch `RECUT_QC_ESSENTIA`); engine calls `run_qc`; tests `tests/engine/test_qc.py` |
-| Q2 QC follow-ups | partial: (b) done, (a) todo | Sonnet. (a) Run the Essentia part of QC **after** render.json is written and append its issues, so the live preview isn't slowed: today render+QC on the 46 s demo takes 2.2 s with Essentia vs 0.56 s without, and a 3-min track adds ~3.5 s. (b) **done in improvement pass 1** (task 2): the master limiter is true-peak aware, see Q-quality.md Q2b. |
+| Q2 QC follow-ups | done | (a) Essentia QC runs off the critical path: `render_iteration(qc="full"\|"fast"\|"background")`, the server uses `background` (fast render ~0.5 s on the 46 s demo vs ~1.4-2 s with Essentia), `render.json.qc.essentia` = pending/done/skipped, stale results discarded by `qc.render_id`; `recut ticket render --fast`. Tests `tests/tickets/test_qc_background.py`. (b) master limiter is true-peak aware (Q-quality.md Q2b). |
 | M1 stems + instrument activity (Demucs on Modal) | todo | Sonnet; docs/workstreams/M-music-data.md |
 | M2 pace + key ranges + short-term loudness | done | `src/recut/map/musicdata.py` (computed in `make_map`; ~4 s for 3 min), Essentia key only via `src/recut/key_essentia.py` (respects `qc_essentia.available()`; else librosa chroma + Krumhansl, source named in `analysis_sources.key_ranges`). Existing maps: `recut map --enrich [stem...]`, `recut ticket enrich <id> [--force]`. Tests: `tests/map/test_musicdata.py` |
 | M3 map schema fields + linter rules + GUI lanes | partial | done: optional `pace`, `loudness_short_term`, `key_ranges`, `analysis_sources`, `instrument_activity` (defined, unfilled), segment `pace`/`drum_activity`/`vocal_activity`; old maps load; GUI pace/loudness lines (toggle "pace / loudness", off by default); `exit-design.md`. Left: instrument activity values + `drum_activity`/`vocal_activity` summaries + GUI drum/bass/vocal lanes (need M1 Demucs), linter `ending_drums`/`mid_vocal`. **A5 (`key_compat`) should call `recut.map.helpers.key_at(map, t)`** (key range at the splice time, falls back to the global key); `pace_at(map, t)` is the energy helper |
 | M4 Apple Music Understanding (Swift CLI) | later | needs an Apple-silicon Mac on macOS 27+ |
-| C1 scaffold | todo | |
-| C2 ticket list/page | todo | |
-| C3 composition view | todo | |
-| C4 source map | todo | |
-| C5 A/B + live reload | todo | |
-| C6 review panel | todo | |
-| C7 client pages | todo | |
-| I1 integration + real tickets | todo | Day 6–7, strongest model |
+| C1 scaffold | dropped (decision: no React; app.html covers C2–C7) | |
+| C2 ticket list/page | dropped (decision: no React; app.html covers C2–C7) | |
+| C3 composition view | dropped (decision: no React; app.html covers C2–C7) | |
+| C4 source map | dropped (decision: no React; app.html covers C2–C7) | |
+| C5 A/B + live reload | dropped (decision: no React; app.html covers C2–C7) | |
+| C6 review panel | dropped (decision: no React; app.html covers C2–C7) | |
+| C7 client pages | dropped (decision: no React; app.html covers C2–C7) | |
+| I1 integration + real tickets | ongoing (operator: real tickets) | the operator works real client tickets; findings go through `docs/IMPROVEMENT_LOOP.md` |
 | R1 convolution reverb (pedalboard Convolution + freely licensed IRs, reverb `type`) | candidate — wait for real tickets | operator on s2·it3 (low-cut return, -26 dB base send rising to -13 dB): "okay for now, needs real cases". Build only when a real ticket shows the algorithmic reverb is the limit |
 
 ## Blockers
@@ -135,6 +137,7 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-14 — Q2a done (Sonnet build agent): Essentia QC runs after `render.json` is written. `run_qc(deep=False)` does the basic detectors and leaves `info._deep()`; `tickets.render_iteration(qc=...)` merges the Essentia issues (`qc_clipping`, `qc_click`, `qc_gap`, `qc_backend`) and numbers atomically in a thread; the app.html Problems panel shows "deep checks running…" while pending. Fast path: ~0.5 s on the demo (full: 1.4-2.0 s).
 - 2026-11-14 — Q0 done (Sonnet build agent): `intake.check_audio(path) -> IntakeResult{ok, problems[{code,message,blocking}], info}` (ffprobe metadata, only the middle 30 s decoded; real bandwidth via `qc.bandwidth_hz`; clipping via the numpy `qc.clip_runs`, because the Essentia detectors are too slow for a sub-second check). `recut check-audio`; `recut ticket new` refuses blocking problems without `--override`; `POST /api/tickets` returns 422 `{detail:{error:"intake",problems}}` unless `override=true`, `/new` shows them with an "Upload anyway" checkbox (not checked in a browser). Problems + override are stored in `<ticket>/intake.json` and an `intake` timeline event (the `Request` contract is untouched). Note: bandwidth reads ~16 kHz for a 15 kHz low-pass (the -40 dB point of a real filter's skirt). 5-min file: ~0.2 s WAV (see report).
 - 2026-11-14 — A5 done (Sonnet build agent): cross-song linter rules, see the Decisions entry. Demo plan 01 (a→b, 2-beat overlap) fires one real `downbeat` error: the incoming downbeat lands on beat 3 of the outgoing bar. bpm/key/loudness don't fire (same song, a/b level-matched by A3). The doc recipe `ending-transplant.md` variant 3 used a 2-beat xfade with the same flaw; changed to `1 bar`.
 - 2026-11-14 — A3 done (Sonnet build agent): multi-source plans are gained to one integrated loudness at load (target = loudest source's LUFS, capped at -9, so quiet sources come up and loud masters are never made louder); single-source plans are untouched (test: identical samples). Measured with `qc.integrated_lufs` (pyloudnorm-equivalent, within 0.01 LU), cached per file+mtime. Demo medley: a and b (-6 dB apart) now render level-matched.
