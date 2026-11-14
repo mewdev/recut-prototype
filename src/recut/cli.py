@@ -247,7 +247,7 @@ def cmd_ticket(args) -> None:
     try:
         _cmd_ticket(args)
     finally:
-        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage"):
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share"):
             from recut import sync
 
             res = sync.request_sync(f"ticket {args.action} {getattr(args, 'id', '') or ''}".strip(), TICKETS_DIR, wait=True)
@@ -466,6 +466,10 @@ def main() -> None:
     t_sh.add_argument("id")
     t_us = tsub.add_parser("usage", help="Compute usage.json (tokens, duration, cost) from session transcripts")
     t_us.add_argument("id")
+    t_sh = tsub.add_parser("share", help="Print the client link for a shipped cut (RECUT_PUBLIC_URL = base)")
+    t_sh.add_argument("id")
+    t_sh.add_argument("--session", type=int, help="default: the newest shipped iteration")
+    t_sh.add_argument("--iteration", type=int)
     t_r = tsub.add_parser("render", help="Render an iteration and print issues")
     t_r.add_argument("id")
     t_r.add_argument("--session", type=int)

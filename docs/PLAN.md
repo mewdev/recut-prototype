@@ -250,11 +250,12 @@ GET  /api/tickets/{id}/events             SSE: "changed" (renders stale iteratio
 GET  /api/tickets/{id}/maps/{source_id}   music map as strict JSON (NaN → null)
 GET  /api/tickets/{id}/peaks/{path}?n=    waveform min/max peaks for any audio file in the ticket
 PUT  /api/tickets/{id}/sessions/{n}/review
-POST /api/tickets/{id}/share              → {token, url}  (only if verdict == ship)
-GET  /s/{token}                           client page: player, original vs. cut
+POST /api/tickets/{id}/share              {session?, iteration?} → {token, url}  (409 unless verdict == ship;
+                                          default: newest shipped iteration; base URL = RECUT_PUBLIC_URL)
+GET  /s/{token}                           client page: Cut/Original player, Approve / Request changes, 1-5 stars, comment, consent line; 404 page for unknown tokens
 GET  /s/{token}/audio/cut                 shared render only (Range requests)
 GET  /s/{token}/audio/original            shared original only (Range requests)
-POST /api/share/{token}/decision          {approved: bool, note}
+POST /api/share/{token}/decision          {approved: bool, rating?: 1-5, note?}  → client_feedback.jsonl (channel share_page)
 POST /api/tickets                         (also public: the client upload form)
 ```
 
