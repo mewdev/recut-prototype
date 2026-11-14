@@ -174,6 +174,19 @@ structure_image = (
 )
 
 
+def bpm_from_beats(beats: list) -> "float | None":
+    """60 / median inter-beat interval. VERBATIM COPY of recut.map.tempo.bpm_from_beats
+    (Modal ships only this file); tests/map/test_tempo.py keeps the two equal."""
+    from statistics import median
+
+    if len(beats) < 4:
+        return None
+    intervals = [b - a for a, b in zip(beats, beats[1:]) if b > a]
+    if not intervals:
+        return None
+    return 60.0 / median(intervals)
+
+
 # ── 1. Beat detection ──────────────────────────────────────────────────────────
 @app.function(image=beats_image, timeout=300, memory=4096)
 def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
@@ -202,15 +215,19 @@ def run_beats(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         # activation[:, 0] is the beat-activation column — reuse it for madmom's
         # own tempo estimator instead of deriving bpm from beat-interval spacing.
         tempi = TempoEstimationProcessor(fps=100)(activation[:, 0])
-        bpm = float(tempi[0, 0]) if len(tempi) else 120.0
+        bpm_estimate = float(tempi[0, 0]) if len(tempi) else 120.0
+        # the estimator can lock onto half/double time; the beat grid is what cuts land on
+        grid_bpm = bpm_from_beats([float(b) for b in beat_times])
+        bpm = grid_bpm if grid_bpm is not None else bpm_estimate
 
         elapsed = round(time.time() - t0, 2)
-        print(f"madmom: {len(beat_times)} beats  bpm={bpm:.1f}  beats_per_bar={beats_per_bar}  {elapsed}s")
+        print(f"madmom: {len(beat_times)} beats  bpm={bpm:.1f} (estimate {bpm_estimate:.1f})  beats_per_bar={beats_per_bar}  {elapsed}s")
 
         return {
             "beats": [round(float(b), 3) for b in beat_times],
             "downbeats": [round(float(b), 3) for b in downbeats],
             "bpm": round(bpm, 2),
+            "bpm_estimate": round(bpm_estimate, 2),
             "beats_per_bar": beats_per_bar,
             "model": "madmom",
         }

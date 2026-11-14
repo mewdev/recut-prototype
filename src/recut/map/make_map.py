@@ -10,7 +10,8 @@ Usage:
 """
 
 import json
-from datetime import datetime
+import warnings
+from datetime import datetime, timezone
 from pathlib import Path
 
 import librosa
@@ -36,6 +37,7 @@ from recut.map.schema import (
     RawSegment,
     Sources,
 )
+from recut.map.tempo import bpm_disagrees, bpm_from_beats
 
 
 def build_segment(
@@ -47,8 +49,11 @@ def build_segment(
     audio: np.ndarray,
     sample_rate: int,
     is_last: bool = False,
+    is_first: bool = False,
 ) -> EnrichedSegment:
-    start = snap_to_downbeat(all_downbeats, segment["start"])
+    # the song's head (pickup / lead-in before the first downbeat) has no downbeat to snap to:
+    # the first segment starts at 0.0 so no audio is lost. Its bars still count real downbeats.
+    start = 0.0 if is_first else snap_to_downbeat(all_downbeats, segment["start"])
     # the song's tail (fade-out, silence) has no downbeat to snap to — last segment runs to end of audio
     end = len(audio) / sample_rate if is_last else snap_to_downbeat(all_downbeats, segment["end"])
     seg_downbeats = downbeats_in(all_downbeats, start, end)
@@ -76,13 +81,35 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
 
     all_phrases = phrase_in(data["downbeats"])
 
+    n_raw = len(data["segments"])
     segments = [
         build_segment(
             segment, index, data["downbeats"], data["chords"], all_phrases, audio, sr,
-            is_last=index == len(data["segments"]) - 1,
+            is_last=index == n_raw - 1, is_first=index == 0,
         )
         for index, segment in enumerate(data["segments"])
     ]
+    # two raw boundaries snapping to the same downbeat leave a zero-length segment: drop it
+    # (no audio is lost) and renumber
+    kept = [seg for seg in segments if seg.duration > 0]
+    if len(kept) < len(segments):
+        dropped = [s.segment_name for s in segments if s.duration <= 0]
+        print(f"make_map: dropped zero-length segments: {dropped}")
+        segments = [seg.model_copy(update={"index": i}) for i, seg in enumerate(kept)]
+
+    # tempo: the beat grid is what cuts land on; the estimator can be half/double time
+    raw_bpm = float(data["bpm"])
+    grid_bpm = bpm_from_beats(data["beats"])
+    bpm, bpm_raw = raw_bpm, None
+    if grid_bpm is not None:
+        bpm = round(grid_bpm, 2)
+        if bpm_disagrees(raw_bpm, grid_bpm):
+            bpm_raw = raw_bpm
+            warnings.warn(
+                f"tempo estimate {raw_bpm:.2f} bpm disagrees with the beat grid "
+                f"({grid_bpm:.2f} bpm); using the grid",
+                stacklevel=2,
+            )
 
     raw_key = data.get("key")
     sources = data["_sources"]
@@ -90,7 +117,8 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
 
     return MusicMap(
         path=str(audio_path),
-        bpm=data["bpm"],
+        bpm=bpm,
+        bpm_raw=bpm_raw,
         beats_per_bar=data["beats_per_bar"],
         duration=len(audio) / sr,
         beats=data["beats"],
@@ -106,7 +134,7 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
         ),
         meta=Meta(
             audio_hash=hash_file(audio_path),
-            generated_at=datetime.utcnow().isoformat(),
+            generated_at=datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             map_version="0.1",
         ),
     )
