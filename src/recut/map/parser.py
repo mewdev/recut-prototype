@@ -14,9 +14,11 @@ MusicMap helpers (used by validator + compositor):
   last_segment(music_map) -> EnrichedSegment
 """
 
+import warnings
 from pathlib import Path
 
 from recut.map.schema import EnrichedSegment, MusicMap, SegmentName
+from recut.map.tempo import bpm_disagrees, bpm_from_beats
 
 # ---------------------------------------------------------------------------
 # Public parsers
@@ -25,12 +27,28 @@ from recut.map.schema import EnrichedSegment, MusicMap, SegmentName
 
 def parse_recut_map(map_path: str | Path) -> MusicMap:
     """Parse our enriched JSON map format. Pydantic validates structure automatically."""
-    return MusicMap.model_validate_json(Path(map_path).read_text())
+    return _reconcile_bpm(MusicMap.model_validate_json(Path(map_path).read_text()))
 
 
 def parse_recut_map_dict(src: dict) -> MusicMap:
     """Parse our map format from an already-loaded dict."""
-    return MusicMap.model_validate(src)
+    return _reconcile_bpm(MusicMap.model_validate(src))
+
+
+def _reconcile_bpm(music_map: MusicMap) -> MusicMap:
+    """Load-time guard: maps made before the beat-grid tempo fix can carry a half/double-time
+    `bpm`, which makes every `bars` / `beats` unit wrong. Correct it from the map's own grid."""
+    grid_bpm = bpm_from_beats(music_map.beats)
+    if grid_bpm is not None and bpm_disagrees(music_map.bpm, grid_bpm):
+        warnings.warn(
+            f"map bpm {music_map.bpm:.2f} disagrees with its beat grid ({grid_bpm:.2f} bpm); "
+            "using the grid (map predates the tempo fix; `recut map --force` persists it)",
+            stacklevel=3,
+        )
+        music_map = music_map.model_copy(
+            update={"bpm": round(grid_bpm, 2), "bpm_raw": music_map.bpm_raw or music_map.bpm}
+        )
+    return music_map
 
 
 def parse_muf_map(muf_path: str) -> MusicMap:

@@ -44,7 +44,8 @@ version now on Modal, and add Apple MU later as a second source for the same fie
   Modal key image.
 
 ## M3: Map schema + use the data
-- `MusicMap` gets **optional** fields, so old maps keep loading:
+- `MusicMap` gets **optional** fields, so old maps keep loading (M0 already added `bpm_raw`: the tempo
+  estimator's value when it disagreed with the beat grid, which now defines `bpm`):
   ```
   instrument_activity: {drum|bass|vocal|other: {hop_s: 0.1, values: [...], ranges: [[start, end], ...]}}
   pace: {hop_s: 1.0, events_per_min: [...], normalized: [...]}

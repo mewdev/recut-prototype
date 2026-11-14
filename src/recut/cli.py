@@ -55,9 +55,25 @@ def cmd_analyze(args) -> None:
 
 
 def cmd_map(args) -> None:
-    """Build enriched maps for all sources with status=needs_map."""
+    """Build enriched maps for all sources with status=needs_map (--force: rebuild existing)."""
     sources = load_project_sources()
-    pending = {k: v for k, v in sources.items() if v.status == "needs_map"}
+    force = getattr(args, "force", False)
+    stems = getattr(args, "stems", None) or []
+    unknown = [s for s in stems if s not in sources]
+    if unknown:
+        print(f"Error: unknown source(s): {', '.join(unknown)}")
+        raise SystemExit(1)
+    if force:
+        # rebuild every source that has raw analysis (or just the named ones)
+        pending = {
+            k: v for k, v in sources.items()
+            if (not stems or k in stems) and (RAW_DIR / f"{k}.json").exists()
+        }
+        for s in stems:
+            if s not in pending:
+                print(f"  skipped {s}: no raw analysis (run `recut analyze` first)")
+    else:
+        pending = {k: v for k, v in sources.items() if v.status == "needs_map"}
 
     if not pending:
         print("Nothing to map — all sources are up to date.")
@@ -360,6 +376,9 @@ def main() -> None:
     analyze.set_defaults(func=cmd_analyze)
 
     map_cmd = sub.add_parser("map", help="Build enriched maps for all needs_map sources")
+    map_cmd.add_argument("--force", action="store_true",
+                         help="rebuild existing enriched maps too (after a map fix)")
+    map_cmd.add_argument("stems", nargs="*", help="with --force: only these sources")
     map_cmd.set_defaults(func=cmd_map)
 
     status_cmd = sub.add_parser("status", help="Show registry state for all sources")
