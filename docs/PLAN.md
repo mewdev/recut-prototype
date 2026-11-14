@@ -63,6 +63,11 @@ multi-song sequencing all stay in.
     review.json                # 3.5 (operator, per session's latest iteration)
   share.json                   # {token, session, iteration, created_at, client_decision?, client_note?}
   client_feedback.jsonl        # one ClientFeedback per client reaction (decision, rating 1–5, note, channel); append-only
+  events.jsonl                 # ticket-level timeline (L1), append-only: {ts, op, ...} with op in
+                               #   created | status (from,to) | session_started (n, model) | rendered (n,k)
+                               #   | reviewed (n,k,verdict) | shipped (n,k) | shared (n,k) | client_feedback (decision, rating)
+  sessions/<n>/usage.json      # L1: {model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+                               #   cost_usd (estimated, null if unknown model), duration_s, turns} summed from transcript.jsonl
 ```
 
 `status`: `new → in_progress → in_review → (needs_rework → in_progress → in_review)* → shipped → client_approved | client_changes`.
