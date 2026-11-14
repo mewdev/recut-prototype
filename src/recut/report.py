@@ -5,6 +5,10 @@ Reads every ticket under a tickets root and never writes. Definitions: docs/work
 - Iterations to ship: the iteration k of the session's first `ship` review.
 - Multi-song: the session's latest iteration plan has more than one source.
 - Model: sessions/<n>/meta.json `model`.
+- Client feedback (`client_feedback.jsonl`, `recut ticket client`): only reactions on sessions in scope.
+  Approval rate = tickets whose LAST reaction is approved / tickets with any reaction; rounds = `changes`
+  before the first `approved`; agreement = operator verdict on that iteration vs the client decision
+  (ship <-> approved, fixable/reject <-> changes).
 """
 
 from __future__ import annotations
@@ -239,6 +243,62 @@ def _worst_sessions(reviewed: list[_Session]) -> list[dict]:
     return out
 
 
+def _client_feedback(root: Path, sessions: list[_Session]) -> dict:
+    """Client reactions on the sessions in scope (see the module docstring)."""
+    in_scope = {(s.ticket_id, s.n) for s in sessions}
+    feedback: dict[str, list] = {}
+    for tid in dict.fromkeys(s.ticket_id for s in sessions):
+        fbs = [fb for fb in tickets.load_client_feedback(tid, root) if (tid, fb.session) in in_scope]
+        if fbs:
+            feedback[tid] = fbs
+
+    approved_last = 0
+    rounds: list[int] = []
+    ratings: list[int] = []
+    change_requests: list[dict] = []
+    compared = matched = unreviewed = entries = 0
+    mismatches: list[dict] = []
+    for tid, fbs in feedback.items():
+        entries += len(fbs)
+        if fbs[-1].decision == "approved":
+            approved_last += 1
+        first = next((i for i, fb in enumerate(fbs) if fb.decision == "approved"), None)
+        if first is not None:
+            rounds.append(first)  # every reaction before the first approval is a `changes`
+        for fb in fbs:
+            if fb.rating is not None:
+                ratings.append(fb.rating)
+            if fb.decision == "changes" and fb.note:
+                change_requests.append({"ticket_id": tid, "session": fb.session, "iteration": fb.iteration,
+                                        "rating": fb.rating, "note": fb.note})
+            rv = tickets.load_iteration_review(tid, fb.session, fb.iteration, root)
+            if rv is None:
+                unreviewed += 1
+                continue
+            compared += 1
+            if (rv.verdict == "ship") == (fb.decision == "approved"):
+                matched += 1
+            else:
+                mismatches.append({"ticket_id": tid, "session": fb.session, "iteration": fb.iteration,
+                                   "operator": rv.verdict, "client": fb.decision})
+
+    n = len(feedback)
+    return {
+        "tickets": n,
+        "entries": entries,
+        "approval": {"approved": approved_last, "tickets": n,
+                     "pct": round(100 * approved_last / n, 1) if n else None},
+        "rounds": {"approved_tickets": len(rounds), "never_approved": n - len(rounds),
+                   "median": float(statistics.median(rounds)) if rounds else None},
+        "rating": {"rated": len(ratings),
+                   "avg": round(statistics.fmean(ratings), 2) if ratings else None},
+        "change_requests": change_requests,
+        "agreement": {"compared": compared, "matched": matched, "unreviewed": unreviewed,
+                      "pct": round(100 * matched / compared, 1) if compared else None,
+                      "mismatches": mismatches},
+    }
+
+
 def build(root: Path = TICKETS_DIR, since: Optional[date] = None) -> dict:
     """The whole report as one JSON-serialisable dict (what `--json` prints)."""
     sessions, n_tickets = _load_sessions(root, since)
@@ -253,6 +313,7 @@ def build(root: Path = TICKETS_DIR, since: Optional[date] = None) -> dict:
         "validator_misses": _validator_misses(reviewed),
         "check_accuracy": _check_accuracy(reviewed),
         "worst_sessions": _worst_sessions(reviewed),
+        "client": _client_feedback(root, sessions),
     }
 
 
@@ -325,4 +386,26 @@ def format_text(data: dict) -> str:
                         _pct(c["precision_pct"])] for c in data["check_accuracy"]])
     else:
         out.append("   none")
+
+    cl = data["client"]
+    out += ["", "6. Client feedback (approval = last reaction approved; agreement = operator verdict vs client)"]
+    if not cl["tickets"]:
+        out.append("   none yet: log with `recut ticket client <id> --approved | --changes`")
+    else:
+        ap, rd, rt, ag = cl["approval"], cl["rounds"], cl["rating"], cl["agreement"]
+        out.append(f"   tickets: {cl['tickets']} · reactions: {cl['entries']} · "
+                   f"client approval rate: {ap['approved']}/{ap['tickets']} ({_pct(ap['pct'])})")
+        out.append(f"   rounds until approval: median {_num(rd['median'])} "
+                   f"({rd['approved_tickets']} approved, {rd['never_approved']} not yet)")
+        out.append(f"   average rating: {_num(rt['avg'])} ({rt['rated']} rated reactions)")
+        out.append(f"   agreement with operator verdict: {ag['matched']}/{ag['compared']} ({_pct(ag['pct'])})"
+                   + (f", {ag['unreviewed']} unreviewed" if ag["unreviewed"] else ""))
+        if cl["change_requests"]:
+            out.append("   change requests:")
+            for c in cl["change_requests"]:
+                stars = f" ★{c['rating']}" if c["rating"] else ""
+                out.append(f"     {c['ticket_id']} s{c['session']}·it{c['iteration']}{stars}: {c['note']}")
+        for m in ag["mismatches"]:
+            out.append(f"   disagree: {m['ticket_id']} s{m['session']}·it{m['iteration']}: "
+                       f"operator {m['operator']}, client {m['client']}")
     return "\n".join(out)

@@ -21,11 +21,20 @@ from recut.contracts.plan import (
     XFadeNode,
 )
 from recut.contracts.render import Issue, RenderInfo, RenderSegment, SourceInfo, Splice
-from recut.contracts.ticket import TAGS, Intent, Request, Review, SessionMeta, Share, SpliceReview
+from recut.contracts.ticket import (
+    TAGS,
+    ClientFeedback,
+    Intent,
+    Request,
+    Review,
+    SessionMeta,
+    Share,
+    SpliceReview,
+)
 
 __all__ = [
     "AutoFilter", "ClipNode", "Delay", "Eq", "FadeHandle", "Limiter", "Plan", "Points", "Ramp",
     "ReturnTrack", "Reverb", "SourceRef", "Track", "Utility", "XFadeNode",
     "Issue", "RenderInfo", "RenderSegment", "SourceInfo", "Splice",
-    "TAGS", "Intent", "Request", "Review", "SessionMeta", "Share", "SpliceReview",
+    "TAGS", "ClientFeedback", "Intent", "Request", "Review", "SessionMeta", "Share", "SpliceReview",
 ]

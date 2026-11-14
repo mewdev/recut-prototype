@@ -92,10 +92,13 @@ def _clip_bounds(node: ClipNode, m: MusicMap) -> tuple[float, float]:
         names = sorted({s.segment_name for s in m.segments if s.segment_name != "silence"})
         raise PlanError(f"clip {node.id}: {e}. Sections in source {node.source!r}: {names}") from e
     start, end = seg.start, seg.end
+    # offsets count from the first downbeat: the first segment starts at 0.0, before it
+    # (pickup / lead-in), and the lead-in is not a bar
+    origin = seg.downbeats[0] if seg.downbeats and seg.downbeats[0] > start else start
     if node.offset_bars is not None:
-        start += bars_to_seconds(m, node.offset_bars)
+        start = origin + bars_to_seconds(m, node.offset_bars)
     elif node.offset_beats is not None:
-        start += beats_to_seconds(m, node.offset_beats)
+        start = origin + beats_to_seconds(m, node.offset_beats)
     if start >= end - 1e-6:
         raise PlanError(f"clip {node.id}: offset is past the end of {node.segment}#{node.index}")
     length = None

@@ -62,6 +62,7 @@ multi-song sequencing all stay in.
       review.json              # 3.5, this iteration's review (session review.json = latest copy)
     review.json                # 3.5 (operator, per session's latest iteration)
   share.json                   # {token, session, iteration, created_at, client_decision?, client_note?}
+  client_feedback.jsonl        # one ClientFeedback per client reaction (decision, rating 1–5, note, channel); append-only
 ```
 
 `status`: `new → in_progress → in_review → (needs_rework → in_progress → in_review)* → shipped → client_approved | client_changes`.

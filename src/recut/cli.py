@@ -55,9 +55,25 @@ def cmd_analyze(args) -> None:
 
 
 def cmd_map(args) -> None:
-    """Build enriched maps for all sources with status=needs_map."""
+    """Build enriched maps for all sources with status=needs_map (--force: rebuild existing)."""
     sources = load_project_sources()
-    pending = {k: v for k, v in sources.items() if v.status == "needs_map"}
+    force = getattr(args, "force", False)
+    stems = getattr(args, "stems", None) or []
+    unknown = [s for s in stems if s not in sources]
+    if unknown:
+        print(f"Error: unknown source(s): {', '.join(unknown)}")
+        raise SystemExit(1)
+    if force:
+        # rebuild every source that has raw analysis (or just the named ones)
+        pending = {
+            k: v for k, v in sources.items()
+            if (not stems or k in stems) and (RAW_DIR / f"{k}.json").exists()
+        }
+        for s in stems:
+            if s not in pending:
+                print(f"  skipped {s}: no raw analysis (run `recut analyze` first)")
+    else:
+        pending = {k: v for k, v in sources.items() if v.status == "needs_map"}
 
     if not pending:
         print("Nothing to map — all sources are up to date.")
@@ -226,7 +242,7 @@ def cmd_ticket(args) -> None:
     try:
         _cmd_ticket(args)
     finally:
-        if args.action in ("new", "demo", "work", "iterate", "render"):
+        if args.action in ("new", "demo", "work", "iterate", "render", "client"):
             from recut import sync
 
             res = sync.request_sync(f"ticket {args.action} {getattr(args, 'id', '') or ''}".strip(), TICKETS_DIR, wait=True)
@@ -270,6 +286,26 @@ def _cmd_ticket(args) -> None:
         n = sessions[-1]
         k = tickets.new_iteration(tid, n)
         print(f"New iteration: {tickets.iteration_dir(tid, n, k) / 'plan.json'} (copied from the previous one)")
+    elif args.action == "client":
+        tid = args.id
+        try:
+            fb = tickets.add_client_feedback(
+                tid, "approved" if args.approved else "changes", rating=args.rating,
+                note=args.note, session=args.session, iteration=args.iteration)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        if args.session is not None or args.iteration is not None:
+            how = "given"
+        elif (rv := tickets.load_iteration_review(tid, fb.session, fb.iteration)) and rv.verdict == "ship":
+            how = "latest shipped"
+        else:
+            how = "no ship review yet: latest iteration"
+        stars = f" ★{fb.rating}" if fb.rating else ""
+        print(f"Recorded client {fb.decision}{stars} on s{fb.session}·it{fb.iteration} ({how}) · ticket {tid} "
+              f"→ {'client_approved' if fb.decision == 'approved' else 'client_changes'}")
+        if fb.note:
+            print(f"  note: {fb.note}")
     elif args.action == "render":
         tid = args.id
         n = args.session or tickets.session_numbers(tid)[-1]
@@ -294,6 +330,16 @@ def cmd_report(args) -> None:
         print(json.dumps(data, indent=2, ensure_ascii=False))
     else:
         print(report.format_text(data))
+
+
+def _rating(text: str) -> int:
+    try:
+        v = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected 1-5, got {text!r}") from None
+    if not 1 <= v <= 5:
+        raise argparse.ArgumentTypeError(f"expected 1-5, got {v}")
+    return v
 
 
 def _starter_plan(tid: str) -> dict:
@@ -330,6 +376,9 @@ def main() -> None:
     analyze.set_defaults(func=cmd_analyze)
 
     map_cmd = sub.add_parser("map", help="Build enriched maps for all needs_map sources")
+    map_cmd.add_argument("--force", action="store_true",
+                         help="rebuild existing enriched maps too (after a map fix)")
+    map_cmd.add_argument("stems", nargs="*", help="with --force: only these sources")
     map_cmd.set_defaults(func=cmd_map)
 
     status_cmd = sub.add_parser("status", help="Show registry state for all sources")
@@ -364,6 +413,15 @@ def main() -> None:
     t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
     t_it = tsub.add_parser("iterate", help="New iteration in the latest session (copies the plan)")
     t_it.add_argument("id")
+    t_c = tsub.add_parser("client", help="Log the client's decision on a delivered cut")
+    t_c.add_argument("id")
+    t_cd = t_c.add_mutually_exclusive_group(required=True)
+    t_cd.add_argument("--approved", action="store_true", help="the client approves the cut")
+    t_cd.add_argument("--changes", action="store_true", help="the client asks for changes")
+    t_c.add_argument("--rating", type=_rating, help="client satisfaction, 1-5")
+    t_c.add_argument("--note", help="what the client said, verbatim when possible")
+    t_c.add_argument("--session", type=int, help="session (default: the latest shipped iteration)")
+    t_c.add_argument("--iteration", type=int, help="iteration (default: the latest shipped iteration)")
     t_r = tsub.add_parser("render", help="Render an iteration and print issues")
     t_r.add_argument("id")
     t_r.add_argument("--session", type=int)

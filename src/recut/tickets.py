@@ -18,7 +18,7 @@ from typing import Optional
 
 import soundfile as sf
 
-from recut.contracts import Intent, Plan, Request, Review, SessionMeta
+from recut.contracts import ClientFeedback, Intent, Plan, Request, Review, SessionMeta
 from recut.engine import PlanError, render_plan
 from recut.paths import TICKETS_DIR
 
@@ -312,6 +312,80 @@ def load_iteration_review(ticket_id: str, n: int, k: int, root: Path = TICKETS_D
         return Review.model_validate_json(p.read_text())
     latest = load_review(ticket_id, n, root)  # reviews saved before per-iteration storage
     return latest if latest and latest.iteration == k else None
+
+
+# ---- client feedback ----------------------------------------------------------------------
+
+CLIENT_FILE = "client_feedback.jsonl"
+
+
+def _shipped_iteration(ticket_id: str, n: int, root: Path) -> Optional[int]:
+    """Latest iteration of session n whose review verdict is ship."""
+    for k in reversed(iteration_numbers(ticket_id, n, root)):
+        rv = load_iteration_review(ticket_id, n, k, root)
+        if rv is not None and rv.verdict == "ship":
+            return k
+    return None
+
+
+def _default_target(ticket_id: str, root: Path) -> tuple[int, int]:
+    """Where a client reaction attaches when none is given: the latest shipped iteration, else the
+    latest iteration of the latest session."""
+    sessions = session_numbers(ticket_id, root)
+    for n in reversed(sessions):
+        k = _shipped_iteration(ticket_id, n, root)
+        if k is not None:
+            return n, k
+    for n in reversed(sessions):
+        ks = iteration_numbers(ticket_id, n, root)
+        if ks:
+            return n, ks[-1]
+    raise ValueError(f"ticket {ticket_id} has no iterations yet: nothing for the client to react to")
+
+
+def add_client_feedback(ticket_id: str, decision: str, rating: Optional[int] = None,
+                        note: Optional[str] = None, session: Optional[int] = None,
+                        iteration: Optional[int] = None, channel: str = "manual",
+                        root: Path = TICKETS_DIR) -> ClientFeedback:
+    """Record one client reaction (append-only `client_feedback.jsonl`), log it to the session's
+    events and set the ticket status (client_approved / client_changes).
+
+    Attaches to the latest shipped iteration unless `session` and/or `iteration` are given. A bare
+    `session` means that session's shipped (else latest) iteration; a bare `iteration` means the
+    latest session that has it."""
+    if session is None and iteration is None:
+        n, k = _default_target(ticket_id, root)
+    elif session is None:
+        candidates = [n for n in session_numbers(ticket_id, root)
+                      if iteration in iteration_numbers(ticket_id, n, root)]
+        if not candidates:
+            raise ValueError(f"no iteration {iteration} in ticket {ticket_id}")
+        n, k = candidates[-1], iteration
+    else:
+        ks = iteration_numbers(ticket_id, session, root)
+        if not ks:
+            raise ValueError(f"no session {session} in ticket {ticket_id}")
+        n = session
+        k = iteration if iteration is not None else (_shipped_iteration(ticket_id, n, root) or ks[-1])
+        if k not in ks:
+            raise ValueError(f"no iteration {k} in session {n} of ticket {ticket_id}")
+
+    fb = ClientFeedback(at=now(), session=n, iteration=k, decision=decision, rating=rating,
+                        note=(note or "").strip() or None, channel=channel)
+    with (ticket_dir(ticket_id, root) / CLIENT_FILE).open("a") as f:
+        f.write(fb.model_dump_json() + "\n")
+    log_event(ticket_id, n, {"op": "client_feedback", "iteration": k, "decision": decision,
+                             "rating": rating, "channel": fb.channel}, root)
+    set_status(ticket_id, "client_approved" if decision == "approved" else "client_changes", root)
+    return fb
+
+
+def load_client_feedback(ticket_id: str, root: Path = TICKETS_DIR) -> list[ClientFeedback]:
+    """Every client reaction for the ticket, in the order they were recorded."""
+    p = ticket_dir(ticket_id, root) / CLIENT_FILE
+    if not p.exists():
+        return []
+    return [ClientFeedback.model_validate_json(line) for line in p.read_text().splitlines() if line.strip()]
 
 
 # ---- demo ------------------------------------------------------------------------------

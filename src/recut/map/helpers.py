@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from recut.map.schema import BeatTime, ChordEntry, KeySignature
+from recut.map.schema import LOUDNESS_FLOOR_DB, BeatTime, ChordEntry, KeySignature
 
 
 # TODO: understand chunked hashing algo better
@@ -72,6 +72,8 @@ def parse_key(label: str) -> KeySignature:
 
 
 def loudness_rms_db(audio: np.ndarray) -> float:
+    if audio.size == 0:  # zero-length segment: np.mean would give NaN
+        return LOUDNESS_FLOOR_DB
     rms = np.sqrt(np.mean(audio**2))
     rms = max(rms, 1e-10)
-    return 20 * np.log10(rms)
+    return float(20 * np.log10(rms))

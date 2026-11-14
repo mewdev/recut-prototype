@@ -8,7 +8,7 @@ Output types (MusicMap and friends): Pydantic BaseModel — validation + seriali
 from pathlib import Path
 from typing import Literal, NewType, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing_extensions import TypedDict
 
 # ---------------------------------------------------------------------------
@@ -102,7 +102,25 @@ class KeySignature(BaseModel):
     mode: str
 
 
+# Loudness of digital silence (and of a zero-length segment): 20*log10(1e-10).
+# Never NaN: NaN is not valid JSON and breaks browsers reading the map.
+LOUDNESS_FLOOR_DB = -200.0
+
+
 class EnrichedSegment(BaseModel):
+    """One section of the song.
+
+    Start/end rules (so no audio is lost at the edges):
+    - `start` snaps to the nearest downbeat, except the FIRST segment, which starts at 0.0:
+      a pickup / lead-in before the first downbeat belongs to it. Then `downbeats[0] > start`.
+      `bars`/`downbeats`/`phrases` count only real downbeats, so the lead-in is not a bar, and
+      clip `offset_bars` / `offset_beats` count from `downbeats[0]`, not from `start`
+      (engine._clip_bounds).
+    - `end` snaps to the nearest downbeat, except the LAST segment, which runs to the end of
+      the audio (fade-out / trailing silence).
+    - Segments that would be zero-length are not created.
+    """
+
     index: int
     segment_name: SegmentName
     start: float
@@ -116,6 +134,14 @@ class EnrichedSegment(BaseModel):
     loudness_db: float
     loudness_db_start: float
     loudness_db_end: float
+
+    @field_validator("loudness_db", "loudness_db_start", "loudness_db_end", mode="before")
+    @classmethod
+    def _no_nan_loudness(cls, v):
+        # maps written before M0 hold NaN for empty segments; load them as the floor
+        if isinstance(v, float) and v != v:
+            return LOUDNESS_FLOOR_DB
+        return v
 
 
 class ModelRef(BaseModel):
@@ -138,7 +164,8 @@ class Meta(BaseModel):
 
 class MusicMap(BaseModel):
     path: str
-    bpm: float
+    bpm: float  # derived from the beat grid (median inter-beat interval); see map/tempo.py
+    bpm_raw: Optional[float] = None  # the tempo estimator's value when it disagreed (half-time)
     beats_per_bar: int
     duration: float
     beats: list[BeatTime]

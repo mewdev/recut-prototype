@@ -87,7 +87,8 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
             sessions.append({"n": n, "meta": json.loads(meta_p.read_text()) if meta_p.exists() else None,
                              "review": review.model_dump() if review else None, "iterations": its})
         return {"request": tickets.load_request(tid, root).model_dump(),
-                "sources": tickets.sources(tid, root), "sessions": sessions}
+                "sources": tickets.sources(tid, root), "sessions": sessions,
+                "client_feedback": [fb.model_dump() for fb in tickets.load_client_feedback(tid, root)]}
 
     @app.get("/api/tickets/{tid}/sessions/{n}/iterations/{k}")
     def get_iteration(tid: str, n: int, k: int):

@@ -33,8 +33,9 @@ agent won't know it.
 | B5 share links | todo | |
 | B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
-| M0 map fixes from the baseline session | todo | Sonnet: first-section snap to the downbeat (mirror of `is_last`); BPM from the beat grid (madmom's estimator can return half-time, e.g. 73 instead of 146, which makes `bars` 2× wrong); `recut map --force`; no NaN on empty sections |
+| M0 map fixes from the baseline session | done | first section starts at 0.0 (lead-in kept); `bpm` from the beat grid (+ optional `bpm_raw`, load-time guard); `recut map --force [stem...]`; no NaN loudness / zero-length segments. Tests: `tests/map/test_m0.py` (15) |
 | L1 ticket timeline + cost | todo | Sonnet: ticket-level status events with timestamps; token use + duration summed from transcripts |
+| C0 manual client feedback logging | done | `recut ticket client <id> --approved/--changes [--rating --note]` → `client_feedback.jsonl`; `recut report` section 6 (approval rate, rounds, rating, agreement); ticket page header shows the latest reaction. Tests: `tests/tickets/test_client_feedback.py`, `tests/cli/test_client_cli.py`, `tests/report/test_client_report.py`, `tests/server/test_server.py` |
 | B5+ client loop | todo | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
 | L2 report v2 + presentation | todo | Sonnet: client metrics, turnaround, cost, weekly trend, `recut report --html` |
 | L3 baseline import | todo | Haiku: `recut ticket import-legacy` for `baseline/pre-refactor/` exports |
@@ -58,9 +59,7 @@ agent won't know it.
 | R1 convolution reverb (pedalboard Convolution + freely licensed IRs, reverb `type`) | candidate — wait for real tickets | operator on s2·it3 (low-cut return, -26 dB base send rising to -13 dB): "okay for now, needs real cases". Build only when a real ticket shows the algorithmic reverb is the limit |
 
 ## Blockers
-- Music maps can contain `NaN` loudness (zero-length segments), which isn't valid JSON for
-  browsers. The server works around it (`/api/tickets/{id}/maps/{sid}`), but `make_map`
-  should not produce NaN (analysis code, operator's call).
+- (none open) Note: `examples/summer-party/summer-party-map.json` predates M0 (NaN loudness on a zero-length `silence`, an `inst` ending before the audio). It is not regenerated (no raw data); it still loads (NaN is read as the -200 dB floor).
 
 ## Decisions
 - 2026-11-14 — Ticket data is saved to the private repo `mewdev/recut-data` (sibling checkout,
@@ -131,6 +130,11 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-14 — M0 done (Sonnet build agent): general map fixes from the pre-refactor baseline session. (1) First segment starts at 0.0 (`make_map.build_segment(is_first)`), so a pickup/lead-in is never dropped; `bars`/`downbeats` count real downbeats only; engine `offset_bars/beats` count from the first downbeat (`engine._clip_bounds`); documented on `EnrichedSegment`. Zero-length segments (two raw boundaries snapping to one downbeat) are dropped and indices renumbered. (2) `MusicMap.bpm` = 60 / median inter-beat interval (`recut/map/tempo.py`); the estimator value goes to optional `bpm_raw` when it differs > 5 % (warning). `parse_recut_map*` corrects old maps from their own grid with a warning, so existing tickets are fixed without re-analysis. `src/analysis/pipeline.py` `run_beats` returns grid bpm + `bpm_estimate` (verbatim copy of the helper; a test keeps them equal). **Needs a Modal redeploy (`modal deploy src/analysis/pipeline.py`) to take effect for new analyses.** (3) `recut map --force [stem ...]` rebuilds existing maps that have raw analysis. (4) Loudness of empty audio is `LOUDNESS_FLOOR_DB` (-200), NaN read from old maps becomes the floor; map JSON is valid (`allow_nan=False`). Existing maps keep the old first-segment start until rebuilt with `recut map --force`. 267 tests pass.
+- 2026-11-14 — C0 done (Haiku build agent): manual client feedback. `tickets.add_client_feedback` (defaults to the latest
+  shipped iteration, else the latest; appends to `client_feedback.jsonl`, logs `client_feedback` to events.jsonl, sets
+  `client_approved`/`client_changes`), `load_client_feedback`, CLI `recut ticket client` (auto-synced), report section 6,
+  `client_feedback` in `GET /api/tickets/{id}`. Tests added in the four files above.
 - 2026-11-14 — Data repo set up: `mewdev/recut-data` (README, CLAUDE.md, .gitignore, first
   baseline). `recut.sync` + `recut sync`; auto-sync from CLI, server and hook; tests isolated
   from the real data repo (conftest sets RECUT_TICKETS_DIR + RECUT_AUTOSYNC=0). 251 tests pass.
