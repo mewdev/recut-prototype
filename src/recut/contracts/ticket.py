@@ -70,6 +70,20 @@ class Review(_Strict):
     reviewed_at: Optional[str] = None
 
 
+class ClientFeedback(_Strict):
+    """One client reaction to a delivered cut: one line in `<ticket>/client_feedback.jsonl`.
+    Written by `recut ticket client` (manual, while cuts go out by email) and later by the
+    client share page (B5+). Append-only: every round of feedback is kept."""
+
+    at: str
+    session: int = Field(ge=1)
+    iteration: int = Field(ge=1)
+    decision: Literal["approved", "changes"]
+    rating: Optional[int] = Field(None, ge=1, le=5)  # client satisfaction, 1-5 stars
+    note: Optional[str] = None  # what the client said / wants changed, verbatim when possible
+    channel: Literal["manual", "share_page"] = "manual"
+
+
 class Share(_Strict):
     token: str
     session: int
