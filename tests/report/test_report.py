@@ -237,12 +237,12 @@ def test_cli_rejects_bad_since(scen, monkeypatch):
 
 def test_demo_fixture(demo):
     root, _ = demo
-    data = report.build(root)
-    assert data["tickets"] == 1
-    assert data["sessions"] == {"total": 1, "reviewed": 0, "unreviewed": 1}
+    data = report.build(root)  # demo tickets are never counted
+    assert data["tickets"] == 0 and data["overview"]["demo_excluded"] == 1
+    assert data["sessions"] == {"total": 0, "reviewed": 0, "unreviewed": 0}
     assert data["success"][0]["n"] == 0 and data["success"][0]["success_pct"] is None
     assert data["validator_misses"]["count"] == 0 and data["worst_sessions"] == []
-    assert "0 reviewed, 1 unreviewed" in report.format_text(data)
+    assert "0 reviewed, 0 unreviewed" in report.format_text(data)
 
 
 def test_declared_but_unused_source_is_single_song():

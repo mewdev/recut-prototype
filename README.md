@@ -93,7 +93,7 @@ Run it every ~5–10 tickets. Code changes happen **only** here, and they must b
 
 ```bash
 git checkout main && git pull && git checkout -b improve/2026-11-20
-recut report --since 2026-11-13          # success rate, top failure tags, validator misses, worst sessions
+recut report --since 2026-11-13          # headline, turnaround, cost, baseline vs now, weekly trend; success rate, top failure tags, validator misses, worst sessions
 claude                                   # use the strongest model (/model → Opus)
 ```
 
@@ -196,8 +196,8 @@ recut ticket render <id> [--session N --iteration K]      # render + print issue
 recut ticket client <id> (--approved | --changes) [--rating 1-5] [--note "..."] [--session N --iteration K]   # log the client's decision
 recut ticket demo                                         # demo ticket from examples/summer-party
 recut ticket import-legacy <export_dir> [--root DIR] [--force]  # pre-refactor session export → baseline ticket (agent legacy-pre-refactor)
-recut serve [--port 8000]                                 # review server + live preview
-recut report [--since DATE] [--json]                      # numbers for the improvement pass
+recut serve [--port 8000]                                 # review server + live preview (operator page /report = live results page)
+recut report [--since DATE] [--json | --html [--out FILE]]  # numbers for the improvement pass; --html = presentation page (recut-report.html)
 recut sync                                                # commit + push ticket data to recut-data
 recut ticket awaiting                                     # shipped cuts with no client feedback logged yet
 
@@ -318,3 +318,11 @@ video editing through tool use over media primitives.
 
 recut's own code is [MIT licensed](LICENSE). The third-party models it uses for analysis
 have their own licenses; see the table above before any commercial use.
+
+## Presenting results
+
+`recut report --html` writes one self-contained page (`recut-report.html`: inline CSS and SVG, no network
+requests, light/dark, phone-friendly): headline tiles, weekly trend, review rounds, top failure tags, a few client
+quotes, baseline vs ticket system. `recut serve` shows the same page live at `/report` (operator-only). Demo
+tickets are never counted, every rate shows its n, metrics with n < 5 say "too few to judge", costs are
+API-equivalent estimates (not invoices), and nothing is extrapolated.

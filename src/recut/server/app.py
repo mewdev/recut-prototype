@@ -58,6 +58,16 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
     def page(tid: Optional[str] = None):
         return (STATIC / "app.html").read_text()
 
+    @app.get("/report", response_class=HTMLResponse)
+    def report_page():
+        # operator-only like the rest of the app (the public surface is /s/ and /api/share/ only)
+        from datetime import datetime
+
+        from recut import report
+        from recut.report_html import render_html
+
+        return render_html(report.build(root), generated=datetime.now().strftime("%Y-%m-%d %H:%M"))
+
     def shared(token: str) -> tuple[str, Share]:
         found = tickets.find_share(token, root)
         if found is None:
