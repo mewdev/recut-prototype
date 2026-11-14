@@ -52,12 +52,14 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
 
     @app.get("/api/tickets")
     def list_all():
+        waiting = {it["id"] for it in tickets.awaiting_client(root)}
         out = []
         for r in tickets.list_tickets(root):
             sessions = tickets.session_numbers(r.id, root)
             review = tickets.load_review(r.id, sessions[-1], root) if sessions else None
             out.append({**r.model_dump(), "sessions": len(sessions),
-                        "latest_verdict": review.verdict if review else None})
+                        "latest_verdict": review.verdict if review else None,
+                        "awaiting_client": r.id in waiting})
         return out
 
     @app.post("/api/tickets")

@@ -388,6 +388,55 @@ def load_client_feedback(ticket_id: str, root: Path = TICKETS_DIR) -> list[Clien
     return [ClientFeedback.model_validate_json(line) for line in p.read_text().splitlines() if line.strip()]
 
 
+def is_demo(ticket_id: str, root: Path = TICKETS_DIR) -> bool:
+    """Demo/test tickets (`recut ticket demo`): no real client, never counted as awaiting."""
+    meta = session_dir(ticket_id, 1, root) / "meta.json"
+    try:
+        return json.loads(meta.read_text()).get("agent") == "demo"
+    except (OSError, ValueError):
+        return False
+
+
+def awaiting_client(root: Path = TICKETS_DIR) -> list[dict]:
+    """Shipped cuts with no client reaction recorded since they were shipped.
+
+    A ticket is awaiting when its newest `ship` review is newer than its newest client
+    feedback (or it has none). Demo tickets are skipped. Newest ship first.
+    """
+    out = []
+    for req in list_tickets(root):
+        if is_demo(req.id, root):
+            continue
+        shipped = None  # (reviewed_at, n, k)
+        for n in session_numbers(req.id, root):
+            for k in iteration_numbers(req.id, n, root):
+                r = load_iteration_review(req.id, n, k, root)
+                if r and r.verdict == "ship" and r.reviewed_at and (shipped is None or r.reviewed_at > shipped[0]):
+                    shipped = (r.reviewed_at, n, k)
+        if shipped is None:
+            continue
+        feedback = load_client_feedback(req.id, root)
+        if feedback and max(f.at for f in feedback) >= shipped[0]:
+            continue
+        out.append({"id": req.id, "shipped_at": shipped[0], "session": shipped[1],
+                    "iteration": shipped[2], "text": req.text})
+    return sorted(out, key=lambda x: x["shipped_at"], reverse=True)
+
+
+def awaiting_client_message(root: Path = TICKETS_DIR) -> str:
+    """Operator reminder text (CLI, server start, SessionStart hook). Empty when nothing waits."""
+    items = awaiting_client(root)
+    if not items:
+        return ""
+    lines = [f"REMINDER: {len(items)} shipped cut(s) have no client feedback recorded yet. "
+             "When the client answers, log it (it's what the client approval rate is built from):"]
+    for it in items:
+        lines.append(f"  - {it['id']} (s{it['session']}·it{it['iteration']}, shipped {it['shipped_at'][:10]}): "
+                     f"{it['text'][:60]}")
+        lines.append(f"    recut ticket client {it['id']} --approved|--changes --rating 1-5 --note \"what the client said\"")
+    return "\n".join(lines)
+
+
 # ---- demo ------------------------------------------------------------------------------
 
 
