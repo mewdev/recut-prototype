@@ -1,5 +1,7 @@
 # Exit Design
 
+*Two exit-design docs: this one is the recipes (which `plan.json` fields build an exit). For the musical judgment of where an exit works (pace, loudness, key), read `skills/music-theory/references/exit-design.md`. Use that to pick the place, this to build the exit.*
+
 How to end a cut deliberately. The exit is the listener's last impression — it should feel intentional, not truncated.
 
 ## Choosing the exit point
@@ -14,6 +16,8 @@ when ending mid-segment instead.
 2. End of an `outro`/`ending` — the listener already expects closure there.
 3. End of a repeated `phrases` entry — the repetition itself signals "this is ending."
 4. Mid-section only if there's a natural breath (a held chord, a break) visible in `loudness_db`.
+
+This ranking is where the section ends; the music-theory doc adds the density check at that spot: the exit should land where `pace` is already falling. If the end of a chorus is still busy (pace 0.7 or higher), prefer the ending transplant or a longer fade, or exit at a quieter earlier edge, rather than fading a busy groove.
 
 Bar-align the cut first, then design the exit working backwards from it.
 

@@ -1,5 +1,7 @@
 # Exit and join design with pace
 
+*Judgment doc: it says where an exit or join works, using the map's pace, loudness and key. The recipes that build the exit (fade-out, filter sweep, ending transplant as `plan.json` snippets) are in `skills/cutting/references/exit-design.md`; its "best exit zones" ranking (end of a chorus, then outro) is the section choice, and the pace rules below refine it.*
+
 The map's `pace` series (onset events per minute, `normalized` 0-1 per track, one sample per
 second) and `loudness_short_term` (LUFS) tell you how busy a place is, independent of BPM.
 Read them with `recut.map.helpers.pace_at(map, t)`; each section also has a mean `pace`.

@@ -388,6 +388,7 @@ function renderIssues() {
   const iss = S.render?.issues || [];
   $("#issues").innerHTML = iss.length ? iss.map((i, j) => `<div class="issue" data-j="${j}"><span class="sev-${i.severity}">●</span> <b>${esc(i.rule)}</b>${i.splice ? ` · ${i.splice}` : ""}${i.node ? ` · ${i.node}` : ""} — ${esc(i.message)}</div>`).join("")
     : `<span class="muted">No validator issues.</span>`;
+  if (S.render?.qc?.essentia === "pending") $("#issues").innerHTML += `<div class="muted">deep checks running…</div>`;
   document.querySelectorAll(".issue").forEach((d) => (d.onclick = () => {
     const i = iss[+d.dataset.j];
     if (i.splice) return selectSplice(i.splice, true);

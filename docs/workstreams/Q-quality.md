@@ -122,3 +122,13 @@ Essentia (AGPL, and network use counts) has to go. Remove `qc_essentia.py` or re
 with permissively licensed detectors, and tune the fallback thresholds with the review
 data collected by then. The same applies to Essentia key detection and MuQ in the
 analysis pipeline (README).
+
+### Q2a — Essentia QC off the critical path
+
+`render_iteration(..., qc="full" | "fast" | "background")`. The server (`recut serve`, SSE
+re-render) uses `background`: audio + `render.json` are written after the fast QC (basic
+detectors, ~0.5 s on the 46 s demo), `render.json.qc.essentia` is `"pending"`, and a thread then
+replaces the Essentia-derived issues (`qc_clipping`, `qc_click`, `qc_gap`, `qc_backend`) and
+numbers and sets `"done"` (or `"skipped"` if Essentia is unavailable). Each render stores a
+`qc.render_id`; a newer render of the same iteration makes the older pass discard its result.
+`recut ticket render` stays synchronous (`full`); `--fast` skips Essentia.

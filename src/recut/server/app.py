@@ -204,7 +204,7 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
         if not d.exists():
             raise HTTPException(404, "iteration not found")
         if tickets.is_stale(tid, n, k, root):
-            tickets.render_iteration(tid, n, k, root)
+            tickets.render_iteration(tid, n, k, root, qc="background")
             sync.request_sync(f"render {tid} s{n}·it{k}", root)
 
         def read(name):
@@ -251,7 +251,7 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
             last = None
             yield "retry: 1000\n\n"
             while not await request.is_disconnected():
-                rendered = await asyncio.to_thread(tickets.render_stale, tid, root)
+                rendered = await asyncio.to_thread(tickets.render_stale, tid, root, "background")
                 if rendered:
                     sync.request_sync(f"render {tid}", root)
                 sig = await asyncio.to_thread(signature)

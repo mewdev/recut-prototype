@@ -416,7 +416,7 @@ def _cmd_ticket(args) -> None:
         tid = args.id
         n = args.session or tickets.session_numbers(tid)[-1]
         k = args.iteration or tickets.iteration_numbers(tid, n)[-1]
-        out = tickets.render_iteration(tid, n, k)
+        out = tickets.render_iteration(tid, n, k, qc="fast" if args.fast else "full")
         if "error" in out:
             print(f"Render FAILED: {out['error']}")
             raise SystemExit(1)
@@ -565,6 +565,8 @@ def main() -> None:
     t_r.add_argument("id")
     t_r.add_argument("--session", type=int)
     t_r.add_argument("--iteration", type=int)
+    t_r.add_argument("--fast", action="store_true",
+                     help="skip the Essentia QC detectors (basic ones still run); default runs everything")
     ticket_cmd.set_defaults(func=cmd_ticket)
 
     report_cmd = sub.add_parser("report", help="Numbers for the weekly improvement pass (reads only)")

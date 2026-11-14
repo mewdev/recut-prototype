@@ -12,7 +12,9 @@ import os
 import secrets
 import shutil
 import subprocess
+import threading
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -22,6 +24,7 @@ import soundfile as sf
 from recut.contracts import ClientFeedback, Intent, Plan, Request, Review, SessionMeta, Share
 from recut.engine import PlanError, render_plan
 from recut.paths import TICKETS_DIR
+from recut.qc import DETECTOR_RULES
 
 _B32 = "abcdefghijklmnopqrstuvwxyz234567"
 
@@ -293,14 +296,58 @@ def is_stale(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR) -> bool:
     return not outs or max(p.stat().st_mtime for p in outs) < plan.stat().st_mtime
 
 
-def render_iteration(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR) -> dict:
-    """Render plan.json → audio.wav + render.json, or render_error.json. Logs to events.jsonl."""
+_DEEP_LOCK = threading.Lock()  # guards _LATEST_RENDER and the render.json merge
+_LATEST_RENDER: dict[Path, str] = {}  # iteration dir -> id of its newest render (stale-result guard)
+
+
+def _apply_deep(d: Path, render_id: str, result) -> bool:
+    """Merge an Essentia pass into render.json (atomic). False if a newer render superseded it."""
+    with _DEEP_LOCK:
+        if _LATEST_RENDER.get(d) != render_id:
+            return False
+        try:
+            data = json.loads((d / "render.json").read_text())
+        except (OSError, ValueError):
+            return False
+        qc = data.get("qc") or {}
+        if qc.get("render_id") != render_id:  # rewritten by another process, or the render failed
+            return False
+        if result is None:
+            qc["essentia"] = "skipped"
+        else:
+            new_issues, updates = result
+            data["issues"] = [i for i in data.get("issues", []) if i.get("rule") not in DETECTOR_RULES]
+            data["issues"] += [i.model_dump(by_alias=True) for i in new_issues]
+            qc.update(updates)
+        data["qc"] = qc
+        _write(d / "render.json", data)
+        return True
+
+
+def _run_deep(d: Path, render_id: str, job) -> None:
+    with _DEEP_LOCK:
+        if _LATEST_RENDER.get(d) != render_id:  # superseded while queued: don't even start
+            return
+    try:
+        result = job()
+    except Exception:  # the fast result stands; never leave it "pending"
+        result = None
+    _apply_deep(d, render_id, result)
+
+
+def render_iteration(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR, qc: str = "full") -> dict:
+    """Render plan.json → audio.wav + render.json, or render_error.json. Logs to events.jsonl.
+
+    `qc`: "full" runs every QC check before returning (CLI, agents); "fast" skips the Essentia
+    detectors (`render.json` qc.essentia = "skipped"); "background" returns after the fast QC and
+    runs Essentia in a thread that rewrites render.json when done (qc.essentia "pending" -> "done"),
+    unless a newer render of this iteration has started (the live preview, `recut serve`)."""
     d = iteration_dir(ticket_id, n, k, root)
     t0 = time.time()
     err_path = d / "render_error.json"
     try:
         plan = Plan.model_validate_json((d / "plan.json").read_text())
-        audio, info = render_plan(plan, ticket_dir(ticket_id, root))
+        audio, info = render_plan(plan, ticket_dir(ticket_id, root), deep_qc=qc == "full")
     except (PlanError, ValueError) as e:  # pydantic ValidationError is a ValueError
         msg = str(e)
         _write(err_path, {"message": msg, "at": now()})
@@ -313,8 +360,22 @@ def render_iteration(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR) -
     sf.write(tmp, audio.samples.T, audio.sr, subtype="PCM_16")
     tmp.replace(d / "audio.wav")
     data = info.to_json()
+    job = getattr(info, "_deep", None) if qc == "background" else None
+    if qc == "fast" and data.get("qc", {}).get("essentia") == "pending":
+        data["qc"]["essentia"] = "skipped"
+    if job is not None and data["qc"].get("essentia") == "pending":
+        render_id = uuid.uuid4().hex
+        data["qc"]["render_id"] = render_id
+        with _DEEP_LOCK:
+            _LATEST_RENDER[d] = render_id
+    else:
+        job = None
+        with _DEEP_LOCK:
+            _LATEST_RENDER.pop(d, None)  # supersede any pending pass of an older render
     _write(d / "render.json", data)
     err_path.unlink(missing_ok=True)
+    if job is not None:
+        threading.Thread(target=_run_deep, args=(d, render_id, job), daemon=True).start()
     log_event(ticket_id, n, {
         "op": "render", "iteration": k, "duration_ms": int((time.time() - t0) * 1000),
         "duration_s": round(info.duration_s, 3),
@@ -326,12 +387,12 @@ def render_iteration(ticket_id: str, n: int, k: int, root: Path = TICKETS_DIR) -
     return data
 
 
-def render_stale(ticket_id: str, root: Path = TICKETS_DIR) -> list[tuple[int, int]]:
+def render_stale(ticket_id: str, root: Path = TICKETS_DIR, qc: str = "full") -> list[tuple[int, int]]:
     done = []
     for n in session_numbers(ticket_id, root):
         for k in iteration_numbers(ticket_id, n, root):
             if is_stale(ticket_id, n, k, root):
-                render_iteration(ticket_id, n, k, root)
+                render_iteration(ticket_id, n, k, root, qc=qc)
                 done.append((n, k))
     return done
 

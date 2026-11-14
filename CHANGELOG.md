@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.0] — 2026-11-14 — Ticket workflow: plan v2 engine, review GUI, QC, client loop
+
+Everything since the 0.1.0 MVP (`cbe0e35`). The old `Clip`/`XFade` composition API still works
+(deprecated); new work goes through `plan.json`.
+
+**Ticket system + review GUI**
+- Tickets are plain folders (`.appdata/tickets/<id>/`: request, inputs, maps, sessions, iterations); `recut ticket new/list/work/iterate/render/show/usage/enrich/demo`; session `intent.json`, `plan.notes` and process warnings
+- `recut serve`: FastAPI review page (no build step, `src/recut/server/static/`): composition + source-map view, A/B, waveform peaks, live re-render over SSE, per-splice review tags + verdicts, pace/loudness lines
+- Transcript Stop hook and SessionStart reminder scripts (`scripts/hooks/`); per-ticket timeline (`events.jsonl`) and per-session usage/cost from transcripts
+
+**Plan v2 engine (Ableton-style)**
+- Contracts in `src/recut/contracts/` (plan, render.json, ticket) with musical units (bars/beats, dB); `engine.render_plan`: multi-source timeline, clip gain and fades, overlaps, tracks (volume/pan), return tracks with sends and ringing tails, master chain, true-peak-aware limiter, gain/send/device automation (ramps + points)
+- Devices: `utility`, `eq`, `auto_filter`, `reverb`, `delay`, `limiter` (`devices.py`); multi-source plans are LUFS-matched on load (A3)
+- `recut.legacy` converts old `Clip`/`XFade`/effect compositions to plans
+
+**Linter + audio QC**
+- Musical linter (`validator/linter.py`): `phrase_align`, `ending`, `energy_drop`, `duration`, cross-song `downbeat`, `bpm_gap`, `key_compat` (key in force at the join), `loudness_jump`
+- Audio QC after every render (`qc.py`; Essentia detectors in `qc_essentia.py`, switch `RECUT_QC_ESSENTIA`, numpy/scipy fallback): loudness relative to the sources, limiting, true peak, clipping, clicks, gaps, DC/phase, gain/tilt jumps, bandwidth
+- Essentia QC runs off the critical path for the live preview (`render.json.qc.essentia` pending/done/skipped); `recut ticket render --fast` skips it
+- Intake check for uploaded audio (`recut check-audio`, `ticket new --override`)
+
+**Data repo + client loop**
+- Ticket data auto-syncs to the private `recut-data` repo (`recut sync`); baseline import of pre-refactor sessions (`ticket import-legacy`)
+- Client share page (`/s/{token}`: Cut/Original, approve/request changes, rating, consent), `recut ticket share`, manual client feedback (`recut ticket client`) and the operator reminder for shipped cuts without feedback
+- `recut report` v2 (headline, turnaround, cost, baseline vs ticket system, weekly trend), `--html` page and `/report`
+
+**Map**
+- M0 fixes (first section from 0.0, beat-grid `bpm`, `map --force`, no NaN loudness); M2/M3 pace, short-term loudness and key ranges (`map --enrich`, `ticket enrich`), helpers `pace_at`/`key_at`
+- Last segment runs to the end of the audio
+
+**Docs / skills**
+- README rewritten for the ticket workflow; `cutting` and `music-theory` skills use the plan vocabulary (reverb return recipe, ending transplant, exit design); Docker image files (unverified, see `docs/STATUS.md` B8)
+
 ## [feat] — 2026-08-21 — Project registries, multi-source prep, xfade curve/beats
 
 **Source registry** (`src/recut/project.py`, new `src/recut/paths.py`)
@@ -225,3 +258,16 @@ Two-layer ending with BPM-synced delay tail extending 5s past cut end.
 | `delay` | `delay(...)(audio)` | pedalboard Delay, BPM-syncable |
 | `xfade` | `xfade(xfade_ms)(a, b)` | equal-power crossfade join between two Audio clips |
 | `chain` | `chain(audio, *transforms)` | compose curried primitives in sequence |
+
+## Plan v2 devices (0.2.0, `src/recut/devices.py`)
+
+Used from `plan.json` on clips, tracks, returns and the master, with automation of their parameters. The primitives above are the deprecated Python API.
+
+| Device | Description |
+|--------|-------------|
+| `utility` | gain, width, mono |
+| `eq` | low/high cuts (12 dB/oct), shelves |
+| `auto_filter` | low/high/band-pass, 12 dB ladder with resonance |
+| `reverb` | Freeverb, `decay` table, `dry_wet`, level-compensated |
+| `delay` | BPM-synced, filters in the feedback loop |
+| `limiter` | master limiter, true-peak aware (static trim to the ceiling) |
