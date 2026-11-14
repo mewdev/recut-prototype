@@ -89,7 +89,7 @@ def test_client_feedback_line_attached_to_approved_iteration(export, tmp_path):
     assert len(lines) == 1
     fb = ClientFeedback.model_validate_json(lines[0])
     assert (fb.session, fb.iteration, fb.decision, fb.rating, fb.channel) == (1, 2, "approved", None, "manual")
-    assert fb.note == "imported from pre-refactor export"
+    assert fb.note is None  # report quotes only real client words
     assert fb.at.startswith("2026-11-14")
     assert tickets.load_client_feedback(tid, root) == [fb]
 

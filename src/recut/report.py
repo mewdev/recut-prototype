@@ -5,6 +5,8 @@ Reads every ticket under a tickets root and never writes. Definitions: docs/work
 - Iterations to ship: the iteration k of the session's first `ship` review.
 - Multi-song: the session's latest iteration plan has more than one source.
 - Model: sessions/<n>/meta.json `model`.
+- Demo tickets (agent `demo`) are never counted. The `overview` (headline, turnaround, cost, baseline vs
+  ticket system, weekly trend) is defined in report_v2.py.
 - Client feedback (`client_feedback.jsonl`, `recut ticket client`): only reactions on sessions in scope.
   Approval rate = tickets whose LAST reaction is approved / tickets with any reaction; rounds = `changes`
   before the first `approved`; agreement = operator verdict on that iteration vs the client decision
@@ -21,7 +23,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
-from recut import tickets
+from recut import report_v2, tickets
 from recut.contracts import Review
 from recut.paths import TICKETS_DIR
 
@@ -101,6 +103,8 @@ def _load_sessions(root: Path, since: Optional[date]) -> tuple[list[_Session], i
     ticket_ids: set[str] = set()
     for req in tickets.list_tickets(root):
         tid = req.id
+        if tickets.is_demo(tid, root):  # demos are never counted
+            continue
         for n in tickets.session_numbers(tid, root):
             sdir = tickets.session_dir(tid, n, root)
             meta = _read_json(sdir / "meta.json") or {}
@@ -314,6 +318,7 @@ def build(root: Path = TICKETS_DIR, since: Optional[date] = None) -> dict:
         "check_accuracy": _check_accuracy(reviewed),
         "worst_sessions": _worst_sessions(reviewed),
         "client": _client_feedback(root, sessions),
+        "overview": report_v2.build_overview(root, since),
     }
 
 
@@ -344,7 +349,10 @@ def format_text(data: dict) -> str:
             f"({sess['reviewed']} reviewed, {sess['unreviewed']} unreviewed)")
     if data["since"]:
         head += f", started since {data['since']}"
-    out = [head, "", "1. Success rate (reviewed sessions; success = result ship)"]
+    out = []
+    if data.get("overview"):
+        out += report_v2.format_overview(data["overview"]) + [""]
+    out += [head, "", "1. Success rate (reviewed sessions; success = result ship)"]
     rows = []
     for r in data["success"]:
         label = r["group"] if r["kind"] != "model" else f"model: {r['group']}"

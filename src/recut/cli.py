@@ -4,6 +4,7 @@ import argparse
 import json
 import pathlib
 import shutil
+from datetime import datetime
 
 import soundfile as sf
 
@@ -377,7 +378,13 @@ def cmd_report(args) -> None:
     from recut import report
 
     data = report.build(args.root, since=args.since)
-    if args.json:
+    if args.html:
+        from recut.report_html import render_html
+
+        out = args.out or pathlib.Path("recut-report.html")
+        out.write_text(render_html(data, generated=datetime.now().strftime("%Y-%m-%d %H:%M")))
+        print(f"wrote {out}")
+    elif args.json:
         print(json.dumps(data, indent=2, ensure_ascii=False))
     else:
         print(report.format_text(data))
@@ -500,6 +507,9 @@ def main() -> None:
     report_cmd.add_argument("--json", action="store_true", help="print one JSON object (for agents)")
     report_cmd.add_argument("--root", type=pathlib.Path, default=TICKETS_DIR,
                             help="tickets folder (default: .appdata/tickets)")
+    report_cmd.add_argument("--html", action="store_true",
+                            help="write one self-contained page for presenting (default recut-report.html)")
+    report_cmd.add_argument("--out", type=pathlib.Path, default=None, help="with --html: output file")
     report_cmd.set_defaults(func=cmd_report)
 
     sync_cmd = sub.add_parser("sync", help="Commit + push ticket data to the data repo (recut-data)")
