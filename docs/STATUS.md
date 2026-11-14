@@ -1,6 +1,6 @@
 # Build Status / Handoff Log
 
-**Current state (2026-11-14):** week-1 prototype is built and in use on real tickets (engine, QC + linter, ticket store, review GUI + client share page, data-repo sync, report, intake check); open: B8 (verify Docker on a host), M1 (Demucs stems) and the rest of M3, A6 `RECUT_SESSION` for direct `compose()`, I1 ongoing with real tickets.
+**Current state (2026-11-14):** week-1 prototype is built and ready for real tickets (none run yet; only the demo ticket and the imported Christmas baseline) (engine, QC + linter, ticket store, review GUI + client share page, data-repo sync, report, intake check); open: B8 (verify Docker on a host), M1 (Demucs stems) and the rest of M3, A6 `RECUT_SESSION` for direct `compose()`, I1 ongoing with real tickets.
 
 **Every agent reads this file before starting and updates it before ending.** It is the
 only memory shared between agent sessions. If something isn't written here, the next
