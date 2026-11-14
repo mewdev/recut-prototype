@@ -47,6 +47,7 @@
   <a href="/">Tickets</a>
   <a href="/new">New ticket</a>
   <span class="muted" id="hdr"></span>
+  <span id="client" style="font-size:13px"></span>
 </header>
 <main id="main"></main>
 <div class="toast" id="toast"></div>
@@ -153,6 +154,11 @@ async function loadTicket(first) {
   S.ticket = t;
   const r = t.request;
   $("#hdr").textContent = `status: ${r.status}`;
+  const cf = t.client_feedback || [];
+  const lastCf = cf[cf.length - 1];
+  $("#client").textContent = lastCf
+    ? `client: ${lastCf.decision}${lastCf.rating ? ` ★${lastCf.rating}` : ""}${lastCf.note ? ` — "${lastCf.note.length > 60 ? lastCf.note.slice(0, 60) + "…" : lastCf.note}"` : ""}`
+    : "";
   $("#req").innerHTML = `${esc(r.text)}${r.target_duration_s ? ` · <b>target ${r.target_duration_s}s</b>` : ""}<br>` +
     Object.entries(r.files).map(([sid, name], i) => `<span class="pill" style="border-color:${COLORS[i % 5]};color:${COLORS[i % 5]}">${sid} · ${esc(name)}</span>`).join(" ");
   const all = t.sessions.flatMap((s) => s.iterations.filter((i) => i.has_plan).map((i) => ({ n: s.n, k: i.k, ...i })));

@@ -35,6 +35,7 @@ agent won't know it.
 | B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
 | M0 map fixes from the baseline session | todo | Sonnet: first-section snap to the downbeat (mirror of `is_last`); BPM from the beat grid (madmom's estimator can return half-time, e.g. 73 instead of 146, which makes `bars` 2× wrong); `recut map --force`; no NaN on empty sections |
 | L1 ticket timeline + cost | todo | Sonnet: ticket-level status events with timestamps; token use + duration summed from transcripts |
+| C0 manual client feedback logging | done | `recut ticket client <id> --approved/--changes [--rating --note]` → `client_feedback.jsonl`; `recut report` section 6 (approval rate, rounds, rating, agreement); ticket page header shows the latest reaction. Tests: `tests/tickets/test_client_feedback.py`, `tests/cli/test_client_cli.py`, `tests/report/test_client_report.py`, `tests/server/test_server.py` |
 | B5+ client loop | todo | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
 | L2 report v2 + presentation | todo | Sonnet: client metrics, turnaround, cost, weekly trend, `recut report --html` |
 | L3 baseline import | todo | Haiku: `recut ticket import-legacy` for `baseline/pre-refactor/` exports |
@@ -131,6 +132,10 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-14 — C0 done (Haiku build agent): manual client feedback. `tickets.add_client_feedback` (defaults to the latest
+  shipped iteration, else the latest; appends to `client_feedback.jsonl`, logs `client_feedback` to events.jsonl, sets
+  `client_approved`/`client_changes`), `load_client_feedback`, CLI `recut ticket client` (auto-synced), report section 6,
+  `client_feedback` in `GET /api/tickets/{id}`. Tests added in the four files above.
 - 2026-11-14 — Data repo set up: `mewdev/recut-data` (README, CLAUDE.md, .gitignore, first
   baseline). `recut.sync` + `recut sync`; auto-sync from CLI, server and hook; tests isolated
   from the real data repo (conftest sets RECUT_TICKETS_DIR + RECUT_AUTOSYNC=0). 251 tests pass.

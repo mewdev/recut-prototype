@@ -71,7 +71,11 @@ recut ticket work <id> --model sonnet     # analyzes new tracks (Modal), starts 
      - **reject**: wrong approach
    - Write what's wrong in plain words. The agent reads it.
 3. **Fixable or reject** → run `recut ticket work <id>` again. The agent reworks from your
-   review. **Ship** → send it to the client.
+   review. **Ship** → send it to the client. Then log what the client said, so approval
+   rate and satisfaction can be reported (`recut report`, "Client feedback"):
+   `recut ticket client <id> --approved --rating 4 --note "loved it"` or
+   `recut ticket client <id> --changes --note "too long at the end"`. It attaches to the latest
+   shipped iteration unless you pass `--session N --iteration K`. Log every round.
 
 Clients can also upload through the form at `/new`.
 
@@ -186,6 +190,7 @@ recut ticket list                                         # all tickets + status
 recut ticket work <id> [--model M]                        # analyze new tracks, start an agent session
 recut ticket iterate <id>                                 # new attempt (copies the last plan)
 recut ticket render <id> [--session N --iteration K]      # render + print issues
+recut ticket client <id> (--approved | --changes) [--rating 1-5] [--note "..."] [--session N --iteration K]   # log the client's decision
 recut ticket demo                                         # demo ticket from examples/summer-party
 recut serve [--port 8000]                                 # review server + live preview
 recut report [--since DATE] [--json]                      # numbers for the improvement pass
