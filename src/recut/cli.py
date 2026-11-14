@@ -29,7 +29,7 @@ Commands:
   compositions  List saved compositions in .appdata/compositions
   validate  Validate a saved composition against its music map
   render    Validate and render a saved composition to audio
-  ticket    Client edit tickets: new, list, work, iterate, render, demo
+  ticket    Client edit tickets: new, list, work, iterate, render, demo, import-legacy
   report    Numbers for the weekly improvement pass (reads tickets only)
   serve     Review server with live browser preview (http://localhost:8000)
 
@@ -247,7 +247,9 @@ def cmd_ticket(args) -> None:
     try:
         _cmd_ticket(args)
     finally:
-        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share"):
+        # import-legacy syncs only the default store (a --root elsewhere is not the data repo)
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share") or (
+                args.action == "import-legacy" and args.root is None):
             from recut import sync
 
             res = sync.request_sync(f"ticket {args.action} {getattr(args, 'id', '') or ''}".strip(), TICKETS_DIR, wait=True)
@@ -344,6 +346,17 @@ def _cmd_ticket(args) -> None:
             print(f"s{n}: {u.get('model')}  in {u['input_tokens']:,} out {u['output_tokens']:,} "
                   f"cache r/w {u['cache_read_tokens']:,}/{u['cache_write_tokens']:,}  "
                   f"{u['duration_s'] / 60:.1f} min  {u['turns']} turns  {cost}")
+    elif args.action == "import-legacy":
+        from recut import legacy_import
+
+        root = args.root or TICKETS_DIR
+        try:
+            tid = legacy_import.import_export(args.export_dir, root, force=args.force)
+        except (FileExistsError, FileNotFoundError, ValueError) as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        print(f"Imported {args.export_dir.name} as baseline ticket {tid} (agent legacy-pre-refactor) in {root}\n"
+              f"Check: recut report --root {root}")
     elif args.action == "render":
         tid = args.id
         n = args.session or tickets.session_numbers(tid)[-1]
@@ -470,6 +483,11 @@ def main() -> None:
     t_sh.add_argument("id")
     t_sh.add_argument("--session", type=int, help="default: the newest shipped iteration")
     t_sh.add_argument("--iteration", type=int)
+    t_imp = tsub.add_parser("import-legacy", help="Import a pre-refactor session export as a baseline ticket")
+    t_imp.add_argument("export_dir", type=pathlib.Path, help="e.g. recut-data/baseline/pre-refactor/<session>")
+    t_imp.add_argument("--root", type=pathlib.Path, default=None,
+                       help="tickets folder (default: the data repo's tickets, as other ticket commands)")
+    t_imp.add_argument("--force", action="store_true", help="replace the ticket if it was already imported")
     t_r = tsub.add_parser("render", help="Render an iteration and print issues")
     t_r.add_argument("id")
     t_r.add_argument("--session", type=int)
