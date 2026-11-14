@@ -192,6 +192,7 @@ recut ticket iterate <id>                                 # new attempt (copies 
 recut ticket render <id> [--session N --iteration K]      # render + print issues
 recut ticket client <id> (--approved | --changes) [--rating 1-5] [--note "..."] [--session N --iteration K]   # log the client's decision
 recut ticket demo                                         # demo ticket from examples/summer-party
+recut ticket import-legacy <export_dir> [--root DIR] [--force]  # pre-refactor session export → baseline ticket (agent legacy-pre-refactor)
 recut serve [--port 8000]                                 # review server + live preview
 recut report [--since DATE] [--json]                      # numbers for the improvement pass
 recut sync                                                # commit + push ticket data to recut-data
