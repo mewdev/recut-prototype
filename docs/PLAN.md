@@ -31,7 +31,7 @@ raise that.
 | Success metric | **Primary:** operator ships the agent's cut with zero edits. **Check:** the client approves it on the share link. | The operator's verdict stands in for the client's; client approval confirms it. |
 | Agent loop | Claude Code works on a ticket folder: reads `request.json` and the latest `review.json`, writes new iterations. No agent inside the GUI in week 1. | |
 | Client visibility | Clients see a cut **only after the operator marks it `ship`**: unguessable share link, no accounts, player with original vs. cut, plus an Approve / Request-changes button. | |
-| Intake | Free-text request + target duration. | |
+| Intake | **The operator creates every ticket** (`recut ticket new` or `/new`), with the client's request in their own words plus the target duration. Clients never upload; they only use the share link. | Decision 2026-11-14. |
 | Data | Ticket folders in git-ignored `.appdata/tickets/`, synced nightly to cloud storage (R2 or Drive). **Client audio never goes into git.** | |
 
 **Principle (operator, 2026-11-13):** every code or architecture change is a general
@@ -63,6 +63,11 @@ multi-song sequencing all stay in.
     review.json                # 3.5 (operator, per session's latest iteration)
   share.json                   # {token, session, iteration, created_at, client_decision?, client_note?}
   client_feedback.jsonl        # one ClientFeedback per client reaction (decision, rating 1–5, note, channel); append-only
+  events.jsonl                 # ticket-level timeline (L1), append-only: {ts, op, ...} with op in
+                               #   created | status (from,to) | session_started (n, model) | rendered (n,k)
+                               #   | reviewed (n,k,verdict) | shipped (n,k) | shared (n,k) | client_feedback (decision, rating)
+  sessions/<n>/usage.json      # L1: {model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+                               #   cost_usd (estimated, null if unknown model), duration_s, turns} summed from transcript.jsonl
 ```
 
 `status`: `new → in_progress → in_review → (needs_rework → in_progress → in_review)* → shipped → client_approved | client_changes`.
@@ -236,7 +241,7 @@ Tag set (fixed, so tags can be counted across sessions):
 ### 3.6 API (FastAPI)
 
 ```
-POST /api/tickets                         multipart: files + text + target_duration_s  (client upload)
+POST /api/tickets                         multipart: files + text + target_duration_s  (operator: new ticket from /new)
 GET  /api/tickets                         list + status
 GET  /api/tickets/{id}                    request + sessions + iterations
 GET  /api/tickets/{id}/sessions/{n}/iterations/{k}      plan + render.json
@@ -245,17 +250,18 @@ GET  /api/tickets/{id}/events             SSE: "changed" (renders stale iteratio
 GET  /api/tickets/{id}/maps/{source_id}   music map as strict JSON (NaN → null)
 GET  /api/tickets/{id}/peaks/{path}?n=    waveform min/max peaks for any audio file in the ticket
 PUT  /api/tickets/{id}/sessions/{n}/review
-POST /api/tickets/{id}/share              → {token, url}  (only if verdict == ship)
-GET  /s/{token}                           client page: player, original vs. cut
+POST /api/tickets/{id}/share              {session?, iteration?} → {token, url}  (409 unless verdict == ship;
+                                          default: newest shipped iteration; base URL = RECUT_PUBLIC_URL)
+GET  /s/{token}                           client page: Cut/Original player, Approve / Request changes, 1-5 stars, comment, consent line; 404 page for unknown tokens
 GET  /s/{token}/audio/cut                 shared render only (Range requests)
 GET  /s/{token}/audio/original            shared original only (Range requests)
-POST /api/share/{token}/decision          {approved: bool, note}
-POST /api/tickets                         (also public: the client upload form)
+POST /api/share/{token}/decision          {approved: bool, rating?: 1-5, note?}  → client_feedback.jsonl (channel share_page)
 ```
 
-**Public paths** (no login): `/new`, `POST /api/tickets`, `/s/*`, `/api/share/*`, and the
-frontend's static assets. **Everything else is behind Cloudflare Access** (operator
-only). The client page must never reference `/media/...` or ticket ids.
+**Public paths** (no login): **only** `/s/*` (the client share page and its audio) and
+`/api/share/*` (the client's decision). **Everything else is behind Cloudflare Access**
+(operator only), including `/new` and `POST /api/tickets`: the operator creates every ticket,
+and clients only listen and answer on the share page (decision 2026-11-14). The client page must never reference `/media/...` or ticket ids.
 
 ```
 ```
@@ -297,10 +303,12 @@ format versioned with stable ids. The data then yields:
 - per-join ok/bad + tags: a join-quality scorer
 - client approval: the true target
 
+Consent: the share page asks the client to agree that their feedback may be used,
+anonymised. Consent to use the client's *tracks* is obtained by the operator when receiving
+the files, outside recut.
+
 Still to add, without blocking anything now:
 - audio *features* around each join (spectra, loudness, beat alignment ±2 s), not audio
-- a client-consent line on the upload page ("edits may be used, anonymised, to improve
-  the service")
 - `recut dataset export` later
 
 The licences of the analysis models matter more for a commercially used model (see the

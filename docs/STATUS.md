@@ -30,15 +30,15 @@ agent won't know it.
 | B2 FastAPI app | done (no share routes) | `src/recut/server/app.py`, `recut serve` |
 | B3 SSE live reload | done | polling, renders stale iterations |
 | B4 waveform peaks | done | on request, cached in memory |
-| B5 share links | todo | |
+| B5 share links | done | `/s/{token}` page + audio, decision API, `recut ticket share` |
 | B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
 | M0 map fixes from the baseline session | done | first section starts at 0.0 (lead-in kept); `bpm` from the beat grid (+ optional `bpm_raw`, load-time guard); `recut map --force [stem...]`; no NaN loudness / zero-length segments. Tests: `tests/map/test_m0.py` (15) |
-| L1 ticket timeline + cost | todo | Sonnet: ticket-level status events with timestamps; token use + duration summed from transcripts |
+| L1 ticket timeline + cost | done | `tickets.ticket_timeline(id, root)` merges real `<ticket>/events.jsonl` with entries derived (`"derived": true`) from old timestamps; `src/recut/usage.py` (`parse_transcript`, `write_usage`, `load_usage`, `refresh_stale`, price dict `PRICES_PER_MTOK`) writes `sessions/<n>/usage.json`; `recut sync` refreshes stale usage; `recut ticket show/usage <id>`; `GET /api/tickets/{id}` has `timeline` + per-session `usage`. L2 can call `ticket_timeline` and `usage.load_usage`. The Stop hook does not compute usage itself (next `recut sync` does). Tests: `tests/tickets/test_timeline_usage.py` |
 | C0 manual client feedback logging | done | `recut ticket client <id> --approved/--changes [--rating --note]` → `client_feedback.jsonl`; `recut report` section 6 (approval rate, rounds, rating, agreement); ticket page header shows the latest reaction. Tests: `tests/tickets/test_client_feedback.py`, `tests/cli/test_client_cli.py`, `tests/report/test_client_report.py`, `tests/server/test_server.py` |
-| B5+ client loop | todo | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
+| B5+ client loop | done | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
 | L2 report v2 + presentation | todo | Sonnet: client metrics, turnaround, cost, weekly trend, `recut report --html` |
-| L3 baseline import | todo | Haiku: `recut ticket import-legacy` for `baseline/pre-refactor/` exports |
+| L3 baseline import | done | `recut ticket import-legacy <export> [--root DIR] [--force]` → `src/recut/legacy_import.py`; ticket `YYYYMMDD-legacy-<slug>-<hash4>`, session agent `legacy-pre-refactor` = baseline marker; no plan.json (export has no maps). Tests: `tests/tickets/test_import_legacy.py` |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
@@ -62,6 +62,9 @@ agent won't know it.
 - (none open) Note: `examples/summer-party/summer-party-map.json` predates M0 (NaN loudness on a zero-length `silence`, an `inst` ending before the audio). It is not regenerated (no raw data); it still loads (NaN is read as the -200 dB floor).
 
 ## Decisions
+- 2026-11-14 — The operator creates every ticket; clients only listen and answer on the share link.
+  `/new` and `POST /api/tickets` are operator-only (behind Cloudflare Access); public paths are
+  only `/s/*` and `/api/share/*`. Q0 warns the operator instead of the client.
 - 2026-11-14 — Ticket data is saved to the private repo `mewdev/recut-data` (sibling checkout,
   auto commit + push after every ticket action, audio excluded); see PLAN §3.7. The Christmas
   pre-refactor session is the first baseline (`recut-data/baseline/pre-refactor/`).
@@ -130,6 +133,7 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-14 — L3 done (Haiku build agent): `recut ticket import-legacy`. Maps a pre-refactor export to one ticket (session 1, agent `legacy-pre-refactor` = baseline marker, model null); reviews keep contract fields only (`human_fix` appended to the note as "human fix: …"); `client_approved` becomes a manual `ClientFeedback` line dated at the export date. plan.json is not written: the export has no maps, and `recut.legacy` needs the segment map. Re-import is refused unless `--force`. Verified on the real export into a tmp root: `recut report` counts 1 ticket, 1 reviewed session, overall fixable 1, client approval 1/1. **Operator: run `recut ticket import-legacy ../recut-data/baseline/pre-refactor/20261015-like-its-christmas-cut` on the Mac** (writes into recut-data/tickets and auto-syncs). 297 tests pass.
 - 2026-11-14 — M0 done (Sonnet build agent): general map fixes from the pre-refactor baseline session. (1) First segment starts at 0.0 (`make_map.build_segment(is_first)`), so a pickup/lead-in is never dropped; `bars`/`downbeats` count real downbeats only; engine `offset_bars/beats` count from the first downbeat (`engine._clip_bounds`); documented on `EnrichedSegment`. Zero-length segments (two raw boundaries snapping to one downbeat) are dropped and indices renumbered. (2) `MusicMap.bpm` = 60 / median inter-beat interval (`recut/map/tempo.py`); the estimator value goes to optional `bpm_raw` when it differs > 5 % (warning). `parse_recut_map*` corrects old maps from their own grid with a warning, so existing tickets are fixed without re-analysis. `src/analysis/pipeline.py` `run_beats` returns grid bpm + `bpm_estimate` (verbatim copy of the helper; a test keeps them equal). **Needs a Modal redeploy (`modal deploy src/analysis/pipeline.py`) to take effect for new analyses.** (3) `recut map --force [stem ...]` rebuilds existing maps that have raw analysis. (4) Loudness of empty audio is `LOUDNESS_FLOOR_DB` (-200), NaN read from old maps becomes the floor; map JSON is valid (`allow_nan=False`). Existing maps keep the old first-segment start until rebuilt with `recut map --force`. 267 tests pass.
 - 2026-11-14 — C0 done (Haiku build agent): manual client feedback. `tickets.add_client_feedback` (defaults to the latest
   shipped iteration, else the latest; appends to `client_feedback.jsonl`, logs `client_feedback` to events.jsonl, sets
@@ -216,8 +220,10 @@ agent won't know it.
 - 2026-11-13 — Effects API switched to an Ableton-style model before D1: tracks, clip
   gain/fade handles, devices, sends → return tracks, automation (ramps + points), musical
   units, dB. Replaces `ring_out`/`scope`. A7 rewritten, A8 added. Unit parser moved into D1.
+- 2026-11-14 — B5/B5+: client share page (`/s/{token}`, Cut/Original, approve/changes, stars, consent), share + decision API, operator "Create client link" button, `recut ticket share`.
 - 2026-11-13 — Added A7 (ending transplant: overlaps, ring-out, scoped fx, limiter) and the
   hosting decision (named tunnel on the operator's domain + Cloudflare Access; share-page
   audio routes). The plan format was extended before D1, so nothing frozen was broken.
 - 2026-11-12 — Plan, workstream briefs and this log created. Waiting on: the operator's
   past-session export (prompt in chat) and contracts day (D1).
+- 2026-11-14 — L1: ticket timeline (events.jsonl, derived backfill) and session usage/cost from transcripts; CLI `ticket show|usage`, API fields.

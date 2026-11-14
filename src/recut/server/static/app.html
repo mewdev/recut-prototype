@@ -89,18 +89,19 @@ async function listPage() {
 
 function newPage() {
   $("#main").innerHTML = `
-    <h2>New edit request</h2>
+    <h2>New ticket</h2>
+    <p class="muted">Operator form: create a ticket for a client's request. Clients never see this page, only the share link.</p>
     <form id="f" class="card" style="max-width:560px">
       <p><label>Tracks<br><input type="file" name="files" multiple required accept="audio/*"></label></p>
-      <p><label>What should the edit do?<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
+      <p><label>The client's request (their words)<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
       <p><label>Target duration (seconds, optional)<br><input type="number" name="target_duration_s" min="1" step="1"></label></p>
-      <p><label>Your name (optional)<br><input type="text" name="client_name"></label></p>
-      <button class="on" type="submit">Send request</button> <span id="st" class="muted"></span>
+      <p><label>Client name (optional)<br><input type="text" name="client_name"></label></p>
+      <button class="on" type="submit">Create ticket</button> <span id="st" class="muted"></span>
     </form>`;
   $("#f").onsubmit = async (e) => {
     e.preventDefault(); $("#st").textContent = "Uploading…";
     const fd = new FormData(e.target); if (!fd.get("target_duration_s")) fd.delete("target_duration_s");
-    try { const r = await api("/api/tickets", { method: "POST", body: fd }); $("#main").innerHTML = `<h2>Thanks!</h2><p>Your request was received. Reference: <b>${esc(r.id)}</b></p>`; }
+    try { const r = await api("/api/tickets", { method: "POST", body: fd }); location = `/t/${encodeURIComponent(r.id)}`; }
     catch (err) { $("#st").textContent = "Upload failed: " + err.message; }
   };
 }
@@ -383,7 +384,8 @@ function renderReview() {
       <div class="muted" style="font-size:12px">${rv.verdict ? VERDICT_HELP[rv.verdict] : "Would you send it to the client exactly as it is? Unsure → pick the stricter one."}</div></div>
     <div><b>Overall tags</b><div class="tags">${tagBtns(rv.tags, "data-gt")}</div></div>
     <p><textarea id="rnote" rows="3" placeholder="What should the agent change? (one or two sentences)">${esc(rv.note || "")}</textarea></p>
-    <button class="on" id="save">Save review</button> <span id="rst" class="muted"></span>`;
+    <button class="on" id="save">Save review</button> <span id="rst" class="muted"></span>
+    <div id="sharebox" style="margin-top:12px"></div>`;
   const R = $("#review");
   R.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => selectSplice(b.dataset.go, true)));
   R.querySelectorAll("[data-ok]").forEach((b) => (b.onclick = () => markSplice(b.dataset.ok, true)));
@@ -395,6 +397,27 @@ function renderReview() {
   R.querySelectorAll("[data-gt]").forEach((b) => (b.onclick = () => { dirty(); const t = b.dataset.gt; rv.tags = rv.tags.includes(t) ? rv.tags.filter((x) => x !== t) : [...rv.tags, t]; renderReview(); }));
   $("#rnote").oninput = (e) => { S.reviewDirty = true; rv.note = e.target.value; };
   $("#save").onclick = saveReview;
+  renderShare();
+}
+function renderShare() {
+  const box = $("#sharebox"); if (!box) return;
+  const sh = S.ticket?.share, rv = S.review;
+  const saved = rv.verdict === "ship" && rv.reviewed_at && !S.reviewDirty;
+  const cf = S.ticket?.client_feedback || [];
+  let h = "";
+  if (sh) {
+    h += `<div class="card"><h3>Client link (s${sh.session}·it${sh.iteration})</h3>
+      <div class="row"><input type="text" readonly id="shurl" value="${esc(sh.url)}"><button id="shcopy">Copy</button></div>
+      <div class="muted" style="margin-top:4px">Send this link to the client.</div>
+      ${cf.length ? cf.map((f) => `<div style="margin-top:6px">${f.decision === "approved" ? "✔ approved" : "✎ changes"}${f.rating ? ` ★${f.rating}` : ""} <span class="muted">s${f.session}·it${f.iteration} · ${esc(f.channel)} · ${esc(f.at)}</span>${f.note ? `<div>${esc(f.note)}</div>` : ""}</div>`).join("") : `<div class="muted" style="margin-top:6px">No client reaction yet.</div>`}</div>`;
+  }
+  if (saved && !(sh && sh.session === S.n && sh.iteration === S.k)) h += `<button class="on" id="shmake">Create client link</button> <span id="shst" class="muted"></span>`;
+  box.innerHTML = h;
+  const copy = $("#shcopy"); if (copy) copy.onclick = async () => { try { await navigator.clipboard.writeText(sh.url); } catch { $("#shurl").select(); document.execCommand("copy"); } toast("Link copied"); };
+  const mk = $("#shmake"); if (mk) mk.onclick = async () => {
+    try { await api(`/api/tickets/${encodeURIComponent(S.tid)}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session: S.n, iteration: S.k }) });
+      S.ticket = await api(`/api/tickets/${encodeURIComponent(S.tid)}`); renderShare(); }
+    catch (e) { $("#shst").textContent = "Failed: " + e.message; } };
 }
 function dirty() { S.reviewDirty = true; if ($("#rst")) $("#rst").textContent = "unsaved changes"; }
 function markSplice(id, ok) {
@@ -407,7 +430,7 @@ async function saveReview() {
   if (!S.review.verdict) { $("#rst").textContent = "Pick a verdict first."; return; }
   const body = { iteration: S.k, verdict: S.review.verdict, splices: S.review.splices, tags: S.review.tags, note: S.review.note || null };
   try { const r = await api(`/api/tickets/${encodeURIComponent(S.tid)}/sessions/${S.n}/review`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    S.reviewDirty = false; $("#rst").textContent = `Saved · ticket is now ${r.status}`; toast(`Review saved · ticket is now ${r.status}`); }
+    S.reviewDirty = false; S.review.reviewed_at = new Date().toISOString(); renderShare(); $("#rst").textContent = `Saved · ticket is now ${r.status}`; toast(`Review saved · ticket is now ${r.status}`); }
   catch (e) { $("#rst").textContent = "Save failed: " + e.message; }
 }
 
