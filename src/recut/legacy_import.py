@@ -17,7 +17,8 @@ Mapping (old `Clip`/`XFade` exports have no audio or maps, so nothing is rendere
 - sessions/1/iterations/<k>/review.json: Review fields only. `human_fix` is appended to the note as
   "human fix: ...". `client_approved` moves to client_feedback.jsonl.
 - client_feedback.jsonl: one ClientFeedback per iteration whose review has `client_approved` set,
-  channel manual, rating null, note "imported from pre-refactor export", at = export date.
+  channel manual, rating null, note null (only real client words go in notes: they are quoted in
+  reports), at = export date. The import itself is recorded in sessions/1/import.json.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ from recut.contracts import ClientFeedback, Intent, Request, Review, SessionMeta
 from recut.paths import TICKETS_DIR
 
 AGENT = "legacy-pre-refactor"
-FEEDBACK_NOTE = "imported from pre-refactor export"
+FEEDBACK_NOTE = None  # client notes are quoted in reports: never put tool-generated text there
 _FOLDER = re.compile(r"^(\d{8})-(.+)$")
 
 
