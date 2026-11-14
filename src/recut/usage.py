@@ -14,13 +14,37 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-# USD per million tokens. Keyed by a substring of the model name (first match wins).
-# update when prices change; source: Anthropic pricing page
+
+# USD per million tokens, Anthropic first-party API list prices (source: Claude API pricing,
+# as cached 2026-11-03). Update when prices change. Keys are substrings of the model id; the
+# FIRST match wins, so specific versions come before family fallbacks. cache_write = 5-minute
+# cache write (1.25x input); cache_read is 0.1x input unless the price sheet says otherwise.
+# These are API-equivalent costs: on a Claude subscription the real cost is the plan, so treat
+# cost_usd as a comparable effort measure across sessions and models, not as an invoice.
+def _p(inp: float, out: float, read: Optional[float] = None) -> dict[str, float]:
+    return {"input": inp, "output": out,
+            "cache_read": read if read is not None else round(inp * 0.1, 4),
+            "cache_write": round(inp * 1.25, 4)}
+
+
 PRICES_PER_MTOK: dict[str, dict[str, float]] = {
-    "opus": {"input": 5.0, "output": 25.0, "cache_read": 0.50, "cache_write": 6.25},
-    "sonnet": {"input": 3.0, "output": 15.0, "cache_read": 0.30, "cache_write": 3.75},
-    "haiku": {"input": 1.0, "output": 5.0, "cache_read": 0.10, "cache_write": 1.25},
+    "fable-5-2": _p(8.0, 40.0, 0.20),
+    "mythos-5-2": _p(8.0, 40.0, 0.20),
+    "fable-5-1": _p(10.0, 50.0),
+    "mythos-5-1": _p(10.0, 50.0),
+    "fable-5": _p(10.0, 50.0),
+    "opus-5-5": _p(4.0, 20.0, 0.20),
+    "opus-5": _p(5.0, 25.0),
+    "opus-4-8": _p(5.0, 25.0),
+    "opus-4-7": _p(5.0, 25.0),
+    "opus-4-6": _p(5.0, 25.0),
+    "sonnet-5-5": _p(2.0, 10.0, 0.10),
+    "sonnet-5": _p(2.0, 10.0),
+    "sonnet-4-6": _p(3.0, 15.0),
+    "haiku-5-5": _p(0.10, 0.50),  # prompts up to 100K tokens ($0.50 / $2.50 beyond)
+    "haiku-4-5": _p(1.0, 5.0),
 }
+
 
 USAGE_FILE = "usage.json"
 TRANSCRIPT_FILE = "transcript.jsonl"

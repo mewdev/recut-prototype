@@ -80,7 +80,7 @@ def _transcript():
         asst("m1", "claude-sonnet-5-5", "2026-11-01T10:00:11Z", 100, 50, 1000, 200),  # dup: last wins
         _line(type="user", timestamp="2026-11-01T10:01:00Z", message={
             "role": "user", "content": [{"type": "tool_result", "content": "ok"}]}),  # not a prompt
-        asst("m2", "claude-opus-4-1", "2026-11-01T10:02:00Z", 10, 20),
+        asst("m2", "claude-opus-4-8", "2026-11-01T10:02:00Z", 10, 20),
         _line(type="user", timestamp="2026-11-01T10:05:00Z", message={
             "role": "user", "content": [{"type": "text", "text": "more"}]}),
     ])
@@ -92,14 +92,17 @@ def test_usage_parsing_two_models_dupes_junk():
     assert u["cache_read_tokens"] == 1000 and u["cache_write_tokens"] == 200
     assert u["turns"] == 2 and u["duration_s"] == 300.0
     assert u["model"] == "claude-sonnet-5-5"
-    assert set(u["models"]) == {"claude-sonnet-5-5", "claude-opus-4-1"}
-    expected = (100 * 3 + 50 * 15 + 1000 * 0.3 + 200 * 3.75) / 1e6 + (10 * 5 + 20 * 25) / 1e6
+    assert set(u["models"]) == {"claude-sonnet-5-5", "claude-opus-4-8"}
+    expected = (100 * 2 + 50 * 10 + 1000 * 0.1 + 200 * 2.5) / 1e6 + (10 * 5 + 20 * 25) / 1e6  # sonnet-5-5, opus-4-8
     assert u["cost_usd"] == pytest.approx(expected, abs=1e-4)
 
 
 def test_cost_math_and_unknown_model():
     assert usage.cost_usd("claude-haiku-4-5", 1_000_000, 1_000_000, 1_000_000, 1_000_000) == pytest.approx(
         1 + 5 + 0.1 + 1.25)
+    assert usage.cost_usd("claude-opus-5-5", 1_000_000, 1_000_000, 1_000_000, 1_000_000) == pytest.approx(
+        4 + 20 + 0.2 + 5)  # specific version wins over the opus-5 entry
+    assert usage.cost_usd("claude-opus-5", 1_000_000, 0) == pytest.approx(5)
     assert usage.cost_usd("mystery-model", 1, 1) is None
     t = _line(type="assistant", timestamp="2026-11-01T10:00:00Z",
               message={"id": "a", "model": "mystery", "usage": {"input_tokens": 5, "output_tokens": 5}})
