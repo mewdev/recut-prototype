@@ -60,6 +60,8 @@ def cmd_map(args) -> None:
     sources = load_project_sources()
     force = getattr(args, "force", False)
     stems = getattr(args, "stems", None) or []
+    if getattr(args, "enrich", False):
+        return _enrich_sources(sources, stems)
     unknown = [s for s in stems if s not in sources]
     if unknown:
         print(f"Error: unknown source(s): {', '.join(unknown)}")
@@ -90,6 +92,29 @@ def cmd_map(args) -> None:
         result = make_map(raw_path, audio_path)
         map_path.write_text(json.dumps(result.model_dump(), indent=2))
         print(f"  ✓ {stem}  duration={result.duration:.1f}s  segments={len(result.segments)}")
+
+
+def _enrich_sources(sources, stems) -> None:
+    """`recut map --enrich`: add pace / loudness / key ranges to existing maps, no re-analysis."""
+    from recut.map.enrich import enrich_map_file
+
+    unknown = [s for s in stems if s not in sources]
+    if unknown:
+        print(f"Error: unknown source(s): {', '.join(unknown)}")
+        raise SystemExit(1)
+    done = False
+    for stem, source in sources.items():
+        if stems and stem not in stems:
+            continue
+        map_path = MAP_DIR / f"{stem}.json"
+        if not map_path.exists():
+            print(f"  skipped {stem}: no map yet (run `recut map`)")
+            continue
+        done = True
+        changed = enrich_map_file(map_path, source.audio_path, force=bool(stems))
+        print(f"  {'✓ enriched' if changed else '= already has pace/loudness/key ranges:'} {stem}")
+    if not done:
+        print("Nothing to enrich.")
 
 
 def cmd_status(args) -> None:
@@ -249,7 +274,7 @@ def cmd_ticket(args) -> None:
         _cmd_ticket(args)
     finally:
         # import-legacy syncs only the default store (a --root elsewhere is not the data repo)
-        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share") or (
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share", "enrich") or (
                 args.action == "import-legacy" and args.root is None):
             from recut import sync
 
@@ -293,6 +318,10 @@ def _cmd_ticket(args) -> None:
         tickets.mark_current_session(tid, n)
         k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
+    elif args.action == "enrich":
+        done = tickets.enrich_maps(args.id, force=args.force)
+        print(f"Enriched maps (pace, loudness, key ranges): {', '.join(done)}" if done
+              else "Maps already have pace / loudness / key ranges (use --force to recompute).")
     elif args.action == "iterate":
         tid = args.id
         sessions = tickets.session_numbers(tid)
@@ -436,7 +465,10 @@ def main() -> None:
     map_cmd = sub.add_parser("map", help="Build enriched maps for all needs_map sources")
     map_cmd.add_argument("--force", action="store_true",
                          help="rebuild existing enriched maps too (after a map fix)")
-    map_cmd.add_argument("stems", nargs="*", help="with --force: only these sources")
+    map_cmd.add_argument("--enrich", action="store_true",
+                         help="add pace / short-term loudness / key ranges to existing maps "
+                              "(no re-analysis; named stems are recomputed)")
+    map_cmd.add_argument("stems", nargs="*", help="with --force / --enrich: only these sources")
     map_cmd.set_defaults(func=cmd_map)
 
     status_cmd = sub.add_parser("status", help="Show registry state for all sources")
@@ -471,6 +503,9 @@ def main() -> None:
     t_work.add_argument("id")
     t_work.add_argument("--agent", default="claude-code")
     t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
+    t_en = tsub.add_parser("enrich", help="Add pace / loudness / key ranges to the ticket's existing maps")
+    t_en.add_argument("id")
+    t_en.add_argument("--force", action="store_true", help="recompute even if present")
     t_it = tsub.add_parser("iterate", help="New iteration in the latest session (copies the plan)")
     t_it.add_argument("id")
     t_c = tsub.add_parser("client", help="Log the client's decision on a delivered cut")

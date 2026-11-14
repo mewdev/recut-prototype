@@ -26,6 +26,7 @@ from recut.map.helpers import (
     phrase_in,
     snap_to_downbeat,
 )
+from recut.map.musicdata import enrich_map
 from recut.map.schema import (
     BeatTime,
     ChordEntry,
@@ -115,7 +116,7 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
     sources = data["_sources"]
     raw_key_source = sources.get("key")
 
-    return MusicMap(
+    music_map = MusicMap(
         path=str(audio_path),
         bpm=bpm,
         bpm_raw=bpm_raw,
@@ -138,6 +139,8 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
             map_version="0.1",
         ),
     )
+    # M2: pace, short-term loudness, key ranges (CPU; ~5 s for a 3-minute track)
+    return enrich_map(music_map, audio, sr)
 
 
 if __name__ == "__main__":

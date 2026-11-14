@@ -135,6 +135,18 @@ def ensure_maps(ticket_id: str, root: Path = TICKETS_DIR, analyze=None) -> list[
     return done
 
 
+def enrich_maps(ticket_id: str, root: Path = TICKETS_DIR, force: bool = False) -> list[str]:
+    """Add pace / short-term loudness / key ranges to the ticket's existing maps from the input
+    audio and the map's own beat grid (no re-analysis). Returns the source ids it rewrote."""
+    from recut.map.enrich import enrich_map_file
+
+    d = ticket_dir(ticket_id, root)
+    return [
+        sid for sid, s in sources(ticket_id, root).items()
+        if s["map"] and enrich_map_file(d / s["map"], d / s["file"], force=force)
+    ]
+
+
 # ---- sessions & iterations ----------------------------------------------------------
 
 
