@@ -31,7 +31,7 @@ raise that.
 | Success metric | **Primary:** operator ships the agent's cut with zero edits. **Check:** the client approves it on the share link. | The operator's verdict stands in for the client's; client approval confirms it. |
 | Agent loop | Claude Code works on a ticket folder: reads `request.json` and the latest `review.json`, writes new iterations. No agent inside the GUI in week 1. | |
 | Client visibility | Clients see a cut **only after the operator marks it `ship`**: unguessable share link, no accounts, player with original vs. cut, plus an Approve / Request-changes button. | |
-| Intake | Free-text request + target duration. | |
+| Intake | **The operator creates every ticket** (`recut ticket new` or `/new`), with the client's request in their own words plus the target duration. Clients never upload; they only use the share link. | Decision 2026-11-14. |
 | Data | Ticket folders in git-ignored `.appdata/tickets/`, synced nightly to cloud storage (R2 or Drive). **Client audio never goes into git.** | |
 
 **Principle (operator, 2026-11-13):** every code or architecture change is a general
@@ -241,7 +241,7 @@ Tag set (fixed, so tags can be counted across sessions):
 ### 3.6 API (FastAPI)
 
 ```
-POST /api/tickets                         multipart: files + text + target_duration_s  (client upload)
+POST /api/tickets                         multipart: files + text + target_duration_s  (operator: new ticket from /new)
 GET  /api/tickets                         list + status
 GET  /api/tickets/{id}                    request + sessions + iterations
 GET  /api/tickets/{id}/sessions/{n}/iterations/{k}      plan + render.json
@@ -256,12 +256,12 @@ GET  /s/{token}                           client page: Cut/Original player, Appr
 GET  /s/{token}/audio/cut                 shared render only (Range requests)
 GET  /s/{token}/audio/original            shared original only (Range requests)
 POST /api/share/{token}/decision          {approved: bool, rating?: 1-5, note?}  → client_feedback.jsonl (channel share_page)
-POST /api/tickets                         (also public: the client upload form)
 ```
 
-**Public paths** (no login): `/new`, `POST /api/tickets`, `/s/*`, `/api/share/*`, and the
-frontend's static assets. **Everything else is behind Cloudflare Access** (operator
-only). The client page must never reference `/media/...` or ticket ids.
+**Public paths** (no login): **only** `/s/*` (the client share page and its audio) and
+`/api/share/*` (the client's decision). **Everything else is behind Cloudflare Access**
+(operator only), including `/new` and `POST /api/tickets`: the operator creates every ticket,
+and clients only listen and answer on the share page (decision 2026-11-14). The client page must never reference `/media/...` or ticket ids.
 
 ```
 ```
@@ -303,10 +303,12 @@ format versioned with stable ids. The data then yields:
 - per-join ok/bad + tags: a join-quality scorer
 - client approval: the true target
 
+Consent: the share page asks the client to agree that their feedback may be used,
+anonymised. Consent to use the client's *tracks* is obtained by the operator when receiving
+the files, outside recut.
+
 Still to add, without blocking anything now:
 - audio *features* around each join (spectra, loudness, beat alignment ±2 s), not audio
-- a client-consent line on the upload page ("edits may be used, anonymised, to improve
-  the service")
 - `recut dataset export` later
 
 The licences of the analysis models matter more for a commercially used model (see the

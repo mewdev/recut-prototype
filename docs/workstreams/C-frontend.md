@@ -71,7 +71,7 @@ composition to that segment.
   `web/reference/` for week 2.
 
 ### C7 — Client pages
-- `/new`: upload form (files, request text, target duration) → `POST /api/tickets` →
+- `/new` (operator-only since 2026-11-14): new-ticket form (files, the client's request text, target duration) → `POST /api/tickets` →
   confirmation page.
 - `/s/:token`: a simple player (audio only from `/s/{token}/audio/cut|original`) with
   Original / Cut tabs and Approve / Request changes

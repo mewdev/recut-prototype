@@ -62,6 +62,9 @@ agent won't know it.
 - (none open) Note: `examples/summer-party/summer-party-map.json` predates M0 (NaN loudness on a zero-length `silence`, an `inst` ending before the audio). It is not regenerated (no raw data); it still loads (NaN is read as the -200 dB floor).
 
 ## Decisions
+- 2026-11-14 — The operator creates every ticket; clients only listen and answer on the share link.
+  `/new` and `POST /api/tickets` are operator-only (behind Cloudflare Access); public paths are
+  only `/s/*` and `/api/share/*`. Q0 warns the operator instead of the client.
 - 2026-11-14 — Ticket data is saved to the private repo `mewdev/recut-data` (sibling checkout,
   auto commit + push after every ticket action, audio excluded); see PLAN §3.7. The Christmas
   pre-refactor session is the first baseline (`recut-data/baseline/pre-refactor/`).

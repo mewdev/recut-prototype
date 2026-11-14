@@ -89,18 +89,19 @@ async function listPage() {
 
 function newPage() {
   $("#main").innerHTML = `
-    <h2>New edit request</h2>
+    <h2>New ticket</h2>
+    <p class="muted">Operator form: create a ticket for a client's request. Clients never see this page, only the share link.</p>
     <form id="f" class="card" style="max-width:560px">
       <p><label>Tracks<br><input type="file" name="files" multiple required accept="audio/*"></label></p>
-      <p><label>What should the edit do?<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
+      <p><label>The client's request (their words)<br><textarea name="text" rows="5" required placeholder="e.g. make it 2:30, keep the second chorus, end on the song's real ending"></textarea></label></p>
       <p><label>Target duration (seconds, optional)<br><input type="number" name="target_duration_s" min="1" step="1"></label></p>
-      <p><label>Your name (optional)<br><input type="text" name="client_name"></label></p>
-      <button class="on" type="submit">Send request</button> <span id="st" class="muted"></span>
+      <p><label>Client name (optional)<br><input type="text" name="client_name"></label></p>
+      <button class="on" type="submit">Create ticket</button> <span id="st" class="muted"></span>
     </form>`;
   $("#f").onsubmit = async (e) => {
     e.preventDefault(); $("#st").textContent = "Uploading…";
     const fd = new FormData(e.target); if (!fd.get("target_duration_s")) fd.delete("target_duration_s");
-    try { const r = await api("/api/tickets", { method: "POST", body: fd }); $("#main").innerHTML = `<h2>Thanks!</h2><p>Your request was received. Reference: <b>${esc(r.id)}</b></p>`; }
+    try { const r = await api("/api/tickets", { method: "POST", body: fd }); location = `/t/${encodeURIComponent(r.id)}`; }
     catch (err) { $("#st").textContent = "Upload failed: " + err.message; }
   };
 }

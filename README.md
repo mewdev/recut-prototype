@@ -80,7 +80,7 @@ recut ticket work <id> --model sonnet     # analyzes new tracks (Modal), starts 
    `recut ticket client <id> --changes --note "too long at the end"`. It attaches to the latest
    shipped iteration unless you pass `--session N --iteration K`. Log every round.
 
-Clients can also upload through the form at `/new`.
+You create every ticket, with `recut ticket new` or the form at `/new` (operator-only). Clients never upload: they only open the share link, listen, and answer there.
 
 **Transcript hook (once per machine).** It lets the improvement pass see the agent's
 reasoning. See "Transcript hook" in [`AGENTS.md`](AGENTS.md).

@@ -22,14 +22,16 @@ review tags:
 `src/recut/intake.py`: `check_audio(path) -> IntakeResult{ok, problems: [{code, message}], info}`.
 It must take under 1 s for a 5-minute file, because it runs while the client waits.
 
-**Policy (operator decision 2026-11-13):** block, then ask for a better file, with an
-override.
+**Policy (updated 2026-11-14: the operator creates every ticket; clients never upload).**
+The check **warns the operator**; it doesn't talk to clients. `recut ticket new` (and `/new`)
+prints the problems in plain words and asks for `--override` on blocking ones, so the operator
+can ask the client for a better file first.
 - Accepted: lossless (WAV/FLAC/AIFF), MP3 ≥ 256 kbps, AAC/M4A ≥ 256 kbps.
 - **The bitrate in the file can lie** (a 128 kbps MP3 re-saved as 320). Always also
   measure the **real bandwidth**: the highest frequency where the long-term spectrum is
   within 40 dB of its median level, using 30 s from the middle of the track.
 
-| code | condition | message to the client (plain words) |
+| code | condition | message to the operator (plain words; can be forwarded to the client) |
 |---|---|---|
 | `undecodable` | ffprobe/decoding fails | "We couldn't read this file. Please export it again." |
 | `low_bitrate` | lossy with a bitrate below 256 kbps (from ffprobe) | "This is a {n} kbps file. Please send WAV/FLAC, or an MP3/AAC of at least 256 kbps." |
@@ -39,15 +41,11 @@ override.
 | `fake_stereo` (info) | L = R (correlation > 0.999) | not blocking |
 | `clipped_source` (info) | Essentia SaturationDetector / fallback clip runs | not blocking: shown to the operator only |
 
-- `POST /api/tickets` runs the check on every file. If any **blocking** problem is
-  found, it answers `422 {problems per file}` and creates no ticket. With form field
-  `override=true` it creates the ticket and records the problems + override in
-  `request.json` (a new optional field; log a Blocker if the contract needs it) and in
-  the first session's `events.jsonl`.
-- `/new` page: show the problems next to each file in plain words, with "Upload a
-  different file" and "Use anyway" buttons.
-- CLI: `recut check-audio <files>` prints the same result. `recut ticket new` refuses
-  blocked files unless `--override`.
+- `recut ticket new` and `POST /api/tickets` (operator-only) run the check on every file.
+  Blocking problems → refuse without `--override` (CLI) or an "Upload anyway" checkbox
+  (`/new`). The override and the problems are recorded in `request.json` (a new optional
+  field; log a Blocker if the contract needs it) and in the ticket timeline.
+- CLI: `recut check-audio <files>` prints the same result.
 - Real music can legitimately have no high frequencies (lo-fi, old recordings), which is
   why the override exists. Thresholds get tuned from overrides that turn out fine.
 - Done when: tests with synthetic files (white noise low-passed at 15 kHz saved as WAV
