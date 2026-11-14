@@ -404,7 +404,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     peak = float(np.abs(mix).max()) if total else 0.0
     issues = _validator_issues(plan, sources) + issues
     issues += lint_plan(plan, {sid: s.music_map for sid, s in sources.items()}, segments, splices,
-                        total / sr)
+                        total / sr, audio={sid: s.audio for sid, s in sources.items()})
 
     info = RenderInfoQC(
         duration_s=total / sr,

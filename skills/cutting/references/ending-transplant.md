@@ -133,12 +133,16 @@ space during the overlap, and the ending's own tail rings out after the very las
   "tracks": [{"id": "main", "clips": [
     {"id": "n1", "type": "clip", "source": "a", "segment": "chorus", "index": 1, "bars": 4,
      "sends": {"A": -15}},
-    {"id": "x1", "type": "xfade", "length": "2 beats", "shape": "equal_power"},
+    {"id": "x1", "type": "xfade", "length": "1 bar", "shape": "equal_power"},
     {"id": "n2", "type": "clip", "source": "a", "segment": "inst", "index": 1, "offset_bars": 4,
      "sends": {"A": -12}}
   ]}]
 }
 ```
+
+The overlap is a whole bar on purpose: the incoming clip starts `length` before the outgoing
+one ends, so a 2-beat overlap would put the ending's downbeat on beat 3 of the old bar and the
+linter's `downbeat` rule (error) would fire. Use whole bars for overlaps longer than ~100 ms.
 
 Listen for: the join disappearing into one space. If the blend sounds muddy, shorten the
 xfade or lower the sends; for a drier ending, remove the `sends` on `n2`.
