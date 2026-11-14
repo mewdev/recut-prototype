@@ -34,7 +34,7 @@ from recut.contracts.units import db_to_gain, parse_time, ramp_in
 from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment, parse_recut_map
 from recut.map.schema import MusicMap
 from recut.primitives.curves import make_envelope
-from recut.qc import RenderInfoQC, run_qc
+from recut.qc import RenderInfoQC, integrated_lufs, run_qc
 from recut.validator import validate
 from recut.validator.linter import lint_plan
 from recut.validator.rules import RULES
@@ -48,13 +48,18 @@ class PlanError(ValueError):
 class LoadedSource:
     music_map: MusicMap
     audio: Audio
+    lufs_in: float | None = None      # integrated loudness of the file as loaded
+    lufs_target: float | None = None  # what it was matched to (== lufs_in when no gain applied)
 
 
-_CACHE: dict[tuple[str, float], object] = {}
+LUFS_CAP = -9.0        # multi-source target never exceeds this: a loud master is not made louder
+LUFS_MIN_GAIN_DB = 0.05  # smaller corrections are skipped (leaves the samples untouched)
+
+_CACHE: dict[tuple, object] = {}
 
 
-def _cached(path: Path, loader):
-    key = (str(path.resolve()), path.stat().st_mtime)
+def _cached(path: Path, loader, tag: str = "load"):
+    key = (tag, str(path.resolve()), path.stat().st_mtime)
     if key not in _CACHE:
         _CACHE[key] = loader(path)
     return _CACHE[key]
@@ -81,8 +86,27 @@ def load_sources(plan: Plan, base_dir: Path) -> dict[str, LoadedSource]:
         target_sr = target_sr or audio.sr
         if audio.sr != target_sr:
             audio = Audio(librosa.resample(audio.samples, orig_sr=audio.sr, target_sr=target_sr), target_sr)
-        out[sid] = LoadedSource(music_map, audio)
+        lufs = _cached(audio_path, lambda _p, a=audio: integrated_lufs(a.samples, a.sr), tag="lufs")
+        out[sid] = LoadedSource(music_map, audio, lufs_in=lufs, lufs_target=lufs)
+    match_loudness(out)
     return out
+
+
+def match_loudness(sources: dict[str, LoadedSource]) -> None:
+    """Level-match a multi-source plan (PLAN §2 Loudness): every source is gained to one
+    common integrated loudness, the loudest source's LUFS capped at LUFS_CAP, so the quiet
+    ones come up to it and a loud master is never made louder (it may come down to the cap).
+    A single-source plan is left byte-identical. Gain is applied to a copy of the samples."""
+    measured = {sid: s.lufs_in for sid, s in sources.items() if s.lufs_in is not None}
+    if len(sources) < 2 or not measured:
+        return
+    target = min(max(measured.values()), LUFS_CAP)
+    for sid, lufs in measured.items():
+        src = sources[sid]
+        src.lufs_target = target
+        gain_db = target - lufs
+        if abs(gain_db) >= LUFS_MIN_GAIN_DB:
+            src.audio = Audio((src.audio.samples * db_to_gain(gain_db)).astype(np.float32), src.audio.sr)
 
 
 def _clip_bounds(node: ClipNode, m: MusicMap) -> tuple[float, float]:
@@ -380,7 +404,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     peak = float(np.abs(mix).max()) if total else 0.0
     issues = _validator_issues(plan, sources) + issues
     issues += lint_plan(plan, {sid: s.music_map for sid, s in sources.items()}, segments, splices,
-                        total / sr)
+                        total / sr, audio={sid: s.audio for sid, s in sources.items()})
 
     info = RenderInfoQC(
         duration_s=total / sr,
@@ -392,6 +416,8 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
                 bpm=s.music_map.bpm,
                 key=f"{s.music_map.key.tonic} {s.music_map.key.mode}" if s.music_map.key else None,
                 duration_s=s.audio.samples.shape[-1] / sr,
+                lufs_in=None if s.lufs_in is None else round(s.lufs_in, 2),
+                lufs_target=None if s.lufs_target is None else round(s.lufs_target, 2),
             )
             for sid, s in sources.items()
         },
