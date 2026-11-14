@@ -14,7 +14,7 @@ import soundfile as sf
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 
-from recut import tickets
+from recut import sync, tickets
 from recut.audio import Audio
 from recut.contracts import TAGS, Review
 from recut.paths import TICKETS_DIR
@@ -65,6 +65,7 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
                      client_name: Optional[str] = Form(None), files: list[UploadFile] = File(...)):
         payload = [(f.filename or "upload", await f.read()) for f in files]
         tid = tickets.create_ticket(text, payload, target_duration_s, client_name, root=root)
+        sync.request_sync(f"new ticket {tid}", root)
         return {"id": tid}
 
     @app.get("/api/tickets/{tid}")
@@ -96,6 +97,7 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
             raise HTTPException(404, "iteration not found")
         if tickets.is_stale(tid, n, k, root):
             tickets.render_iteration(tid, n, k, root)
+            sync.request_sync(f"render {tid} s{n}·it{k}", root)
 
         def read(name):
             p = d / name
@@ -110,6 +112,7 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
     def put_review(tid: str, n: int, review: Review):
         tdir(tid)
         tickets.save_review(tid, n, review, root)
+        sync.request_sync(f"review {tid} s{n}·it{review.iteration} {review.verdict}", root)
         return {"ok": True, "status": tickets.load_request(tid, root).status}
 
     @app.get("/api/tickets/{tid}/maps/{sid}")
@@ -140,7 +143,9 @@ def create_app(root: Path = TICKETS_DIR) -> FastAPI:
             last = None
             yield "retry: 1000\n\n"
             while not await request.is_disconnected():
-                await asyncio.to_thread(tickets.render_stale, tid, root)
+                rendered = await asyncio.to_thread(tickets.render_stale, tid, root)
+                if rendered:
+                    sync.request_sync(f"render {tid}", root)
                 sig = await asyncio.to_thread(signature)
                 if sig != last:
                     if last is not None:

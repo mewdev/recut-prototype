@@ -33,6 +33,11 @@ agent won't know it.
 | B5 share links | todo | |
 | B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
+| M0 map fixes from the baseline session | todo | Sonnet: first-section snap to the downbeat (mirror of `is_last`); BPM from the beat grid (madmom's estimator can return half-time, e.g. 73 instead of 146, which makes `bars` 2× wrong); `recut map --force`; no NaN on empty sections |
+| L1 ticket timeline + cost | todo | Sonnet: ticket-level status events with timestamps; token use + duration summed from transcripts |
+| B5+ client loop | todo | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
+| L2 report v2 + presentation | todo | Sonnet: client metrics, turnaround, cost, weekly trend, `recut report --html` |
+| L3 baseline import | todo | Haiku: `recut ticket import-legacy` for `baseline/pre-refactor/` exports |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
 | Q0 intake check (block low-quality uploads) | todo | Sonnet; docs/workstreams/Q-quality.md |
 | A9 musical linter rules | done | `src/recut/validator/linter.py` (`lint_plan`, called from `engine.render_plan`); tests `tests/validator/test_linter.py` |
@@ -58,6 +63,9 @@ agent won't know it.
   should not produce NaN (analysis code, operator's call).
 
 ## Decisions
+- 2026-11-14 — Ticket data is saved to the private repo `mewdev/recut-data` (sibling checkout,
+  auto commit + push after every ticket action, audio excluded); see PLAN §3.7. The Christmas
+  pre-refactor session is the first baseline (`recut-data/baseline/pre-refactor/`).
 - 2026-11-13 — Essentia's Intel-Mac wheel aborts Python on import (native "Failed loading
   SDL2 library" dialog; no try/except can catch it). `qc_essentia` is now off by default on
   darwin/x86_64, probes the import in a child process before importing in-process, and the
@@ -123,6 +131,9 @@ agent won't know it.
   sit in a zero-length `silence` segment and can't be used until the map is regenerated.
 
 ## Log
+- 2026-11-14 — Data repo set up: `mewdev/recut-data` (README, CLAUDE.md, .gitignore, first
+  baseline). `recut.sync` + `recut sync`; auto-sync from CLI, server and hook; tests isolated
+  from the real data repo (conftest sets RECUT_TICKETS_DIR + RECUT_AUTOSYNC=0). 251 tests pass.
 - 2026-11-13 — B7 done (Haiku build agent): `recut report` (`src/recut/report.py`, read-only). Five sections: success rate (overall / per model / single vs multi-song; reviewed sessions only, result = highest reviewed iteration's verdict), failure tags (grouped per B-backend, `fx_wrong` under engine), validator misses (bad splices with no render issue on that splice), worst 5 sessions, and check accuracy (per issue rule: flagged splices marked bad vs ok). `--json` prints the same data. Per-iteration reviews are used. Tests: `tests/report/test_report.py` (12, hand-built fixture: ship/fixable/reject, single/multi-song, two models, one unreviewed session, a validator miss, a check-accuracy case). Suite: 245 pass.
 - 2026-11-13 — Improvement pass 1, task 3 (enforce the agent process; evidence: the s2 agent wrote no `intent.json`, kept no
   transcript, and its plan `notes` were the only record). `recut ticket render` prints `WARNING (process)` lines for a missing or

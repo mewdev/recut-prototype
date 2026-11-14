@@ -1,3 +1,10 @@
+import os
+import tempfile
+
+# Tests never touch the real tickets folder or the data repo (set before recut is imported).
+os.environ["RECUT_TICKETS_DIR"] = tempfile.mkdtemp(prefix="recut-test-tickets-")
+os.environ["RECUT_AUTOSYNC"] = "0"
+
 import pytest
 
 from recut import tickets

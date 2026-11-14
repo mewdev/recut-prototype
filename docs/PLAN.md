@@ -262,6 +262,49 @@ only). The client page must never reference `/media/...` or ticket ids.
 Waveform peaks: the server computes them on request (`/peaks/...`, cached in memory).
 The browser doesn't decode the whole file just to draw it.
 
+## 3.7 Data: where it lives, what's logged, training-ready
+
+**Storage (operator decision 2026-11-14).** All ticket data is saved to the private repo
+**`mewdev/recut-data`**, permanently and automatically:
+- recut uses `<recut-data checkout>/tickets` whenever a `recut-data` clone sits next to
+  this repo. That's the same on the Mac (`~/Documents/dev/`) and in cloud sessions
+  (`/home/user/`). `RECUT_TICKETS_DIR` overrides it.
+- Every ticket action commits and pushes (`recut.sync`): `recut ticket new|work|iterate|render|demo`,
+  the review server (new ticket, render, review), and the transcript Stop hook.
+  `RECUT_AUTOSYNC=0` turns it off; `recut sync` syncs by hand.
+- Audio is never committed. Back it up separately.
+- Pre-ticket sessions live in `recut-data/baseline/pre-refactor/` (old format), as the
+  "before" for comparisons.
+
+**Measured for the improvement pass and for presenting results.** Each metric needs these
+logs; the task that adds missing logs is noted.
+| Metric | Needs | Status |
+|---|---|---|
+| Ship rate (operator verdict), first-attempt ship rate, iterations to ship | per-iteration reviews | ✅ (`recut report`) |
+| Failure tags, validator misses, check accuracy | reviews + render issues | ✅ |
+| Results per model (Sonnet / Opus / …) | `meta.json.model` | ✅ |
+| **Client approval rate**, client change requests, **satisfaction 1–5** + comment | share link + client page | ❌ B5+ |
+| **Turnaround**: request → first cut → shipped → client decision | ticket-level status events with timestamps | ❌ L1 |
+| **Cost per cut** (tokens/€ per ticket and model), session duration | transcript usage summed | ❌ L1 |
+| Human interventions (manual fixes, code fixes per ticket) | review `human_fix`, linked PRs | ❌ L1 |
+| Trend before/after each improvement pass, presentation page | all of the above + baseline import | ❌ L2 (`recut report --html`), L3 (import baseline) |
+
+**Training-ready (a specialised cutting model may be trained on this later).** Keep every
+format versioned with stable ids. The data then yields:
+- (request, map) → shipped plan: supervised examples
+- worse vs. better iteration of the same ticket: preference pairs
+- per-join ok/bad + tags: a join-quality scorer
+- client approval: the true target
+
+Still to add, without blocking anything now:
+- audio *features* around each join (spectra, loudness, beat alignment ±2 s), not audio
+- a client-consent line on the upload page ("edits may be used, anonymised, to improve
+  the service")
+- `recut dataset export` later
+
+The licences of the analysis models matter more for a commercially used model (see the
+README).
+
 ## 4. Week schedule
 
 | Day | Work |
