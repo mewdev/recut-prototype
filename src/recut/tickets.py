@@ -8,6 +8,7 @@
 """
 
 import json
+import os
 import secrets
 import shutil
 import subprocess
@@ -18,7 +19,7 @@ from typing import Optional
 
 import soundfile as sf
 
-from recut.contracts import ClientFeedback, Intent, Plan, Request, Review, SessionMeta
+from recut.contracts import ClientFeedback, Intent, Plan, Request, Review, SessionMeta, Share
 from recut.engine import PlanError, render_plan
 from recut.paths import TICKETS_DIR
 
@@ -386,6 +387,79 @@ def load_client_feedback(ticket_id: str, root: Path = TICKETS_DIR) -> list[Clien
     if not p.exists():
         return []
     return [ClientFeedback.model_validate_json(line) for line in p.read_text().splitlines() if line.strip()]
+
+
+# ---- client share link ------------------------------------------------------------------
+
+SHARE_FILE = "share.json"
+
+
+def load_share(ticket_id: str, root: Path = TICKETS_DIR) -> Optional[Share]:
+    """The ticket's current share (one token at a time), or None."""
+    p = ticket_dir(ticket_id, root) / SHARE_FILE
+    return Share.model_validate_json(p.read_text()) if p.exists() else None
+
+
+def find_share(token: str, root: Path = TICKETS_DIR) -> Optional[tuple[str, Share]]:
+    """(ticket id, share) for a token, or None. Compares in constant time."""
+    for req in list_tickets(root):
+        sh = load_share(req.id, root)
+        if sh and secrets.compare_digest(sh.token, token):
+            return req.id, sh
+    return None
+
+
+def create_share(ticket_id: str, session: Optional[int] = None, iteration: Optional[int] = None,
+                 root: Path = TICKETS_DIR) -> Share:
+    """Share a `ship`-reviewed iteration with the client (default: the newest shipped one).
+
+    Sharing the iteration that is already shared reuses its token; a different one gets a new
+    token (share.json holds only the current share). Raises ValueError unless the verdict is ship."""
+    sessions = session_numbers(ticket_id, root)
+    if session is None and iteration is None:
+        target = next(((n, k) for n in reversed(sessions)
+                       if (k := _shipped_iteration(ticket_id, n, root)) is not None), None)
+        if target is None:
+            raise ValueError("no iteration has a ship verdict yet: review one as ship first")
+        n, k = target
+    else:
+        n = session if session is not None else next(
+            (m for m in reversed(sessions) if iteration in iteration_numbers(ticket_id, m, root)), None)
+        if n is None or n not in sessions:
+            raise ValueError("no such session/iteration")
+        ks = iteration_numbers(ticket_id, n, root)
+        k = iteration if iteration is not None else (_shipped_iteration(ticket_id, n, root) or (ks[-1] if ks else None))
+        if k not in ks:
+            raise ValueError("no such session/iteration")
+        rv = load_iteration_review(ticket_id, n, k, root)
+        if rv is None or rv.verdict != "ship":
+            raise ValueError(f"s{n}·it{k} is not reviewed as ship: only shipped cuts can be shared")
+    if not (iteration_dir(ticket_id, n, k, root) / "audio.wav").exists():
+        raise ValueError(f"s{n}·it{k} has no rendered audio")
+    cur = load_share(ticket_id, root)
+    if cur and (cur.session, cur.iteration) == (n, k):
+        return cur
+    sh = Share(token=secrets.token_urlsafe(16), session=n, iteration=k, created_at=now())
+    _write(ticket_dir(ticket_id, root) / SHARE_FILE, sh.model_dump())
+    log_event(ticket_id, n, {"op": "shared", "iteration": k}, root)
+    return sh
+
+
+def record_share_decision(ticket_id: str, share: Share, approved: bool, rating: Optional[int],
+                          note: Optional[str], root: Path = TICKETS_DIR) -> ClientFeedback:
+    """A client's answer from the share page: appended as feedback for the shared s/k and mirrored
+    in share.json."""
+    fb = add_client_feedback(ticket_id, "approved" if approved else "changes", rating=rating,
+                             note=note, session=share.session, iteration=share.iteration,
+                             channel="share_page", root=root)
+    share.client_decision, share.client_note = fb.decision, fb.note
+    _write(ticket_dir(ticket_id, root) / SHARE_FILE, share.model_dump())
+    return fb
+
+
+def share_url(token: str, base: Optional[str] = None) -> str:
+    base = base or os.environ.get("RECUT_PUBLIC_URL") or "http://localhost:8000"
+    return f"{base.rstrip('/')}/s/{token}"
 
 
 def is_demo(ticket_id: str, root: Path = TICKETS_DIR) -> bool:

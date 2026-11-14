@@ -71,8 +71,11 @@ recut ticket work <id> --model sonnet     # analyzes new tracks (Modal), starts 
      - **reject**: wrong approach
    - Write what's wrong in plain words. The agent reads it.
 3. **Fixable or reject** → run `recut ticket work <id>` again. The agent reworks from your
-   review. **Ship** → send it to the client. Then log what the client said, so approval
-   rate and satisfaction can be reported (`recut report`, "Client feedback"):
+   review. **Ship** → click **Create client link** in the review panel (or
+   `recut ticket share <id>`; base URL from `RECUT_PUBLIC_URL`) and send the link to the client.
+   They listen (cut vs. original), approve or request changes, rate 1-5 and comment; the answer
+   is logged automatically (every round is kept). If the client answers by email instead, log it
+   by hand so approval rate and satisfaction can be reported (`recut report`, "Client feedback"):
    `recut ticket client <id> --approved --rating 4 --note "loved it"` or
    `recut ticket client <id> --changes --note "too long at the end"`. It attaches to the latest
    shipped iteration unless you pass `--session N --iteration K`. Log every round.

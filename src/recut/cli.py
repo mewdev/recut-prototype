@@ -247,7 +247,7 @@ def cmd_ticket(args) -> None:
     try:
         _cmd_ticket(args)
     finally:
-        if args.action in ("new", "demo", "work", "iterate", "render", "client"):
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "share"):
             from recut import sync
 
             res = sync.request_sync(f"ticket {args.action} {getattr(args, 'id', '') or ''}".strip(), TICKETS_DIR, wait=True)
@@ -319,6 +319,14 @@ def _cmd_ticket(args) -> None:
               f"→ {'client_approved' if fb.decision == 'approved' else 'client_changes'}")
         if fb.note:
             print(f"  note: {fb.note}")
+    elif args.action == "share":
+        try:
+            sh = tickets.create_share(args.id, args.session, args.iteration)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        print(f"Client link for s{sh.session}·it{sh.iteration}: {tickets.share_url(sh.token)}")
+        print("Send it to the client. They answer on the page; the answer is logged automatically.")
     elif args.action == "render":
         tid = args.id
         n = args.session or tickets.session_numbers(tid)[-1]
@@ -437,6 +445,10 @@ def main() -> None:
     t_c.add_argument("--note", help="what the client said, verbatim when possible")
     t_c.add_argument("--session", type=int, help="session (default: the latest shipped iteration)")
     t_c.add_argument("--iteration", type=int, help="iteration (default: the latest shipped iteration)")
+    t_sh = tsub.add_parser("share", help="Print the client link for a shipped cut (RECUT_PUBLIC_URL = base)")
+    t_sh.add_argument("id")
+    t_sh.add_argument("--session", type=int, help="default: the newest shipped iteration")
+    t_sh.add_argument("--iteration", type=int)
     t_r = tsub.add_parser("render", help="Render an iteration and print issues")
     t_r.add_argument("id")
     t_r.add_argument("--session", type=int)

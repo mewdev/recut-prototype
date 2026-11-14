@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Your edit</title>
+<style>
+  :root { --bg:#fff; --panel:#f6f7f9; --border:#d9dce1; --text:#16181d; --muted:#6b7280; --accent:#111827; --ok:#16a34a; --bad:#dc2626; --star:#f59e0b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111418; --panel:#1b1f26; --border:#323843; --text:#e5e7eb; --muted:#9ca3af; --accent:#e5e7eb; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif; color:var(--text); background:var(--bg); }
+  main { max-width:560px; margin:0 auto; padding:20px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:16px; margin:24px 0 8px; }
+  .muted { color:var(--muted); font-size:14px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:16px; }
+  .seg { display:flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:12px; }
+  .seg button { flex:1; border:0; background:transparent; color:var(--text); padding:12px; font:inherit; cursor:pointer; }
+  .seg button.on { background:var(--accent); color:var(--bg); }
+  audio { width:100%; }
+  .choice { display:flex; gap:10px; } .choice button { flex:1; min-height:48px; border:2px solid var(--border); background:transparent; color:var(--text); border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
+  .choice button.on.ok { border-color:var(--ok); background:var(--ok); color:#fff; } .choice button.on.bad { border-color:var(--bad); background:var(--bad); color:#fff; }
+  .stars { display:flex; gap:4px; } .stars button { border:0; background:none; font-size:36px; line-height:1; padding:4px; cursor:pointer; color:var(--border); }
+  .stars button.on { color:var(--star); }
+  textarea { width:100%; font:inherit; color:var(--text); background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:10px; }
+  .send { width:100%; min-height:50px; margin-top:12px; border:0; border-radius:10px; background:var(--accent); color:var(--bg); font:inherit; font-weight:600; cursor:pointer; }
+  .send:disabled { opacity:.45; cursor:default; }
+  .err { color:var(--bad); font-size:14px; margin-top:8px; }
+</style>
+</head>
+<body>
+<main id="main">
+  <h1>Your edit is ready</h1>
+  <p class="muted">Listen to the cut, compare it with your original, then tell us what you think.</p>
+  <div class="card">
+    <div class="seg" role="group" aria-label="Version"><button id="bCut" class="on">Cut</button><button id="bOrig">Original</button></div>
+    <audio id="au" controls preload="metadata"></audio>
+  </div>
+  <div id="form" class="card">
+    <h2 style="margin-top:0">What do you think?</h2>
+    <div class="choice"><button id="bOk" class="ok">Approve</button><button id="bNo" class="bad">Request changes</button></div>
+    <h2>Rating</h2>
+    <div class="stars" id="stars" role="group" aria-label="Rating from 1 to 5 stars"></div>
+    <h2>Comment</h2>
+    <textarea id="note" rows="4" maxlength="4000" placeholder="Anything you'd like us to know or change (optional)"></textarea>
+    <p class="muted">By sending feedback you agree that this edit and your feedback may be used, anonymised, to improve the service.</p>
+    <button class="send" id="send" disabled>Send feedback</button>
+    <div class="err" id="err"></div>
+  </div>
+  <div id="thanks" class="card" hidden>
+    <h2 style="margin-top:0">Thank you!</h2>
+    <p id="tText"></p>
+    <button class="send" id="again" style="background:transparent;color:var(--text);border:1px solid var(--border)">Send more feedback</button>
+  </div>
+</main>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const base = location.pathname.replace(/\/$/, "");
+const token = base.split("/").pop();
+const au = $("#au");
+let mode = "cut", approved = null, rating = null;
+const pos = { cut: 0, orig: 0 };
+function setMode(m) {
+  if (m === mode) return;
+  pos[mode] = au.currentTime; const was = !au.paused;
+  mode = m; au.src = `${base}/audio/${m === "cut" ? "cut" : "original"}`;
+  au.onloadedmetadata = () => { au.currentTime = Math.min(pos[m], au.duration || 0); if (was) au.play(); au.onloadedmetadata = null; };
+  $("#bCut").classList.toggle("on", m === "cut"); $("#bOrig").classList.toggle("on", m === "orig");
+}
+au.src = `${base}/audio/cut`;
+$("#bCut").onclick = () => setMode("cut"); $("#bOrig").onclick = () => setMode("orig");
+const stars = $("#stars");
+for (let i = 1; i <= 5; i++) {
+  const b = document.createElement("button"); b.textContent = "★"; b.setAttribute("aria-label", `${i} star${i > 1 ? "s" : ""}`);
+  b.onclick = () => { rating = rating === i ? null : i; paint(); }; stars.appendChild(b);
+}
+function paint() {
+  [...stars.children].forEach((b, i) => b.classList.toggle("on", rating !== null && i < rating));
+  $("#bOk").classList.toggle("on", approved === true); $("#bNo").classList.toggle("on", approved === false);
+  $("#send").disabled = approved === null;
+}
+$("#bOk").onclick = () => { approved = true; paint(); }; $("#bNo").onclick = () => { approved = false; paint(); };
+$("#send").onclick = async () => {
+  $("#send").disabled = true; $("#err").textContent = "";
+  try {
+    const r = await fetch(`/api/share/${encodeURIComponent(token)}/decision`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ approved, rating, note: $("#note").value.trim() || null }) });
+    if (!r.ok) throw new Error(r.status);
+    $("#form").hidden = true; $("#thanks").hidden = false;
+    $("#tText").textContent = approved ? "Glad you like it. We've recorded your approval." : "We've got your notes and will rework the edit.";
+  } catch (e) { $("#err").textContent = "Sorry, that didn't go through. Please try again."; paint(); }
+};
+$("#again").onclick = () => { approved = null; rating = null; $("#note").value = ""; $("#thanks").hidden = true; $("#form").hidden = false; paint(); };
+paint();
+</script>
+</body>
+</html>

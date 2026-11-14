@@ -30,13 +30,13 @@ agent won't know it.
 | B2 FastAPI app | done (no share routes) | `src/recut/server/app.py`, `recut serve` |
 | B3 SSE live reload | done | polling, renders stale iterations |
 | B4 waveform peaks | done | on request, cached in memory |
-| B5 share links | todo | |
+| B5 share links | done | `/s/{token}` page + audio, decision API, `recut ticket share` |
 | B6 CLI + transcript hook | done (hook untested inside Claude Code) | CLI; `scripts/hooks/copy_transcript.sh` + AGENTS.md settings snippet. Tests: `tests/tickets/test_process.py` (script run with a fake transcript) |
 | B7 `recut report` | done | `src/recut/report.py`, CLI `recut report [--since YYYY-MM-DD] [--json] [--root]`. Read-only. Tests: `tests/report/test_report.py` (12) |
 | M0 map fixes from the baseline session | done | first section starts at 0.0 (lead-in kept); `bpm` from the beat grid (+ optional `bpm_raw`, load-time guard); `recut map --force [stem...]`; no NaN loudness / zero-length segments. Tests: `tests/map/test_m0.py` (15) |
 | L1 ticket timeline + cost | todo | Sonnet: ticket-level status events with timestamps; token use + duration summed from transcripts |
 | C0 manual client feedback logging | done | `recut ticket client <id> --approved/--changes [--rating --note]` → `client_feedback.jsonl`; `recut report` section 6 (approval rate, rounds, rating, agreement); ticket page header shows the latest reaction. Tests: `tests/tickets/test_client_feedback.py`, `tests/cli/test_client_cli.py`, `tests/report/test_client_report.py`, `tests/server/test_server.py` |
-| B5+ client loop | todo | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
+| B5+ client loop | done | Sonnet: share link → client page with Approve / Request changes, 1–5 rating + comment, consent line |
 | L2 report v2 + presentation | todo | Sonnet: client metrics, turnaround, cost, weekly trend, `recut report --html` |
 | L3 baseline import | todo | Haiku: `recut ticket import-legacy` for `baseline/pre-refactor/` exports |
 | B8 Docker image | blocked: needs docker to verify | Dockerfile, compose.yaml, .dockerignore, README section written; `docker compose config` ok; build/tests/curl not run. The lead session started dockerd: the base image pulls, but `apt-get` can't reach Debian mirrors from inside containers in this sandbox (network policy, not the Dockerfile). **Verify on the operator's Mac** |
@@ -216,6 +216,7 @@ agent won't know it.
 - 2026-11-13 — Effects API switched to an Ableton-style model before D1: tracks, clip
   gain/fade handles, devices, sends → return tracks, automation (ramps + points), musical
   units, dB. Replaces `ring_out`/`scope`. A7 rewritten, A8 added. Unit parser moved into D1.
+- 2026-11-14 — B5/B5+: client share page (`/s/{token}`, Cut/Original, approve/changes, stars, consent), share + decision API, operator "Create client link" button, `recut ticket share`.
 - 2026-11-13 — Added A7 (ending transplant: overlaps, ring-out, scoped fx, limiter) and the
   hosting decision (named tunnel on the operator's domain + Cloudflare Access; share-page
   audio routes). The plan format was extended before D1, so nothing frozen was broken.
