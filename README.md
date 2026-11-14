@@ -195,6 +195,7 @@ recut ticket demo                                         # demo ticket from exa
 recut serve [--port 8000]                                 # review server + live preview
 recut report [--since DATE] [--json]                      # numbers for the improvement pass
 recut sync                                                # commit + push ticket data to recut-data
+recut ticket awaiting                                     # shipped cuts with no client feedback logged yet
 
 # analysis + legacy compositions
 recut analyze <track>        # Modal analysis → raw JSON

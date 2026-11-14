@@ -15,6 +15,15 @@ track or one review pass.
 - Inside a ticket, an agent may tune that ticket's `plan.json` freely: that's the cut
   itself, not a code change.
 
+## Operator reminder: client feedback (every session)
+
+If your context contains a `REMINDER: … shipped cut(s) have no client feedback recorded`
+(from the SessionStart hook, `recut serve` or `recut ticket awaiting`), **start your first
+reply with that reminder**: list the ticket ids and the `recut ticket client …` command,
+in one short block. Then do what you were asked. Client reactions are only measurable if
+they're logged when they happen. If the operator says the client hasn't answered yet,
+don't repeat the reminder in the same session.
+
 ## Building the prototype (week 1): start here
 
 If you were given a build task (an ID like A3, B2 or C5), read these in order and nothing else unless the task needs it:
@@ -50,20 +59,28 @@ and `recut-data`, so the work is saved. To work one:
    your reasoning besides the transcript). `recut ticket render` warns when the notes are
    identical to the previous iteration's, or empty.
 
-**Transcript hook (operator, once).** `scripts/hooks/copy_transcript.sh` is a Claude Code Stop
-hook that copies the session transcript to `<session>/transcript.jsonl`, for the weekly
-improvement pass. `.claude/` is git-ignored, so each operator adds it to their own
-`.claude/settings.local.json` (use the absolute path of the checkout):
+**Hooks (operator, once).** `.claude/` is git-ignored, so each operator adds both hooks to
+their own `.claude/settings.local.json` (use the absolute path of the checkout):
+- `scripts/hooks/copy_transcript.sh` (Stop) copies the session transcript to
+  `<session>/transcript.jsonl` for the weekly improvement pass.
+- `scripts/hooks/session_start.sh` (SessionStart) reminds about shipped cuts with no client
+  feedback logged (see "Operator reminder" above).
 
 ```json
 {
   "hooks": {
+    "SessionStart": [
+      {"hooks": [{"type": "command", "command": "/ABS/PATH/TO/recut-prototype/scripts/hooks/session_start.sh"}]}
+    ],
     "Stop": [
       {"hooks": [{"type": "command", "command": "/ABS/PATH/TO/recut-prototype/scripts/hooks/copy_transcript.sh"}]}
     ]
   }
 }
 ```
+
+Both hooks need the `recut` command on PATH: start Claude Code from a shell where the
+`recut` environment is active.
 
 The hook finds the session folder from `$RECUT_SESSION` (the `export` line `recut ticket work`
 prints: set it in the shell that starts Claude Code if you can) and otherwise from

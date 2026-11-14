@@ -82,7 +82,7 @@ async function listPage() {
     ${rows.length ? "" : `<p class="muted">No tickets yet. Create one at <a href="/new">New ticket</a>, or run <code>recut ticket demo</code> for a demo.</p>`}
     <table><tr><th>Ticket</th><th>Status</th><th>Sessions</th><th>Last verdict</th><th>Request</th></tr>
     ${rows.map((r) => `<tr class="link" onclick="location='/t/${r.id}'"><td><b>${esc(r.id)}</b><div class="muted">${esc(r.created_at)}</div></td>
-      <td><span class="pill">${esc(r.status)}</span></td><td>${r.sessions}</td><td>${esc(r.latest_verdict || "—")}</td>
+      <td><span class="pill">${esc(r.status)}</span>${r.awaiting_client ? ` <span class="pill" style="border-color:var(--warn);color:var(--warn)" title="Log it: recut ticket client ${esc(r.id)} --approved|--changes --rating 1-5 --note '...'">awaiting client feedback</span>` : ""}</td><td>${r.sessions}</td><td>${esc(r.latest_verdict || "—")}</td>
       <td>${esc(r.text.slice(0, 140))}${r.target_duration_s ? ` <span class="muted">· target ${r.target_duration_s}s</span>` : ""}</td></tr>`).join("")}
     </table>`;
 }

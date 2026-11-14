@@ -184,6 +184,11 @@ def cmd_serve(args) -> None:
     print(f"recut review server → http://{args.host}:{args.port}  (tickets: {TICKETS_DIR.resolve()})")
     print(f"data repo: {repo} (auto-sync {'on' if sync.enabled() else 'off'})" if repo
           else "data repo: none — tickets stay local (clone mewdev/recut-data next to this repo)")
+    from recut import tickets
+
+    reminder = tickets.awaiting_client_message()
+    if reminder:
+        print("\n" + reminder + "\n")
     uvicorn.run("recut.server.app:app", host=args.host, port=args.port, reload=args.reload,
                 log_level="warning")
 
@@ -262,8 +267,16 @@ def _cmd_ticket(args) -> None:
         tid = tickets.create_ticket(args.text, files, args.duration)
         print(f"Created ticket {tid}")
     elif args.action == "list":
+        waiting = {it["id"] for it in tickets.awaiting_client()}
         for r in tickets.list_tickets():
-            print(f"{r.id}  {r.status:<14} {r.text[:70]}")
+            flag = "  ⚠ awaiting client feedback" if r.id in waiting else ""
+            print(f"{r.id}  {r.status:<14} {r.text[:70]}{flag}")
+    elif args.action == "awaiting":
+        msg = tickets.awaiting_client_message()
+        if msg:
+            print(msg)
+        elif not args.quiet:
+            print("No shipped cuts are waiting for client feedback.")
     elif args.action == "demo":
         tid = tickets.create_demo_ticket()
         print(f"Created demo ticket {tid} with 2 rendered iterations.\n"
@@ -406,6 +419,8 @@ def main() -> None:
     t_new.add_argument("--text", required=True, help="the client's request, verbatim")
     t_new.add_argument("--duration", type=float, help="target duration in seconds")
     tsub.add_parser("list", help="List tickets")
+    t_aw = tsub.add_parser("awaiting", help="Shipped cuts with no client feedback logged yet")
+    t_aw.add_argument("--quiet", action="store_true", help="print nothing when none (for hooks)")
     tsub.add_parser("demo", help="Create a demo ticket from examples/summer-party")
     t_work = tsub.add_parser("work", help="Start an agent session (analyzes unmapped sources)")
     t_work.add_argument("id")

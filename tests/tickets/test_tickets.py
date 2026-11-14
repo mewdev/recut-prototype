@@ -62,3 +62,35 @@ def test_each_iteration_keeps_its_review(demo):
     assert tickets.load_iteration_review(tid, 1, 1, root).verdict == "reject"
     assert tickets.load_iteration_review(tid, 1, 2, root).verdict == "fixable"
     assert tickets.load_review(tid, 1, root).iteration == 2  # session copy = latest
+
+
+def test_awaiting_client_feedback(tmp_path, demo):
+    import time
+
+    droot, dtid = demo
+    audio = droot / dtid / "inputs" / "a.mp3"
+    tid = tickets.create_ticket("real client", [("song.mp3", audio)], 30, root=tmp_path)
+    n = tickets.new_session(tid, agent="claude-code", model="sonnet", root=tmp_path)
+    k = tickets.new_iteration(tid, n, {"version": 2}, root=tmp_path)
+    assert tickets.awaiting_client(tmp_path) == []  # not shipped yet
+
+    tickets.save_review(tid, n, Review(iteration=k, verdict="ship"), tmp_path)
+    waiting = tickets.awaiting_client(tmp_path)
+    assert [w["id"] for w in waiting] == [tid] and (waiting[0]["session"], waiting[0]["iteration"]) == (n, k)
+    assert f"recut ticket client {tid}" in tickets.awaiting_client_message(tmp_path)
+
+    time.sleep(1.1)  # timestamps have 1 s resolution
+    tickets.add_client_feedback(tid, "approved", rating=5, root=tmp_path)
+    assert tickets.awaiting_client(tmp_path) == []
+    assert tickets.awaiting_client_message(tmp_path) == ""
+
+    time.sleep(1.1)  # a later re-ship waits for a new reaction
+    k2 = tickets.new_iteration(tid, n, root=tmp_path)
+    tickets.save_review(tid, n, Review(iteration=k2, verdict="ship"), tmp_path)
+    assert [w["iteration"] for w in tickets.awaiting_client(tmp_path)] == [k2]
+
+
+def test_demo_tickets_never_await_client(demo):
+    root, tid = demo
+    tickets.save_review(tid, 1, Review(iteration=2, verdict="ship"), root)
+    assert tid not in [w["id"] for w in tickets.awaiting_client(root)]
