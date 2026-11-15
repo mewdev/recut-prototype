@@ -64,6 +64,9 @@ agent won't know it.
 - (none open) Note: `examples/summer-party/summer-party-map.json` predates M0 (NaN loudness on a zero-length `silence`, an `inst` ending before the audio). It is not regenerated (no raw data); it still loads (NaN is read as the -200 dB floor).
 
 ## Decisions
+- 2026-11-15 — For now cuts go to clients via Google Drive (`recut ticket export`, logged with
+  `recut ticket client`). The share page stays built but unused until the operator wants a public
+  URL (Cloudflare). Fixed: `recut ticket share` CLI handler had been lost in a merge.
 - 2026-11-14 — A5: rules live in `validator/linter.py` (next to A9, called from the engine) and get the level-matched source audio. `downbeat` checks the join of each side: incoming = clip `src_start`; outgoing = `src_end` minus the xfade overlap (an overlap under 100 ms is a click cover and doesn't shift it), against the map's `bars` (downbeats), 30 ms. `loudness_jump` is the source/map-level check (3 s short-term window of the outgoing source before the cut vs the incoming source after it, clip gain included, > 3 dB); it is kept separate from `qc_gain_jump` (400 ms on the rendered audio, catches fades/devices), so they differ in window and data. `bpm_gap` uses 3 % and accepts 2:1 within 3 %.
 - 2026-11-14 — A3: target LUFS = min(loudest source, -9) rather than a fixed -14 (PLAN §2 said match, the A3 task said -14): never makes loud masters louder, and quiet sources aren't dragged below the loudest. Gain is applied to a copy; peaks above 0 dBFS are left to the master limiter.
 - 2026-11-14 — The operator creates every ticket; clients only listen and answer on the share link.
