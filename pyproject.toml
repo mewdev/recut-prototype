@@ -18,7 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff", "httpx"]
-qc = ['essentia; not (sys_platform == "darwin" and platform_machine == "x86_64")']   # AGPL: non-commercial prototype only; see src/recut/qc_essentia.py
+qc = ['essentia; sys_platform != "darwin" or platform_machine != "x86_64"']  # not on Intel Macs (crashes on import)   # AGPL: non-commercial prototype only; see src/recut/qc_essentia.py
 
 [project.scripts]
 recut = "recut.cli:main"
