@@ -35,6 +35,7 @@ from pedalboard import (  # type: ignore
 )
 from pedalboard import Limiter as PbLimiter
 from pedalboard import Reverb as PbReverb
+from scipy import signal
 
 from recut.automation import build_curve
 from recut.contracts.plan import Automation, Device
@@ -90,7 +91,6 @@ AUTOMATABLE: dict[str, dict[str, str]] = {
 BLOCK = 512
 
 
-TRUE_PEAK_TOP = 50_000  # candidate peaks oversampled when trimming (a limited master has many)
 
 
 def limit(x: np.ndarray, sr: int, ceiling_db: float) -> tuple[np.ndarray, float]:
@@ -110,12 +110,29 @@ def limit(x: np.ndarray, sr: int, ceiling_db: float) -> tuple[np.ndarray, float]
     return trim_true_peak(y.astype(np.float32), ceiling_db)
 
 
+def exact_true_peak(y: np.ndarray, chunk_s: float = 10.0, sr_hint: int = 48000) -> float:
+    """4x-oversampled peak over the WHOLE signal (linear). Exact, unlike `qc.true_peak`, which
+    only oversamples around the largest sample peaks: on a heavily limited master the worst
+    inter-sample peak is not always next to one of them (missed by up to ~1.2 dB on an Intel
+    Mac's pedalboard build). The limiter must never overshoot, so it pays the full cost here
+    (about 1 s per 3 minutes of stereo). Processed in overlapping chunks to bound memory."""
+    if y.ndim == 1:
+        y = y[None, :]
+    n = y.shape[-1]
+    step, ov = int(chunk_s * sr_hint), 64
+    best = 0.0
+    for i in range(0, n, step):
+        seg = y[:, max(0, i - ov): min(n, i + step + ov)]
+        if seg.shape[-1] == 0:
+            continue
+        best = max(best, float(np.abs(signal.resample_poly(seg, 4, 1, axis=-1)).max()))
+    return best
+
+
 def trim_true_peak(y: np.ndarray, ceiling_db: float) -> tuple[np.ndarray, float]:
     """Scale `y` down so its 4x-oversampled peak is at `ceiling_db` (minus a 0.01 dB margin for
     the oversampling estimate); untouched if already under. Returns (audio, trim in dB)."""
-    from recut.qc import true_peak
-
-    _, tp = true_peak(y, top=TRUE_PEAK_TOP)
+    tp = exact_true_peak(y)
     ceil = 10 ** ((ceiling_db - 0.01) / 20)
     if tp <= ceil:
         return y, 0.0
