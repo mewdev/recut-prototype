@@ -301,3 +301,22 @@ def test_demo_renders_have_no_qc_errors_and_write_numbers(demo, monkeypatch, env
         assert [i for i in r["issues"] if i["rule"].startswith("qc_") and i["severity"] == "error"] == []
         assert {"lufs", "true_peak_dbtp", "timings_ms"} <= set(r["qc"])
         assert "peak_clip" not in {i["rule"] for i in r["issues"]}
+
+
+def test_limiter_never_overshoots_across_many_loud_masters():
+    """Regression (operator's Intel Mac): measuring the true peak only around the largest sample
+    peaks missed inter-sample overs by up to ~1.2 dB on heavily limited audio. The limiter now
+    measures the whole signal, so no ceiling is ever exceeded, whatever the material."""
+    from recut.devices import limit
+
+    sr = 44100
+    for seed in range(6):
+        r = np.random.default_rng(seed)
+        t = np.arange(sr * 8) / sr
+        x = sum(np.sin(2 * np.pi * f * t + r.uniform(0, 6)) for f in (55, 220, 880, 3520, 7040)) * 0.4
+        x = x + r.standard_normal(t.size) * 0.3
+        pre = (np.stack([x, np.roll(x, 7)]) * 2).astype(np.float32)
+        for ceiling in (-1.0, -0.3, -3.0):
+            out, _ = limit(pre.copy(), sr, ceiling)
+            full = float(np.abs(signal.resample_poly(out, 4, 1, axis=-1)).max())
+            assert 20 * np.log10(full) <= ceiling + 0.02, (seed, ceiling, 20 * np.log10(full))
