@@ -286,7 +286,7 @@ def cmd_ticket(args) -> None:
         _cmd_ticket(args)
     finally:
         # import-legacy syncs only the default store (a --root elsewhere is not the data repo)
-        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share", "enrich") or (
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share", "enrich", "export") or (
                 args.action == "import-legacy" and args.root is None):
             from recut import sync
 
@@ -412,6 +412,24 @@ def _cmd_ticket(args) -> None:
             raise SystemExit(1)
         print(f"Imported {args.export_dir.name} as baseline ticket {tid} (agent legacy-pre-refactor) in {root}\n"
               f"Check: recut report --root {root}")
+    elif args.action == "share":
+        try:
+            sh = tickets.create_share(args.id, args.session, args.iteration)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        print(f"Client link for s{sh.session}·it{sh.iteration}: {tickets.share_url(sh.token)}")
+        print("Send it to the client. They answer on the page; the answer is logged automatically.")
+    elif args.action == "export":
+        try:
+            out = tickets.export_cut(args.id, args.to, fmt=args.format, session=args.session,
+                                     iteration=args.iteration)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        print(f"Exported: {out}")
+        print("Share it (e.g. Google Drive: right-click, Share, Copy link). When the client answers:\n"
+              f"  recut ticket client {args.id} --approved|--changes --rating 1-5 --note \"...\"")
     elif args.action == "render":
         tid = args.id
         n = args.session or tickets.session_numbers(tid)[-1]
@@ -552,6 +570,13 @@ def main() -> None:
     t_sh.add_argument("id")
     t_us = tsub.add_parser("usage", help="Compute usage.json (tokens, duration, cost) from session transcripts")
     t_us.add_argument("id")
+    t_ex = tsub.add_parser("export", help="Write the shipped cut as a named MP3/WAV for sending (RECUT_EXPORT_DIR)")
+    t_ex.add_argument("id")
+    t_ex.add_argument("--to", type=pathlib.Path, default=None,
+                      help="folder (default: $RECUT_EXPORT_DIR, else ~/Desktop)")
+    t_ex.add_argument("--format", choices=["mp3", "wav"], default="mp3")
+    t_ex.add_argument("--session", type=int)
+    t_ex.add_argument("--iteration", type=int)
     t_sh = tsub.add_parser("share", help="Print the client link for a shipped cut (RECUT_PUBLIC_URL = base)")
     t_sh.add_argument("id")
     t_sh.add_argument("--session", type=int, help="default: the newest shipped iteration")

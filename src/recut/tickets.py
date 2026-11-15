@@ -575,6 +575,49 @@ def find_share(token: str, root: Path = TICKETS_DIR) -> Optional[tuple[str, Shar
     return None
 
 
+def export_cut(ticket_id: str, to: Optional[Path] = None, fmt: str = "mp3",
+               session: Optional[int] = None, iteration: Optional[int] = None,
+               root: Path = TICKETS_DIR) -> Path:
+    """Write the shipped cut (default: newest `ship` iteration) to `to` as a named file for
+    sending to the client, e.g. into a Google Drive-synced folder. Folder: `to`, else
+    $RECUT_EXPORT_DIR, else ~/Desktop. Name: <ticket>_s<n>-it<k>_<first source name>.<fmt>.
+    MP3 is 320 kbps (ffmpeg). Logs an `exported` timeline event."""
+    sessions = session_numbers(ticket_id, root)
+    if session is None and iteration is None:
+        target = next(((n, k) for n in reversed(sessions)
+                       if (k := _shipped_iteration(ticket_id, n, root)) is not None), None)
+        if target is None:
+            raise ValueError("no iteration has a ship verdict yet: review one as ship first "
+                             "(or pass --session/--iteration)")
+        n, k = target
+    else:
+        n = session if session is not None else (sessions[-1] if sessions else None)
+        if n is None or n not in sessions:
+            raise ValueError("no such session")
+        ks = iteration_numbers(ticket_id, n, root)
+        k = iteration if iteration is not None else (ks[-1] if ks else None)
+        if k not in ks:
+            raise ValueError("no such iteration")
+    src = iteration_dir(ticket_id, n, k, root) / "audio.wav"
+    if not src.exists():
+        raise FileNotFoundError(f"s{n}·it{k} has no rendered audio (render it first)")
+    folder = Path(to or os.environ.get("RECUT_EXPORT_DIR") or Path.home() / "Desktop").expanduser()
+    folder.mkdir(parents=True, exist_ok=True)
+    files = load_request(ticket_id, root).files
+    stem = Path(next(iter(files.values()), "cut")).stem if files else "cut"
+    safe = "".join(c if c.isalnum() or c in "-_" else "-" for c in stem).strip("-")[:40] or "cut"
+    out = folder / f"{ticket_id}_s{n}-it{k}_{safe}.{fmt}"
+    if fmt == "wav":
+        shutil.copy2(src, out)
+    else:
+        if shutil.which("ffmpeg") is None:
+            raise FileNotFoundError("ffmpeg not found: install it (brew install ffmpeg) or use --format wav")
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-codec:a", "libmp3lame",
+                        "-b:a", "320k", str(out)], check=True)
+    ticket_event(ticket_id, "exported", root, n=n, k=k, file=out.name)
+    return out
+
+
 def create_share(ticket_id: str, session: Optional[int] = None, iteration: Optional[int] = None,
                  root: Path = TICKETS_DIR) -> Share:
     """Share a `ship`-reviewed iteration with the client (default: the newest shipped one).

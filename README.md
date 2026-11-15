@@ -87,6 +87,18 @@ You create every ticket, with `recut ticket new` or the form at `/new` (operator
 **Transcript hook (once per machine).** It lets the improvement pass see the agent's
 reasoning. See "Transcript hook" in [`AGENTS.md`](AGENTS.md).
 
+### Sending cuts to clients (current way: Google Drive)
+1. `recut ticket export <id>` writes the shipped cut as a named 320 kbps MP3. Set
+   `RECUT_EXPORT_DIR` once to a Google Drive-synced folder, e.g.
+   `export RECUT_EXPORT_DIR="$HOME/Google Drive/My Drive/recut-cuts"` in `~/.zshrc`.
+2. In Drive, right-click the file, choose Share, then Copy link, and send it to the client.
+3. When the client answers: `recut ticket client <id> --approved|--changes --rating 1-5 --note "…"`.
+   The SessionStart reminder and `recut ticket awaiting` make sure no answer is forgotten.
+
+The built-in client share page (`Create client link`, `/s/<token>`) is the later option. It
+records answers automatically, but needs a public URL (Cloudflare Tunnel + Access, see
+`docs/PLAN.md` §2).
+
 ## The weekly improvement pass
 
 Run it every ~5–10 tickets. Code changes happen **only** here, and they must be
@@ -203,6 +215,7 @@ recut serve [--port 8000]                                 # review server + live
 recut report [--since DATE] [--json | --html [--out FILE]]  # numbers for the improvement pass; --html = presentation page (recut-report.html)
 recut sync                                                # commit + push ticket data to recut-data
 recut ticket awaiting                                     # shipped cuts with no client feedback logged yet
+recut ticket export <id> [--to DIR] [--format mp3|wav]     # shipped cut as a named file to send (RECUT_EXPORT_DIR)
 
 # analysis + legacy compositions
 recut analyze <track>        # Modal analysis → raw JSON
