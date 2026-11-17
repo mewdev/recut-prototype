@@ -17,6 +17,7 @@ from pathlib import Path
 import librosa
 import numpy as np
 
+from recut.map.activity import apply_activity
 from recut.map.helpers import (
     chords_in,
     downbeats_in,
@@ -140,7 +141,12 @@ def run(raw_path: str | Path, audio_path: str | Path) -> MusicMap:
         ),
     )
     # M2: pace, short-term loudness, key ranges (CPU; ~5 s for a 3-minute track)
-    return enrich_map(music_map, audio, sr)
+    music_map = enrich_map(music_map, audio, sr)
+    # M1: instrument activity from the stem curves Modal returned (absent when stems failed)
+    activity = data.get("_activity")
+    if activity and activity.get("curves"):
+        music_map = apply_activity(music_map, activity["curves"], float(activity.get("hop_s", 0.1)))
+    return music_map
 
 
 if __name__ == "__main__":

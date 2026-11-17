@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Literal, NewType, Optional
 
 from pydantic import BaseModel, field_validator
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 # ---------------------------------------------------------------------------
 # CONSTANTS
@@ -79,6 +79,12 @@ class AnalysisSources(TypedDict):
     chords: str
     structure: str
     key: str
+    instrument_activity: NotRequired[str]  # "demucs-htdemucs", only when stems ran
+
+
+class RawActivity(TypedDict):
+    hop_s: float
+    curves: dict[str, list[float]]  # drums/bass/vocals/other -> 0-1 per hop
 
 
 class RawAnalysis(TypedDict):
@@ -91,6 +97,7 @@ class RawAnalysis(TypedDict):
     chords: list[ChordEntry]
     key: str  # e.g. "F# minor" — madmom's key_prediction_to_label() format
     _sources: AnalysisSources
+    _activity: NotRequired[RawActivity]  # M1: stem activity curves (optional)
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +204,7 @@ class StemActivity(BaseModel):
 
 
 class InstrumentActivity(BaseModel):
-    """Per-stem activity (M1, Demucs). Defined here, not filled yet."""
+    """Per-stem activity (M1, Demucs htdemucs). Filled by map/activity.py."""
 
     drum: Optional[StemActivity] = None
     bass: Optional[StemActivity] = None
@@ -221,6 +228,6 @@ class MusicMap(BaseModel):
     pace: Optional[Pace] = None
     loudness_short_term: Optional[LoudnessShortTerm] = None
     key_ranges: Optional[list[KeyRange]] = None
-    instrument_activity: Optional[InstrumentActivity] = None  # M1: not computed yet
+    instrument_activity: Optional[InstrumentActivity] = None  # M1: Demucs stem activity
     # which method produced each optional field, e.g. {"pace": "librosa-onsets"}
     analysis_sources: Optional[dict[str, str]] = None

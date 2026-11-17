@@ -5,9 +5,8 @@
 The map's `pace` series (onset events per minute, `normalized` 0-1 per track, one sample per
 second) and `loudness_short_term` (LUFS) tell you how busy a place is, independent of BPM.
 Read them with `recut.map.helpers.pace_at(map, t)`; each section also has a mean `pace`.
-Maps made before pace existed have none: run `recut ticket enrich <id>`. Instrument activity
-(drums, vocals) is not available yet, so pace is the only density signal; loudness alone
-cannot tell "quiet but busy" from "sparse".
+Maps made before pace existed have none: run `recut ticket enrich <id>`. Loudness alone
+cannot tell "quiet but busy" from "sparse": for that use the instrument activity below.
 
 - **Exit on a falling pace.** A clean ending usually comes where pace is already dropping
   (about 0.3 or lower, for a few seconds). A fade over a section still at pace 0.7 or higher
@@ -20,3 +19,20 @@ cannot tell "quiet but busy" from "sparse".
 - **A high-BPM breakdown is low pace.** Judge energy by `pace`, not `bpm`.
 - **Key.** `key_at(map, t)` gives the key in force at `t`; a key change inside a clip is a
   reason to splice at its edge (`map.key_ranges`).
+
+## Instrument activity: drums and vocals
+
+When the map has `instrument_activity` (Demucs stems; `analysis_sources.instrument_activity`;
+older maps: `recut ticket enrich <id>`), `drum`, `bass`, `vocal` and `other` are 0-1 curves (0.1 s
+steps, each stem scaled to its own loud level) with `ranges` where the stem is clearly playing for
+at least a bar. Read them with `recut.map.activity.activity_at(map, "drum", t)`; sections carry
+`drum_activity` and `vocal_activity` means.
+- **Never fade a groove.** A `fade_out` over a section whose last-bar drum activity is above
+  about 0.6 sounds like switching the song off (the linter warns: `ending_drums`). Exit on a drum
+  break or a section edge, or end on the chord with a short tail, instead. "Quiet but still
+  has drums" is a high drum activity at low loudness: it reads as a groove, not as an ending.
+- **Don't cut a sung phrase in half.** A splice more than one beat inside a vocal range
+  cuts a line mid-word (the linter warns: `mid_vocal`). Move it to the range's edge (the end
+  of the line, a breath), or to a bar where `vocal` is near 0.
+- **Joins:** the best entry has the outgoing and incoming drum activity close; entering a vocal
+  over a vocal in the outgoing track is a clash unless one of them is pushed down.

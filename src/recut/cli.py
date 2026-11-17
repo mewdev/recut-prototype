@@ -12,7 +12,7 @@ from recut.analysis_client import analyze_raw
 from recut.audio import Audio
 from recut.compositor import compose
 from recut.map.make_map import run as make_map
-from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR, RENDERS_DIR, TICKETS_DIR
+from recut.paths import AUDIO_DIR, MAP_DIR, RAW_DIR, RENDERS_DIR, STEMS_DIR, TICKETS_DIR
 from recut.project import Composition, Source, load_compositions, load_project_sources
 from recut.report import parse_date
 from recut.validator import validate
@@ -46,7 +46,7 @@ def cmd_analyze(args) -> None:
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     out_path = RAW_DIR / f"{audio_path.stem}.json"
-    result = analyze_raw(audio_path)
+    result = analyze_raw(audio_path, stems_dir=STEMS_DIR / audio_path.stem)
     out_path.write_text(json.dumps(result, indent=2))
     print(f"Saved: {out_path.resolve()}")
 
@@ -61,7 +61,7 @@ def cmd_map(args) -> None:
     force = getattr(args, "force", False)
     stems = getattr(args, "stems", None) or []
     if getattr(args, "enrich", False):
-        return _enrich_sources(sources, stems)
+        return _enrich_sources(sources, stems, activity=getattr(args, "activity", False))
     unknown = [s for s in stems if s not in sources]
     if unknown:
         print(f"Error: unknown source(s): {', '.join(unknown)}")
@@ -94,8 +94,9 @@ def cmd_map(args) -> None:
         print(f"  ✓ {stem}  duration={result.duration:.1f}s  segments={len(result.segments)}")
 
 
-def _enrich_sources(sources, stems) -> None:
-    """`recut map --enrich`: add pace / loudness / key ranges to existing maps, no re-analysis."""
+def _enrich_sources(sources, stems, activity: bool = False) -> None:
+    """`recut map --enrich`: add pace / loudness / key ranges to existing maps, no re-analysis.
+    With `activity`: also drum/bass/vocal/other activity (saved stems, else Modal for stems only)."""
     from recut.map.enrich import enrich_map_file
 
     unknown = [s for s in stems if s not in sources]
@@ -111,8 +112,9 @@ def _enrich_sources(sources, stems) -> None:
             print(f"  skipped {stem}: no map yet (run `recut map`)")
             continue
         done = True
-        changed = enrich_map_file(map_path, source.audio_path, force=bool(stems))
-        print(f"  {'✓ enriched' if changed else '= already has pace/loudness/key ranges:'} {stem}")
+        changed = enrich_map_file(map_path, source.audio_path, force=bool(stems),
+                                  stems_dir=STEMS_DIR / stem if activity else None)
+        print(f"  {'✓ enriched' if changed else '= already has pace/loudness/key ranges/activity:'} {stem}")
     if not done:
         print("Nothing to enrich.")
 
@@ -344,9 +346,10 @@ def _cmd_ticket(args) -> None:
         k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
     elif args.action == "enrich":
-        done = tickets.enrich_maps(args.id, force=args.force)
-        print(f"Enriched maps (pace, loudness, key ranges): {', '.join(done)}" if done
-              else "Maps already have pace / loudness / key ranges (use --force to recompute).")
+        done = tickets.enrich_maps(args.id, force=args.force, activity=getattr(args, "activity", False))
+        print(f"Enriched maps (pace, loudness, key ranges, instrument activity): {', '.join(done)}" if done
+              else "Maps already have pace / loudness / key ranges / instrument activity "
+                   "(use --force to recompute).")
     elif args.action == "iterate":
         tid = args.id
         sessions = tickets.session_numbers(tid)
@@ -509,8 +512,11 @@ def main() -> None:
     map_cmd.add_argument("--force", action="store_true",
                          help="rebuild existing enriched maps too (after a map fix)")
     map_cmd.add_argument("--enrich", action="store_true",
-                         help="add pace / short-term loudness / key ranges to existing maps "
-                              "(no re-analysis; named stems are recomputed)")
+                         help="add pace / short-term loudness / key ranges / instrument activity to existing "
+                              "maps (no re-analysis; Modal only for stems missing in .appdata/stems; "
+                              "named sources are recomputed)")
+    map_cmd.add_argument("--no-activity", dest="activity", action="store_false",
+                         help="with --enrich: skip instrument activity (it needs saved stems or Modal)")
     map_cmd.add_argument("stems", nargs="*", help="with --force / --enrich: only these sources")
     map_cmd.set_defaults(func=cmd_map)
 
@@ -552,9 +558,11 @@ def main() -> None:
     t_work.add_argument("id")
     t_work.add_argument("--agent", default="claude-code")
     t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
-    t_en = tsub.add_parser("enrich", help="Add pace / loudness / key ranges to the ticket's existing maps")
+    t_en = tsub.add_parser("enrich", help="Add pace / loudness / key ranges / instrument activity to the ticket's existing maps")
     t_en.add_argument("id")
     t_en.add_argument("--force", action="store_true", help="recompute even if present")
+    t_en.add_argument("--no-activity", dest="activity", action="store_false",
+                      help="skip instrument activity (it needs saved stems or Modal)")
     t_it = tsub.add_parser("iterate", help="New iteration in the latest session (copies the plan)")
     t_it.add_argument("id")
     t_c = tsub.add_parser("client", help="Log the client's decision on a delivered cut")
