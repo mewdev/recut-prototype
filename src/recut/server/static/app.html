@@ -122,7 +122,7 @@ function newPage() {
 // ------------------------------------------------------------------ ticket page
 const S = {
   tid: null, ticket: null, n: null, k: null, it: null, render: null, maps: {}, peaks: {}, cutPeaks: null,
-  cut: new Audio(), orig: {}, mode: "cut", origSeg: null, selSplice: null, review: null, follow: true, audioVersion: null, curves: false,
+  cut: new Audio(), orig: {}, mode: "cut", origSeg: null, selSplice: null, review: null, follow: true, audioVersion: null, curves: false, inst: false,
 };
 
 async function ticketPage(tid) {
@@ -138,6 +138,7 @@ async function ticketPage(tid) {
       <span class="row" style="gap:0"><button id="mCut" class="on">Cut</button><button id="mOrig">Original</button></span>
       <label class="muted"><input type="checkbox" id="follow" checked> follow latest iteration</label>
       <label class="muted"><input type="checkbox" id="curves"> pace / loudness</label>
+      <label class="muted"><input type="checkbox" id="inst"> drums / bass / vocal</label>
       <span class="muted" style="margin-left:auto"><kbd>space</kbd> play · <kbd>a</kbd> cut/original · <kbd>n</kbd>/<kbd>p</kbd> splice · <kbd>g</kbd>/<kbd>b</kbd> ok/bad</span>
     </div>
     <canvas id="cv" height="300"></canvas>
@@ -155,6 +156,7 @@ async function ticketPage(tid) {
   $("#mOrig").onclick = () => setMode("orig");
   $("#follow").onchange = (e) => { S.follow = e.target.checked; };
   $("#curves").onchange = (e) => { S.curves = e.target.checked; draw(); };
+  $("#inst").onchange = (e) => { S.inst = e.target.checked; draw(); };
   const cv = $("#cv");
   cv.onclick = onCanvasClick;
   new ResizeObserver(() => draw()).observe(cv);
@@ -267,11 +269,11 @@ function tick() {
 }
 
 // ------------------------------------------------------------------ timeline canvas
-const L = { compY: 26, compH: 96, gap: 54, srcH: 58, srcGap: 26, curveH: 22 };
+const L = { compY: 26, compH: 96, gap: 54, srcH: 58, srcGap: 26, curveH: 22, instH: 27 };
 function layout() {
   const sids = Object.keys(S.it?.plan?.sources || {});
   const rows = {}; let y = L.compY + L.compH + L.gap;
-  sids.forEach((sid, i) => { rows[sid] = { y, color: COLORS[i % 5] }; y += L.srcH + L.srcGap + (S.curves ? L.curveH : 0); });
+  sids.forEach((sid, i) => { rows[sid] = { y, color: COLORS[i % 5] }; y += L.srcH + L.srcGap + (S.curves ? L.curveH : 0) + (S.inst ? L.instH : 0); });
   return { rows, height: y };
 }
 function wave(ctx, pk, x0, x1, y, h, color, from = 0, to = null) {
@@ -302,6 +304,24 @@ function drawCurves(ctx, m, row, W, SX) {
   (m.key_ranges || []).slice(1).forEach((r) => { ctx.fillStyle = "#b45309"; ctx.fillRect(SX(r.start), y0, 1, h); });
   ctx.fillStyle = "#6b7280"; ctx.font = "9px system-ui";
   ctx.fillText(m.pace ? "pace ─  loudness ┄  key change |" : "no pace data (recut ticket enrich)", 4, y0 + 8); ctx.font = "11px system-ui";
+}
+// thin drum / bass / vocal activity lanes (0-1, Demucs; ranges underlined) under a source row;
+// maps without instrument_activity draw only a hint
+function drawInstruments(ctx, m, row, W, SX) {
+  const y0 = row.y + L.srcH + 2 + (S.curves ? L.curveH : 0), laneH = 8, dur = m.duration || 1;
+  ctx.fillStyle = "#f6f7f9"; ctx.fillRect(0, y0 - 1, W, L.instH - 2);
+  const ia = m.instrument_activity;
+  if (!ia) { ctx.fillStyle = "#6b7280"; ctx.font = "9px system-ui"; ctx.fillText("no instrument data (recut ticket enrich)", 4, y0 + 9); ctx.font = "11px system-ui"; return; }
+  [["drum", "drums"], ["bass", "bass"], ["vocal", "vocal"]].forEach(([k, label], li) => {
+    const a = ia[k], ly = y0 + li * (laneH + 1);
+    if (!a?.values?.length) return;
+    const hop = a.hop_s || 0.1;
+    ctx.fillStyle = row.color + "99"; ctx.beginPath(); ctx.moveTo(SX(0), ly + laneH);
+    a.values.forEach((v, i) => { ctx.lineTo(SX(Math.min(dur, i * hop)), ly + laneH - Math.max(0, Math.min(1, v)) * laneH); });
+    ctx.lineTo(SX(Math.min(dur, a.values.length * hop)), ly + laneH); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = row.color; (a.ranges || []).forEach(([r0, r1]) => ctx.fillRect(SX(r0), ly + laneH - 1, Math.max(1, SX(r1) - SX(r0)), 1));
+    ctx.fillStyle = "#374151"; ctx.font = "8px system-ui"; ctx.fillText(label, 3, ly + 7); ctx.font = "11px system-ui";
+  });
 }
 function draw() {
   const cv = $("#cv"); if (!cv) return;
@@ -356,6 +376,7 @@ function draw() {
       ctx.fillStyle = "#9ca3af"; ctx.fillRect(x, row.y, 1, L.srcH); ctx.fillStyle = "#4b5563"; ctx.fillText(`${g.segment_name}`, x + 4, row.y + 11); });
     ctx.fillStyle = row.color; ctx.font = "bold 11px system-ui"; ctx.fillText(`${sid} · ${S.ticket.request.files[sid] || ""}`, 4, row.y - 5); ctx.font = "11px system-ui";
     if (S.curves && m) drawCurves(ctx, m, row, W, SX);
+    if (S.inst && m) drawInstruments(ctx, m, row, W, SX);
     if (S.mode === "orig" && S.origSeg?.source === sid) { const x = SX(S.orig[sid].currentTime); ctx.fillStyle = "#111827"; ctx.fillRect(x, row.y - 2, 2, L.srcH + 4); }
   });
   // playhead

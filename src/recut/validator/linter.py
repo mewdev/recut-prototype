@@ -7,6 +7,11 @@ Runs from `engine.render_plan` once clip bounds and splices are known, and retur
 - `ending`: the last clip stops mid-section and has no `fade_out`
 - `energy_drop`: loudness falls by more than 6 dB across a splice with no fade or xfade
 - `duration`: rendered length misses the target (warn > 2 s, error > 10 %)
+- `ending_drums` (M3, needs `instrument_activity`): the cut ends with a `fade_out` while drum
+  activity in the last bar before the fade is above 0.6: the fade switches a busy groove off
+- `mid_vocal` (M3, needs `instrument_activity`): a splice lands inside a vocal range, more than
+  one beat from the range's edges: it cuts a phrase in half
+  (both skip silently when the map has no activity)
 
 Cross-song rules (A5, PLAN §2), keyed by splice id:
 
@@ -26,7 +31,9 @@ import numpy as np
 from recut.audio import Audio
 from recut.contracts.plan import ClipNode, Plan
 from recut.contracts.render import Issue, RenderSegment, Splice
+from recut.map.activity import bar_seconds
 from recut.map.helpers import key_at
+from recut.map.musicdata import segment_mean
 from recut.map.parser import get_segment
 from recut.map.schema import EnrichedSegment, MusicMap
 from recut.qc import _momentary
@@ -42,6 +49,7 @@ LOUDNESS_JUMP_DB = 3.0
 LOUDNESS_MIN_WINDOW_S = 1.0
 DURATION_WARN_S = 2.0
 DURATION_ERROR_FRAC = 0.10
+DRUMS_BUSY = 0.6           # mean drum activity in the last bar before a fade-out
 
 
 def _boundaries(m: MusicMap) -> list[float]:
@@ -78,6 +86,19 @@ def _short_term(audio: Audio, lo: float, hi: float, gain_db: float) -> Optional[
     a, b = int(max(lo, 0) * audio.sr), int(hi * audio.sr)
     v = _momentary(x, audio.sr, a, min(b, x.shape[-1]))
     return None if v is None else v + gain_db
+
+
+def _mid_vocal(m: MusicMap, t: float) -> Optional[tuple[float, float]]:
+    """The vocal range `t` sits inside, more than one beat from both edges (None otherwise,
+    including when the map has no vocal activity)."""
+    ia = m.instrument_activity
+    if ia is None or ia.vocal is None:
+        return None
+    beat = 60.0 / m.bpm if m.bpm > 0 else 0.5
+    for a, b in ia.vocal.ranges:
+        if a + beat < t < b - beat:
+            return a, b
+    return None
 
 
 def _cross_song(sp: Splice, prev: ClipNode, nxt: ClipNode, rp: RenderSegment, rn: RenderSegment,
@@ -150,6 +171,14 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
                     severity="warn", rule="phrase_align", splice=sp.id, node=nxt.id,
                     message=f"{sp.id}: {side} cut at {t:.2f}s of source {node.source!r} "
                             f"({node.segment}#{node.index}) is not on a phrase boundary"))
+        # mid_vocal: the cut lands in the middle of a sung phrase
+        for side, node, t in (("outgoing", prev, rp.src_end), ("incoming", nxt, rn.src_start)):
+            r = _mid_vocal(maps[node.source], t)
+            if r:
+                issues.append(Issue(
+                    severity="warn", rule="mid_vocal", splice=sp.id, node=nxt.id,
+                    message=f"{sp.id}: {side} cut at {t:.2f}s of source {node.source!r} falls inside "
+                            f"a vocal range ({r[0]:.1f}-{r[1]:.1f}s), not at its edge"))
         # energy_drop
         smoothed = (sp.overlap_ms >= SMOOTHING_XFADE_MS or prev.fade_out is not None
                     or nxt.fade_in is not None)
@@ -175,6 +204,22 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
                     severity="warn", rule="ending", node=last.id,
                     message=f"the cut ends mid-section ({last.segment}#{last.index} at {end:.2f}s) "
                             f"with no fade_out"))
+
+    # ending_drums: a fade over a section that is still driving
+    if segments:
+        last = clips.get(segments[-1].node_id)
+        m = maps[last.source] if last is not None else None
+        ia = m.instrument_activity if m else None
+        if last is not None and last.fade_out is not None and ia is not None and ia.drum is not None:
+            end = segments[-1].src_end
+            bar = bar_seconds(m.bars, m.beats, m.bpm, m.beats_per_bar)
+            drums = segment_mean(ia.drum.values, ia.drum.hop_s, max(0.0, end - bar), end)
+            if drums > DRUMS_BUSY:
+                issues.append(Issue(
+                    severity="warn", rule="ending_drums", node=last.id,
+                    message=f"the cut fades out at {end:.2f}s of {last.source!r} while the drums are "
+                            f"still busy (activity {drums:.2f} in the last bar): end on a drum break or "
+                            f"a section edge instead of fading a groove"))
 
     # duration
     target = plan.target_duration_s

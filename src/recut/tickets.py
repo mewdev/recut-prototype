@@ -148,23 +148,37 @@ def ensure_maps(ticket_id: str, root: Path = TICKETS_DIR, analyze=None) -> list[
     for sid, s in sources(ticket_id, root).items():
         if s["map"]:
             continue
-        if analyze is None:
-            from recut.analysis_client import analyze_to_map as analyze
-        music_map = analyze(d / s["file"])
+        if analyze is None:  # default: Modal; the stem FLACs are saved next to the ticket's maps
+            from recut.analysis_client import analyze_to_map
+
+            music_map = analyze_to_map(d / s["file"], stems_dir=stems_dir(ticket_id, sid, root))
+        else:
+            music_map = analyze(d / s["file"])
         _write(d / "maps" / f"{sid}.json", music_map.model_dump())
         done.append(sid)
     return done
 
 
-def enrich_maps(ticket_id: str, root: Path = TICKETS_DIR, force: bool = False) -> list[str]:
+def stems_dir(ticket_id: str, source_id: str, root: Path = TICKETS_DIR) -> Path:
+    """`<ticket>/stems/<source_id>/`: the separated stems (<stem>.flac). Audio: never committed
+    (the data repo's .gitignore excludes *.flac, see recut.sync)."""
+    return ticket_dir(ticket_id, root) / "stems" / source_id
+
+
+def enrich_maps(ticket_id: str, root: Path = TICKETS_DIR, force: bool = False,
+                activity: bool = False, fetch_stems=None) -> list[str]:
     """Add pace / short-term loudness / key ranges to the ticket's existing maps from the input
-    audio and the map's own beat grid (no re-analysis). Returns the source ids it rewrote."""
+    audio and the map's own beat grid (no re-analysis). With `activity`, also instrument
+    activity: from the saved stems if present, else Modal (stem separation only). Returns the
+    source ids it rewrote."""
     from recut.map.enrich import enrich_map_file
 
     d = ticket_dir(ticket_id, root)
     return [
         sid for sid, s in sources(ticket_id, root).items()
-        if s["map"] and enrich_map_file(d / s["map"], d / s["file"], force=force)
+        if s["map"] and enrich_map_file(
+            d / s["map"], d / s["file"], force=force,
+            stems_dir=stems_dir(ticket_id, sid, root) if activity else None, fetch_stems=fetch_stems)
     ]
 
 

@@ -6,8 +6,9 @@ Replicates what chordmini.me does when you upload a track:
   2. Chords   — Chord-CNN-LSTM (5-model ensemble → .lab → JSON)
   3. Structure — SongFormer (MuQ + MusicFM embeddings → section labels)
   4. Key      — Essentia (KeyExtractor: HPCP + key-profile correlation)
+  5. Stems    — Demucs htdemucs (drums/bass/vocals/other) + instrument activity curves (optional)
 
-All four run in parallel Modal containers, then merge into one JSON.
+All run in parallel Modal containers, then merge into one JSON.
 
 Usage:
     modal deploy modal_chordmini.py
@@ -43,6 +44,7 @@ import modal
 app = modal.App("recut-analysis")
 
 # ── Model licensing ────────────────────────────────────────────────────────────
+# Demucs      MIT        — commercial OK (htdemucs weights: MIT)
 # ChordMini   MIT        — commercial OK
 # SongFormer  MIT        — commercial OK
 # MusicFM     MIT        — commercial OK
@@ -172,6 +174,58 @@ structure_image = (
         '"'
     )
 )
+
+
+# ── Stems: Demucs htdemucs (own image; weights fetched at build time) ───────────
+stems_image = _base_cuda.pip_install("demucs==4.0.1").run_commands(
+    "python -c \"from demucs.pretrained import get_model; get_model('htdemucs'); print('htdemucs weights OK')\""
+)
+
+
+def stem_activity(samples, sr: int, hop_s: float = 0.1, smooth_s: float = 0.3, floor_db: float = -50.0) -> list:
+    """BEHAVIOURAL COPY of recut.map.activity.stem_activity (Modal ships only this file);
+    tests/map/test_activity.py keeps the two equal. RMS per 100 ms -> dBFS -> 0-1 (-50 dBFS = 0,
+    the stem's own 95th percentile = 1) -> 300 ms moving average. Silent stem -> all zeros."""
+    import numpy as np
+
+    x = np.asarray(samples, dtype=np.float64)
+    if x.ndim == 2:
+        x = x.mean(axis=0)
+    hop = max(1, int(round(hop_s * sr)))
+    n = int(np.ceil(len(x) / hop))
+    if n == 0:
+        return []
+    pad = n * hop - len(x)
+    sq = np.concatenate([x * x, np.zeros(pad)]).reshape(n, hop).sum(axis=1)
+    counts = np.full(n, hop, dtype=np.float64)
+    if pad:
+        counts[-1] = hop - pad
+    db = 20 * np.log10(np.maximum(np.sqrt(sq / counts), 1e-5))
+    top = float(np.percentile(db, 95))
+    if top <= floor_db:  # a stem active under 5% of the time: use its peak, if it is clearly audible
+        top = float(db.max())
+        if top < floor_db + 20.0:  # silent, or only bleed: no activity
+            return [0.0] * n
+    v = np.clip((db - floor_db) / (top - floor_db), 0.0, 1.0)
+    k = max(1, int(round(smooth_s / hop_s)))
+    if k > 1:
+        w = np.ones(k)
+        v = np.convolve(v, w, mode="same") / np.convolve(np.ones(n), w, mode="same")
+    return [round(float(a), 4) for a in np.clip(v, 0.0, 1.0)]
+
+
+def activity_ranges(values: list, hop_s: float, min_len_s: float, threshold: float = 0.25) -> list:
+    """BEHAVIOURAL COPY of recut.map.activity.activity_ranges (lists instead of tuples)."""
+    out, start = [], None
+    for i, v in enumerate(list(values) + [0.0]):
+        if v > threshold and start is None:
+            start = i
+        elif v <= threshold and start is not None:
+            a, b = start * hop_s, i * hop_s
+            if b - a >= min_len_s - 1e-9:
+                out.append([round(a, 3), round(b, 3)])
+            start = None
+    return out
 
 
 def bpm_from_beats(beats: list) -> "float | None":
@@ -355,22 +409,81 @@ def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
         }
 
 
-# ── Orchestrator: run all four in parallel ─────────────────────────────────────
+# ── 5. Stem separation + instrument activity ───────────────────────────────────
+@app.function(image=stems_image, gpu="T4", timeout=600, memory=12288)
+def run_stems(audio_bytes: bytes, filename: str = "track.mp3", min_range_s: float = 2.0) -> dict:
+    """Demucs htdemucs -> 4 stems as 44.1 kHz stereo FLAC bytes + per-stem activity curves.
+
+    Returns {"stems": {name: flac bytes}, "activity": {name: [0-1 per 100 ms]},
+    "ranges": {name: [[start, end], ...]} (activity > 0.25 for >= min_range_s; the client
+    recomputes them with the map's real bar length), "hop_s": 0.1, "sample_rate": 44100,
+    "model": "demucs-htdemucs"}."""
+    import io
+    import tempfile
+    import time
+
+    import numpy as np
+    import soundfile as sf
+    import torch
+    from demucs.apply import apply_model
+    from demucs.audio import AudioFile
+    from demucs.pretrained import get_model
+
+    sr = 44100
+    with tempfile.TemporaryDirectory() as tmp:
+        audio_path = pathlib.Path(tmp) / filename
+        audio_path.write_bytes(audio_bytes)
+
+        t0 = time.time()
+        model = get_model("htdemucs")
+        model.eval()
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        wav = AudioFile(audio_path).read(streams=0, samplerate=sr, channels=2)
+        ref = wav.mean(0)
+        mean, std = ref.mean(), ref.std() + 1e-8  # demucs' own input normalisation
+        wav = (wav - mean) / std
+        with torch.no_grad():
+            out = apply_model(model, wav[None], device=device, split=True, overlap=0.25, progress=False)[0]
+        out = out * std + mean
+
+        stems, activity, ranges = {}, {}, {}
+        for name, tensor in zip(model.sources, out):
+            x = tensor.cpu().numpy().astype(np.float32)  # channels x samples
+            buf = io.BytesIO()
+            sf.write(buf, x.T, sr, format="FLAC", subtype="PCM_24")
+            stems[name] = buf.getvalue()
+            activity[name] = stem_activity(x, sr)
+            ranges[name] = activity_ranges(activity[name], 0.1, min_range_s)
+
+        elapsed = round(time.time() - t0, 2)
+        print(f"demucs: {len(stems)} stems on {device}  {elapsed}s")
+        return {"stems": stems, "activity": activity, "ranges": ranges, "hop_s": 0.1,
+                "sample_rate": sr, "model": "demucs-htdemucs"}
+
+
+# ── Orchestrator: run all in parallel ─────────────────────────────────────
 @app.function(image=_base, timeout=1200)
 def analyze_all(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str = "full") -> dict:
-    """Spawn beats + chords + structure + key in parallel, merge into one JSON."""
+    """Spawn beats + chords + structure + key + stems in parallel, merge into one JSON."""
     # spawn = fire-and-forget; returns a handle we .get() later
     beats_call = run_beats.spawn(audio_bytes, filename)
     chords_call = run_chords.spawn(audio_bytes, filename, chord_dict)
     structure_call = run_structure.spawn(audio_bytes, filename)
     key_call = run_key.spawn(audio_bytes, filename)
+    stems_call = run_stems.spawn(audio_bytes, filename)
 
     beats = beats_call.get()
     chords = chords_call.get()
     structure = structure_call.get()
     key = key_call.get()
+    try:  # stems are optional: a failure must not lose the rest of the analysis
+        stems = stems_call.get()
+        activity = {"hop_s": stems["hop_s"], "curves": stems["activity"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"WARNING: stem separation failed, no instrument activity: {e}")
+        activity = None
 
-    return {
+    result = {
         "path": filename,
         "bpm": beats["bpm"],
         "beats_per_bar": beats["beats_per_bar"],
@@ -386,6 +499,10 @@ def analyze_all(audio_bytes: bytes, filename: str = "track.mp3", chord_dict: str
             "key": "essentia-key-extractor",
         },
     }
+    if activity:
+        result["_activity"] = activity
+        result["_sources"]["instrument_activity"] = "demucs-htdemucs"
+    return result
 
 
 # ── Local CLI ──────────────────────────────────────────────────────────────────

@@ -41,6 +41,7 @@ APPDATA = HOME / ".appdata"
 AUDIO_DIR = APPDATA / "audio"
 RAW_DIR = APPDATA / "maps" / "raw"
 MAP_DIR = APPDATA / "maps" / "enriched"
+STEMS_DIR = APPDATA / "stems"  # <source>/<stem>.flac (git-ignored; tickets keep theirs per ticket)
 COMPOSITIONS_DIR = APPDATA / "compositions"
 RENDERS_DIR = APPDATA / "renders"
 TICKETS_DIR = resolve_tickets_dir(HOME, dict(os.environ))
