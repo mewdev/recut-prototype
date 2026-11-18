@@ -31,6 +31,7 @@ import numpy as np
 from recut.audio import Audio
 from recut.contracts.plan import ClipNode, Plan
 from recut.contracts.render import Issue, RenderSegment, Splice
+from recut.contracts.units import level_db
 from recut.map.activity import bar_seconds
 from recut.map.helpers import key_at
 from recut.map.musicdata import segment_mean
@@ -123,8 +124,8 @@ def _cross_song(sp: Splice, prev: ClipNode, nxt: ClipNode, rp: RenderSegment, rn
                                      f"the same, relative or adjacent on the Camelot wheel"))
     if audio and prev.source in audio and nxt.source in audio:
         w = LOUDNESS_WINDOW_S
-        a = _short_term(audio[prev.source], max(rp.src_end - w, rp.src_start), rp.src_end, prev.gain)
-        b = _short_term(audio[nxt.source], rn.src_start, min(rn.src_start + w, rn.src_end), nxt.gain)
+        a = _short_term(audio[prev.source], max(rp.src_end - w, rp.src_start), rp.src_end, level_db(prev.gain))
+        b = _short_term(audio[nxt.source], rn.src_start, min(rn.src_start + w, rn.src_end), level_db(nxt.gain))
         if a is not None and b is not None and abs(b - a) > LOUDNESS_JUMP_DB:
             out.append(Issue(severity="warn", rule="loudness_jump", splice=sp.id, node=nxt.id,
                              message=f"{sp.id}: short-term loudness jumps {b - a:+.1f} dB across the "
@@ -186,7 +187,7 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
         if not smoothed and sa and sb:
             a, b = _edge_loudness(sa, True, rp.src_end), _edge_loudness(sb, False, rn.src_start)
             if a is not None and b is not None:
-                drop = (a + prev.gain) - (b + nxt.gain)
+                drop = (a + level_db(prev.gain)) - (b + level_db(nxt.gain))
                 if drop > ENERGY_DROP_DB:
                     issues.append(Issue(
                         severity="warn", rule="energy_drop", splice=sp.id, node=nxt.id,

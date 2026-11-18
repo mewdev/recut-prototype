@@ -58,6 +58,7 @@ A **static** filter (high-pass the low end, dull the top) is the `eq` device: `{
 `reverb` and `delay` add energy. The overlap of an `xfade` adds energy too (two clips at full level, e.g. `hold` on both sides). The master `limiter` (-1 dB by default) catches the sum and brings it back, but a limiter working hard sounds squashed.
 
 - `render.json` reports `peak_dbfs` (after the master), `limiter_applied`, and under `qc` the measured loudness, true peak and `max_gain_reduction_db`; the `qc_limiting` warning fires when the limiter pulled the level down by more than 3 dB.
+- **Sources are already level-matched.** With two or more sources the engine gains every source to one common integrated loudness before rendering (`match_loudness`, PLAN §2). A source that *looks* 15 dB quieter in the map (`loudness_db`) is not quieter in the render: do not add clip `gain` to make it up. Clip `gain` is a relative trim of a few dB around that match. (Ticket 20261118-jn7o: +10 dB "to match" a quiet source ran it into the limiter by 12.7 dB, audibly distorted.)
 - If `qc_limiting` fires, lower the send level (by 3 dB), the clip `gain` (by 2 to 3 dB), or shorten the overlap, rather than relying on the limiter.
 - Several wet stages in series (a clip reverb, then a return reverb, then a track delay) compound; check `peak_dbfs` after adding any.
 

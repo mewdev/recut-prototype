@@ -31,7 +31,9 @@ def _spawn_stems(audio_bytes: bytes, filename: str, log, return_stems: bool = Fa
         return Function.from_name(_APP, "run_stems").spawn(audio_bytes, filename,
                                                            return_stems=return_stems)
     except Exception as e:  # noqa: BLE001  stems are optional (e.g. app deployed before M1)
-        log(f"  ! stems unavailable, no instrument activity: {e}")
+        log(f"  ! stems unavailable, no instrument activity: {e}\n"
+            f"    fix: `modal deploy src/analysis/pipeline.py` (app predates run_stems), then "
+            f"`recut ticket enrich <id> --force` adds the activity curves to the existing maps")
         return None
 
 
