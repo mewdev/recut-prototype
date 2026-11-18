@@ -380,7 +380,7 @@ def _cmd_ticket(args) -> None:
         if mapped:
             print(f"Analyzed + mapped sources: {', '.join(mapped)}")
         n = tickets.new_session(tid, agent=args.agent, model=args.model)
-        tickets.mark_current_session(tid, n)
+        tickets.mark_agent_session(tid, n)
         k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
     elif args.action == "audition":

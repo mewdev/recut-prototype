@@ -5,8 +5,10 @@
 # Claude Code runs this with a JSON object on stdin that includes "transcript_path". Where to
 # copy to, in order:
 #   1. $RECUT_SESSION (the session folder `recut ticket work` printed)
-#   2. the folder named in <tickets root>/.current_session, which `recut ticket work` writes
-#      (a hook can't see an `export` made inside the agent's shell)
+#   2. the folder named in <tickets root>/.agent_sessions/<session_id>, which `recut ticket work`
+#      writes for the Claude session that ran it ($CLAUDE_CODE_SESSION_ID; a hook can't see an
+#      `export` made inside the agent's shell). Keyed by session, so parallel agents on different
+#      tickets never write into each other's ticket. No pointer for this session: nothing is copied.
 # <tickets root> is $RECUT_TICKETS_DIR, else $RECUT_HOME/.appdata/tickets, else
 # <repo>/.appdata/tickets. Test override: $RECUT_TRANSCRIPT_PATH replaces the stdin path.
 #
@@ -37,7 +39,8 @@ if [ -z "$dest" ]; then
   if [ -n "${RECUT_TICKETS_DIR:-}" ]; then root="$RECUT_TICKETS_DIR"
   elif [ -d "$repo_dir/../recut-data/.git" ]; then root="$repo_dir/../recut-data/tickets"
   else root="$repo_dir/.appdata/tickets"; fi
-  [ -f "$root/.current_session" ] && dest="$(head -n1 "$root/.current_session")"
+  sid="$(printf '%s' "$stdin_json" | sed -n 's/.*"session_id"[[:space:]]*:[[:space:]]*"\([A-Za-z0-9_-]*\)".*/\1/p' | head -n1)"
+  [ -n "$sid" ] && [ -f "$root/.agent_sessions/$sid" ] && dest="$(head -n1 "$root/.agent_sessions/$sid")"
 fi
 [ -n "$dest" ] && [ -d "$dest" ] || exit 0
 

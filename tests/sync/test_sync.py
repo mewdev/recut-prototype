@@ -36,6 +36,23 @@ def test_sync_commits_and_pushes_without_audio(tmp_path):
     assert int(git("rev-list", "--count", "main", cwd=remote)) == 1
 
 
+def test_sync_adds_new_ignore_patterns_to_an_older_gitignore(tmp_path):
+    """A data repo set up by an older recut keeps its .gitignore; patterns added since (the
+    machine-local agent session pointers) must still be ignored, never committed."""
+    remote, repo = make_data_repo(tmp_path)
+    (repo / ".gitignore").write_text("# old header, Written by recut.sync.\n*.wav\n*.mp3\nmine.txt\n")
+    (repo / "tickets" / ".agent_sessions").mkdir()
+    (repo / "tickets" / ".agent_sessions" / "abc-123").write_text("/some/session\n")
+    (repo / "tickets" / "a.json").write_text("1")
+    sync.sync(repo / "tickets")
+    files = git("ls-tree", "-r", "--name-only", "main", cwd=remote).split()
+    assert "tickets/a.json" in files and not any(".agent_sessions" in f for f in files)
+    lines = (repo / ".gitignore").read_text().splitlines()
+    assert "mine.txt" in lines and lines.count("*.wav") == 1 and ".agent_sessions/" in lines
+    sync.sync(repo / "tickets")
+    assert (repo / ".gitignore").read_text().splitlines() == lines  # added once, not on every sync
+
+
 def test_sync_rebases_on_other_machines_push(tmp_path):
     remote, repo = make_data_repo(tmp_path)
     (repo / "tickets" / "a.json").write_text("1")

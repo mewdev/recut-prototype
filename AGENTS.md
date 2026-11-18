@@ -91,9 +91,12 @@ their own `.claude/settings.local.json` (use the absolute path of the checkout):
 Both hooks need the `recut` command on PATH: start Claude Code from a shell where the
 `recut` environment is active.
 
-The hook finds the session folder from `$RECUT_SESSION` (the `export` line `recut ticket work`
-prints: set it in the shell that starts Claude Code if you can) and otherwise from
-`.appdata/tickets/.current_session`, which `recut ticket work` writes. It never fails the agent.
+The hook finds the session folder from `$RECUT_SESSION` if it is set, and otherwise from
+`<tickets>/.agent_sessions/<Claude session id>`, which `recut ticket work` writes for the Claude
+session that ran it. That pointer is per session, so several agents can work different tickets at
+once. Don't export `RECUT_SESSION` in a shell that starts more than one Claude Code session: every
+session would copy into that one ticket. A session that never ran `recut ticket work` copies
+nothing. It never fails the agent.
 Check it: `echo '{"transcript_path": "/path/to/any.jsonl"}' | RECUT_SESSION=<session dir> scripts/hooks/copy_transcript.sh`.
 
 The `cutting`/`music-theory` skills below give the musical judgment. `skills/cutting/` is
