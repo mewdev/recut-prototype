@@ -1,0 +1,139 @@
+{
+  "version": 2,
+  "sources": {
+    "a": {
+      "file": "inputs/a.wav",
+      "map": "maps/a.json"
+    },
+    "b": {
+      "file": "inputs/b.wav",
+      "map": "maps/b.json"
+    }
+  },
+  "tracks": [
+    {
+      "id": "main",
+      "clips": [
+        {
+          "id": "b1",
+          "type": "clip",
+          "source": "b",
+          "segment": "intro",
+          "index": 1,
+          "gain": -3.5
+        },
+        {
+          "id": "b2",
+          "type": "clip",
+          "source": "b",
+          "segment": "verse",
+          "index": 1,
+          "gain": -3.5
+        },
+        {
+          "id": "b3",
+          "type": "clip",
+          "source": "b",
+          "segment": "verse",
+          "index": 2,
+          "gain": -3.5
+        },
+        {
+          "id": "b4",
+          "type": "clip",
+          "source": "b",
+          "segment": "verse",
+          "index": 3,
+          "gain": -3.5
+        },
+        {
+          "id": "b5",
+          "type": "clip",
+          "source": "b",
+          "segment": "verse",
+          "index": 4,
+          "gain": -3.5
+        },
+        {
+          "id": "b6",
+          "type": "clip",
+          "source": "b",
+          "segment": "silence",
+          "index": 1,
+          "gain": -3.5
+        },
+        {
+          "id": "p1",
+          "type": "gap",
+          "length": "10ms"
+        },
+        {
+          "id": "a1",
+          "type": "clip",
+          "source": "a",
+          "segment": "intro",
+          "index": 1,
+          "gain": -2.0
+        },
+        {
+          "id": "a2",
+          "type": "clip",
+          "source": "a",
+          "segment": "chorus",
+          "index": 1,
+          "gain": -2.0
+        },
+        {
+          "id": "a3",
+          "type": "clip",
+          "source": "a",
+          "segment": "chorus",
+          "index": 2,
+          "gain": -2.0
+        },
+        {
+          "id": "a4",
+          "type": "clip",
+          "source": "a",
+          "segment": "inst",
+          "index": 1,
+          "gain": -2.0
+        },
+        {
+          "id": "a5",
+          "type": "clip",
+          "source": "a",
+          "segment": "inst",
+          "index": 2,
+          "gain": -2.0
+        },
+        {
+          "id": "a6",
+          "type": "clip",
+          "source": "a",
+          "segment": "chorus",
+          "index": 3,
+          "gain": -2.0
+        },
+        {
+          "id": "a7",
+          "type": "clip",
+          "source": "a",
+          "segment": "chorus",
+          "index": 4,
+          "gain": -2.0
+        },
+        {
+          "id": "a8",
+          "type": "clip",
+          "source": "a",
+          "segment": "silence",
+          "index": 1,
+          "gain": -2.0
+        }
+      ]
+    }
+  ],
+  "target_duration_s": null,
+  "notes": "(fixture: agent notes removed) it3.json"
+}

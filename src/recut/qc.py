@@ -493,7 +493,12 @@ def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] =
 
     # -- per-splice: gain jump, tilt jump
     with tm("splice_jumps"):
+        song_changes = {i.node for i in info.issues if i.rule == "song_change_gap"}  # set by the linter
         for sp_ in info.splices:
+            if sp_.overlap_ms <= 0 and not _step_times(info, sp_):
+                continue  # contiguous in one source: the song plays on, its own changes aren't jumps
+            if sp_.to in song_changes:
+                continue  # a tail fading out, then the next song: the jump is the point
             t_in = sp_.out_time
             t_after = sp_.out_time + sp_.overlap_ms / 1000
             n400 = int(0.4 * sr)

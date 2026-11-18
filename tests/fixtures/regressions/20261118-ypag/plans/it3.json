@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "sources": {
+    "a": {
+      "file": "inputs/a.wav",
+      "map": "maps/a.json"
+    },
+    "b": {
+      "file": "inputs/b.wav",
+      "map": "maps/b.json"
+    }
+  },
+  "tracks": [
+    {
+      "id": "main",
+      "clips": [
+        {
+          "id": "b1",
+          "type": "clip",
+          "source": "b",
+          "segment": "chorus",
+          "index": 1
+        },
+        {
+          "id": "b2",
+          "type": "clip",
+          "source": "b",
+          "segment": "verse",
+          "index": 1
+        },
+        {
+          "id": "b3",
+          "type": "clip",
+          "source": "b",
+          "segment": "chorus",
+          "index": 2
+        },
+        {
+          "id": "b4",
+          "type": "clip",
+          "source": "b",
+          "segment": "silence",
+          "index": 1,
+          "beats": 6,
+          "fade_out": {
+            "length": "100ms",
+            "shape": "linear"
+          }
+        },
+        {
+          "id": "a1",
+          "type": "clip",
+          "source": "a",
+          "segment": "intro",
+          "index": 1,
+          "gain": -1
+        },
+        {
+          "id": "a2",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 1,
+          "gain": -1
+        },
+        {
+          "id": "a3",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 2,
+          "gain": -1
+        },
+        {
+          "id": "a4",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 3,
+          "gain": -1
+        },
+        {
+          "id": "a5",
+          "type": "clip",
+          "source": "a",
+          "segment": "inst",
+          "index": 1,
+          "gain": -1
+        },
+        {
+          "id": "a6",
+          "type": "clip",
+          "source": "a",
+          "segment": "silence",
+          "index": 1,
+          "gain": -1
+        }
+      ]
+    }
+  ],
+  "target_duration_s": null,
+  "notes": "(fixture: agent notes removed) it3.json"
+}
