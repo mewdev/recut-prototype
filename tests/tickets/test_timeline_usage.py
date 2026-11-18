@@ -90,11 +90,44 @@ def test_usage_parsing_two_models_dupes_junk():
     u = usage.parse_transcript(_transcript())
     assert u["input_tokens"] == 110 and u["output_tokens"] == 70
     assert u["cache_read_tokens"] == 1000 and u["cache_write_tokens"] == 200
-    assert u["turns"] == 2 and u["duration_s"] == 300.0
-    assert u["model"] == "claude-sonnet-5-5"
+    assert u["turns"] == 2 and u["duration_s"] == 300.0 and u["wall_s"] == 300.0
+    assert u["model"] == "mixed"  # switched models mid-session: no single label
     assert set(u["models"]) == {"claude-sonnet-5-5", "claude-opus-4-8"}
     expected = (100 * 2 + 50 * 10 + 1000 * 0.1 + 200 * 2.5) / 1e6 + (10 * 5 + 20 * 25) / 1e6  # sonnet-5-5, opus-4-8
     assert u["cost_usd"] == pytest.approx(expected, abs=1e-4)
+
+
+def test_idle_gaps_do_not_count_as_session_time():
+    # operator away 3 h before the next prompt: wall-clock 3 h 1 min, active = 1 min + the 5 min cap
+    t = "\n".join([
+        _line(type="user", timestamp="2026-11-01T10:00:00Z", message={"role": "user", "content": "go"}),
+        _line(type="assistant", timestamp="2026-11-01T10:01:00Z", message={
+            "id": "m1", "model": "claude-sonnet-5-5", "usage": {"input_tokens": 1, "output_tokens": 1}}),
+        _line(type="user", timestamp="2026-11-01T13:01:00Z", message={"role": "user", "content": "back"}),
+    ])
+    u = usage.parse_transcript(t)
+    assert u["wall_s"] == 3 * 3600 + 60
+    assert u["duration_s"] == 60 + usage.IDLE_CAP_S
+    assert u["model"] == "claude-sonnet-5-5"
+
+
+def test_long_tool_run_counts_in_full():
+    # a 20 min tool call (e.g. Modal analysis) ends at a tool result, not a prompt: it is work
+    t = "\n".join([
+        _line(type="user", timestamp="2026-11-01T10:00:00Z", message={"role": "user", "content": "go"}),
+        _line(type="user", timestamp="2026-11-01T10:20:00Z", message={
+            "role": "user", "content": [{"type": "tool_result", "content": "ok"}]}),
+    ])
+    assert usage.parse_transcript(t)["duration_s"] == 1200
+
+
+def test_old_format_usage_is_recomputed(root):
+    tid = tickets.create_ticket("x", [], root=root)
+    sd = tickets.session_dir(tid, tickets.new_session(tid, root=root), root)
+    (sd / "transcript.jsonl").write_text(_transcript())
+    (sd / "usage.json").write_text(json.dumps({"duration_s": 99999.0}))  # newer than the transcript
+    assert usage.refresh_stale(root) == [sd]
+    assert usage.load_usage(sd)["wall_s"] == 300.0
 
 
 def test_cost_math_and_unknown_model():

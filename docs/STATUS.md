@@ -67,6 +67,7 @@ agent won't know it.
 - (otherwise none open) Note: `examples/summer-party/summer-party-map.json` predates M0 (NaN loudness on a zero-length `silence`, an `inst` ending before the audio). It is not regenerated (no raw data); it still loads (NaN is read as the -200 dB floor).
 
 ## Decisions
+- 2026-11-18 — usage.json `duration_s` is active time (waiting over 5 min for the operator's next prompt counts as 5 min; tool runs count in full; `wall_s` keeps first-to-last), and `model` is `mixed` when a session switched models. Wall-clock had counted hours of operator absence (ypag 377 min, now 109 active; fzsv 300, now 31). Older usage.json files are recomputed at the next sync. Not fixed: dev chat after the ticket in the same session still counts.
 - 2026-11-18 — `import recut` sets `NUMBA_CACHE_DIR` to `~/.cache/numba-recut` unless set: in a sandbox every Python call failed with numba's "no locator available". AGENTS.md no longer hard-codes one operator's Python path (it's the `python` next to `recut`).
 - 2026-11-18 — ffmpeg/ffprobe are looked up on PATH, then next to the running Python (`intake.tool`), for MP3 export and intake. Two tickets hit "ffmpeg not found" while the conda env had it (~55 min lost installing another copy).
 - 2026-11-18 — `recut serve` restarts when recut's code changes (default; `--no-reload` opts out). A server left running across the `gap` merge failed 26 GUI renders in 4 tickets while the CLI rendered fine.
