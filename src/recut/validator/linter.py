@@ -137,7 +137,7 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
               splices: list[Splice], duration_s: Optional[float] = None,
               audio: Optional[dict[str, Audio]] = None) -> list[Issue]:
     issues: list[Issue] = []
-    clips = {n.id: n for n in plan.tracks[0].clips if isinstance(n, ClipNode)}
+    clips = {n.id: n for t in plan.tracks for n in t.clips if isinstance(n, ClipNode)}
     seg_by_node = {s.node_id: s for s in segments}
     grids = {sid: _boundaries(m) for sid, m in maps.items()}
 
@@ -195,10 +195,12 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
                                 f"with no fade or crossfade"))
 
     # ending: the last clip stops at a section end / the song's end, or has a fade_out
-    if segments:
-        last = clips.get(segments[-1].node_id)
+    main = [s for s in segments if s.track == plan.tracks[0].id]  # the cut ends where the main track does
+    final = max(main, key=lambda s: s.out_end) if main else None
+    if final:
+        last = clips.get(final.node_id)
         if last is not None and last.fade_out is None:
-            m, end = maps[last.source], segments[-1].src_end
+            m, end = maps[last.source], final.src_end
             ends = [s.end for s in m.segments if s.end - s.start > 1e-3] + [m.duration]
             if not _near(end, ends):
                 issues.append(Issue(
@@ -207,12 +209,12 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
                             f"with no fade_out"))
 
     # ending_drums: a fade over a section that is still driving
-    if segments:
-        last = clips.get(segments[-1].node_id)
+    if final:
+        last = clips.get(final.node_id)
         m = maps[last.source] if last is not None else None
         ia = m.instrument_activity if m else None
         if last is not None and last.fade_out is not None and ia is not None and ia.drum is not None:
-            end = segments[-1].src_end
+            end = final.src_end
             bar = bar_seconds(m.bars, m.beats, m.bpm, m.beats_per_bar)
             drums = segment_mean(ia.drum.values, ia.drum.hop_s, max(0.0, end - bar), end)
             if drums > DRUMS_BUSY:

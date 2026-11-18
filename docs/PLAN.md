@@ -152,6 +152,17 @@ top, and the wash keeps ringing on the return.
 - a short overlap with both sides at full level: `out_shape` and `in_shape` both
   `"hold"`.
 
+**Pauses (`gap`)** (2026-11-18): `{"type": "gap", "id": "p1", "length": "5s"}` is silence on
+the track. Musical units follow the previous clip's tempo (the first source's at the start
+of a track). Return tails keep ringing through it. Nothing joins across a gap, so no splice
+is recorded there. An `xfade` may not sit next to a gap; a track may start with a gap (that
+places a layer later on the timeline) but must end with a clip.
+
+**Stems as sources** (2026-11-18): a source may be a separated stem with its song's map,
+e.g. `"a_vox": {"file": "stems/a/vocals.flac", "map": "maps/a.json"}`. The stem has the
+song's timeline, so sections and bars work as for the mix. Stems are kept by default
+(`RECUT_KEEP_STEMS=0` turns it off); maps analyzed before that need `recut ticket enrich <id> --force`.
+
 **Devices (week 1)**, with Ableton names; parameters as in the example:
 | Device | Parameters |
 |---|---|
@@ -174,8 +185,11 @@ size, and the engine docs give the table.
 **Rules:**
 - Return tracks keep ringing after clips end, so reverb and delay tails are never cut
   off. That's why there's no special "ring out" field.
-- Week 1 renders exactly **one** track plus returns and master. More than one track
-  raises `ValueError("multi-track not supported yet")`.
+- **Tracks** (multi-track since 2026-11-18): every track starts at 0 s and is laid out on
+  its own (clips, xfades, gaps). Track buses (devices, volume, pan, automation) are summed,
+  every track can send to the returns, then the master runs once. Layering = a second track
+  that starts with a `gap` (e.g. a voice FX on top of the main track's fade-out).
+  `render.json` segments carry their `track` id.
 - Old-format compositions (`Fade`, `Reverb`, `ReverbSweep`, `Delay`, `FilterSweep`,
   `XFade(ms, curve)`) still load through an adapter in the engine, and the test suite
   covers it.

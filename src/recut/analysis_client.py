@@ -16,10 +16,10 @@ _APP = "recut-analysis"
 
 
 def keep_stems() -> bool:
-    """Keep the separated stem audio (~150 MB per track as FLAC)? Off by default: the map only
-    needs the activity curves, and mashups will use a better separator (STATUS M7). Turn on
-    with `RECUT_KEEP_STEMS=1` or the `--keep-stems` CLI flag."""
-    return os.environ.get("RECUT_KEEP_STEMS", "").strip().lower() in ("1", "true", "yes", "on")
+    """Keep the separated stem audio (~150 MB per track as FLAC, local only, never committed)?
+    On by default: any stem can be a plan source (a voice or drum hit as an FX, a layer).
+    Turn off with `RECUT_KEEP_STEMS=0` or the `--no-keep-stems` CLI flag."""
+    return os.environ.get("RECUT_KEEP_STEMS", "").strip().lower() not in ("0", "false", "no", "off")
 
 
 def _spawn_stems(audio_bytes: bytes, filename: str, log, return_stems: bool = False):

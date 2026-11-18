@@ -13,6 +13,7 @@ class RenderSegment(BaseModel):
     src_end: float
     out_start: float
     out_end: float
+    track: str = "main"
 
 
 class Splice(BaseModel):

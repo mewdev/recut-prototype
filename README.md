@@ -216,8 +216,8 @@ recut report [--since DATE] [--json | --html [--out FILE]]  # numbers for the im
 recut sync                                                # commit + push ticket data to recut-data
 recut ticket awaiting                                     # shipped cuts with no client feedback logged yet
 recut ticket export <id> [--to DIR] [--format mp3|wav]     # shipped cut as a named file to send (RECUT_EXPORT_DIR)
-# analyze / map / ticket work / ticket enrich: add --keep-stems (or RECUT_KEEP_STEMS=1) to keep the
-# separated stem audio (~150 MB/track); by default only the instrument-activity curves are stored
+# analyze / map / ticket work / ticket enrich keep the separated stem audio (~150 MB/track, local only,
+# usable as plan sources); --no-keep-stems (or RECUT_KEEP_STEMS=0) stores only the activity curves
 
 # analysis + legacy compositions
 recut analyze <track>        # Modal analysis → raw JSON

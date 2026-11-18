@@ -41,6 +41,16 @@ def test_two_sources_6db_apart_come_out_level_matched():
     assert srcs["a"].lufs_target == srcs["b"].lufs_target == pytest.approx(srcs["a"].lufs_in, abs=0.01)
 
 
+def test_a_stem_keeps_its_balance_against_its_own_mix():
+    # regression (ticket 20261118-jn7o): a vocal stem must not be raised to its song's loudness
+    srcs = {"a": loaded(-20), "a_vox": loaded(-32), "b": loaded(-26)}
+    srcs["a"].song = srcs["a_vox"].song = "maps/a.json"
+    match_loudness(srcs)
+    lufs = {sid: integrated_lufs(s.audio.samples, SR) for sid, s in srcs.items()}
+    assert lufs["a"] - lufs["a_vox"] == pytest.approx(12.0, abs=0.5)  # same gain for the song's sources
+    assert abs(lufs["a"] - lufs["b"]) < 1.0  # songs are still matched to each other
+
+
 def test_loud_masters_are_capped_not_made_louder():
     srcs = {"a": loaded(-3), "b": loaded(-9)}   # both louder than the cap
     before = srcs["a"].lufs_in
@@ -78,3 +88,12 @@ def test_demo_medley_is_level_matched_and_reported(demo):
     a, b = info.sources["a"], info.sources["b"]
     assert a.lufs_in is not None and a.lufs_in - b.lufs_in == pytest.approx(6, abs=0.5)
     assert a.lufs_target == b.lufs_target <= LUFS_CAP
+
+
+def test_a_stem_without_its_mix_in_the_plan_still_gets_its_songs_gain():
+    # review finding: a lone vocal stem must not be raised to the other song's level
+    srcs = {"a_vox": loaded(-32), "b": loaded(-20)}
+    srcs["a_vox"].song, srcs["a_vox"].song_lufs = "maps/a.json", -20.0  # its mix is as loud as b
+    before = srcs["a_vox"].lufs_in
+    match_loudness(srcs)
+    assert integrated_lufs(srcs["a_vox"].audio.samples, SR) == pytest.approx(before, abs=0.1)  # no make-up gain

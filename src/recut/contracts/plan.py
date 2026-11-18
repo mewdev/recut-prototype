@@ -154,7 +154,15 @@ class XFadeNode(_Strict):
         return self.in_shape or self.shape
 
 
-Node = Annotated[Union[ClipNode, XFadeNode], Field(discriminator="type")]
+class GapNode(_Strict):
+    """Silence on the track (a pause). Units follow the previous clip's tempo."""
+
+    type: Literal["gap"]
+    id: str
+    length: TimeStr
+
+
+Node = Annotated[Union[ClipNode, XFadeNode, GapNode], Field(discriminator="type")]
 
 
 class Track(_Strict):
@@ -208,11 +216,14 @@ class Plan(_Strict):
             for d in t.devices:
                 unique(d.id)
             nodes = t.clips
-            if not isinstance(nodes[0], ClipNode) or not isinstance(nodes[-1], ClipNode):
-                raise ValueError(f"track {t.id}: must start and end with a clip, not an xfade")
+            if isinstance(nodes[0], XFadeNode) or not isinstance(nodes[-1], ClipNode):
+                raise ValueError(f"track {t.id}: must end with a clip and not start with an xfade")
             for prev, cur in zip(nodes, nodes[1:]):
                 if isinstance(prev, XFadeNode) and isinstance(cur, XFadeNode):
                     raise ValueError(f"track {t.id}: two xfades next to each other ({prev.id}, {cur.id})")
+                if {type(prev), type(cur)} == {XFadeNode, GapNode}:
+                    raise ValueError(f"track {t.id}: an xfade can't touch a gap ({prev.id}, {cur.id}): "
+                                     f"nothing is playing on the gap side")
             for n in nodes:
                 unique(n.id)
                 if isinstance(n, ClipNode):

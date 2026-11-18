@@ -2,7 +2,7 @@
 
 Which device, send or automation to reach for, and in what order. Parameters and units are in `../assets/effects-cheatsheet.md`; the plan format is `docs/PLAN.md` §3.2. Wrong routing produces resonance artifacts, mud, or an audible processing boundary.
 
-**One track, whole mix.** The engine renders one track of full-mix clips (plus returns and master). There is no per-instrument isolation (see `known-limitations.md`). Every rule below is about what the *whole mix* will sound like.
+**Clips play what their source contains.** A clip from a song is the whole mix; a clip from a stem source (`stems/<source>/vocals.flac` …) is that stem only. Tracks are layers summed before the master (see `known-limitations.md`). Every rule below is about what the summed result will sound like.
 
 ## Inserts vs. sends
 

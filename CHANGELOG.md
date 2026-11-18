@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — 2026-11-18 — Layers, pauses, stems as sources (ticket 20261118-jn7o)
+
+- Plan v2: `gap` node (pause); multi-track (layers from 0 s, a leading `gap` places a layer); `render.json` segments carry `track`
+- A separated stem is a plan source (`stems/<source>/vocals.flac` + the song's map); a song's sources share one loudness-matching gain
+- `layer_level` info issue: a layer's entry loudness against the main track
+- `recut ticket audition <id> <source>`: short phrase files from the stem for picking an FX by ear
+- `recut ticket export` names the file after the client (`Ježci - čerti_it7.mp3`)
+- Fixed: clip `gain: "-inf"` crashed the linter; review GUI fetches a stem source's map and draws one bar row per track
+
 ## [0.2.0] — 2026-11-14 — Ticket workflow: plan v2 engine, review GUI, QC, client loop
 
 Everything since the 0.1.0 MVP (`cbe0e35`). The old `Clip`/`XFade` composition API still works

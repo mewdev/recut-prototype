@@ -2,17 +2,19 @@
 
 recut is an early prototype (see repo `CLAUDE.md`). Say these gaps out loud when relevant rather than silently working around them.
 
-## One track only
+## Layers, not a mixer
 
-The engine renders exactly one track of clips, plus return tracks and the master. More than one track raises `multi-track not supported yet`. Layering (mashups, a vocal over another song's instrumental) is week-2 work; sequencing several sources (a medley, several versions of one song) works today.
+Tracks (PLAN §3.2) all start at 0 s; a track that begins with a `gap` places a layer later.
+Each track has its own devices, volume, pan and automation, and every track can send to the
+returns. There is no sidechain/ducking between tracks and no time-stretching, so layering two
+*songs* (a full mashup) still needs compatible tempos and sections chosen by hand.
 
-## No stem or per-instrument editing
+## Stems are separated after the fact
 
-Clips are full mixes (clients send full mixes only). Every device acts on the whole mix: you can filter or duck "the mix", not "the drums". Do not tell a user "I'll isolate the drums and fade just those"; that doesn't exist. The stem FLACs (`RECUT_KEEP_STEMS=1`) can be pre-mixed offline into a new source, e.g. a clean voice FX: `sound-fx.md`. See `effects-routing.md`, `transitions-and-masking.md`.
-
-## No pause (gap) clip
-
-There is no silence node. A pause between clips is a muted clip (`"gain": "-inf"`); see `sound-fx.md`.
+A stem source (`stems/<source>/<stem>.flac`, with the song's map) exists when the analysis kept
+the stems (the default; older tickets: `recut ticket enrich <id> --force`). Demucs htdemucs separation has bleed and
+artefacts: fine for a short voice hit or a drum loop, audible on long exposed parts (STATUS M7).
+Clips are otherwise full mixes and every device acts on what the clip contains.
 
 ## No time-stretching
 

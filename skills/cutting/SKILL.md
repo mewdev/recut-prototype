@@ -9,7 +9,8 @@ Builds and renders audio edits against a song's `MusicMap` by writing a **plan**
 
 ## The model in 60 seconds
 
-- A **track** holds **clips**. Each clip is chosen musically from the map (`segment` + `index`, optional `bars`/`beats`, `offset_bars`, `loop`) — never by free timecodes. Clips can come from several **sources** (several songs, or versions of one).
+- A **track** holds **clips**, `xfade` joins and `gap` pauses. Several tracks are layers that all start at 0 s (a leading `gap` places a layer later).
+- Each clip is chosen musically from the map (`segment` + `index`, optional `bars`/`beats`, `offset_bars`, `loop`) — never by free timecodes. Clips can come from several **sources** (several songs, versions of one, or a song's separated stems).
 - A clip has **`gain`** (dB) and **fade handles** (`fade_in`/`fade_out`: `{length, shape}`).
 - **`xfade`** nodes between clips join them: `length` + `shape`, or `out_shape`/`in_shape` per side. `"hold"` keeps a side at full level for the whole overlap.
 - **Devices** (Ableton names: `utility`, `eq`, `auto_filter`, `reverb`, `delay`, `limiter`) sit on a clip, a track or the master.
@@ -43,7 +44,7 @@ Render with `recut ticket render <id>` (it prints the issues) or in code: `rende
 
 1. **Disambiguate the request first.** Most cutting prompts are underspecified — see `references/prompt-disambiguation.md`. State your interpretation explicitly before building anything.
 2. **Read the map, don't guess.** Load the song's `MusicMap` and check `references/map-interpretation.md` for what each field does and does not tell you.
-3. **Write the plan**: sources, one track of clips and `xfade`s, in order. Pick sections and lengths in bars.
+3. **Write the plan**: sources, a `main` track of clips, `xfade`s and `gap`s (pauses), in order; extra tracks for layers (a voice FX on top, see `references/sound-fx.md`). Pick sections and lengths in bars.
 4. **Render and read the issues.** `recut ticket render <id>` reports structure problems (`structure`), cross-song joins, `xfade_clamped`, the musical linter (`phrase_align`, `ending`, `energy_drop`, `duration`), and the audio QC after the render (`qc_*`: loudness, `qc_limiting`, true peak, clicks, gaps, gain/brightness jumps at splices). See `references/validation-workflow.md` for what the checks cover and, importantly, what they don't.
 5. **Apply effects with real signal-processing judgment** — see `references/effects-routing.md` and `references/transitions-and-masking.md` before adding devices, sends or automation. Reverb and delay belong on **returns** (a send), not inserted on every clip.
 6. **Design the exit deliberately** if the cut needs an ending — see `references/exit-design.md`. If the song's real ending should land mid-song (the most common manual fix), use the **ending transplant** recipe: `references/ending-transplant.md` (three variants as `plan.json` snippets).
@@ -81,7 +82,7 @@ scripts/
 
 ## Honesty about gaps
 
-recut is an early prototype. If a request needs something the framework can't do yet (per-instrument/stem editing, time-stretching to match tempos, more than one track, automatic key/energy-aware validation), say so explicitly and point at `references/known-limitations.md` rather than faking it with an unsupported field.
+recut is an early prototype. If a request needs something the framework can't do yet (time-stretching to match tempos, sidechain/ducking between tracks, a stem that was not kept at analysis, automatic key/energy-aware validation), say so explicitly and point at `references/known-limitations.md` rather than faking it with an unsupported field.
 
 ## Legacy Python API
 

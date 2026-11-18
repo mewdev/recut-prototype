@@ -159,6 +159,50 @@ def ensure_maps(ticket_id: str, root: Path = TICKETS_DIR, analyze=None) -> list[
     return done
 
 
+STEM_FILES = {"vocal": "vocals", "drum": "drums", "bass": "bass", "other": "other"}
+
+
+def write_auditions(ticket_id: str, source: str, stem: str = "vocal", max_s: float = 4.0,
+                    pad_s: float = 0.3, root: Path = TICKETS_DIR) -> list[Path]:
+    """Short audition files of a source's `stem` activity ranges (map `instrument_activity`)
+    no longer than `max_s`, each padded by `pad_s`, cut from the separated stem when it was kept
+    (else from the mix). Written to `<latest session>/audition/<source>_<stem>_<start>-<end>.wav`
+    so the operator can pick an FX by ear in one go (the agent can't listen)."""
+    import librosa
+    import soundfile as sf
+
+    from recut.map.parser import parse_recut_map
+
+    if stem not in STEM_FILES:
+        raise ValueError(f"stem must be one of {sorted(STEM_FILES)}")
+    d = ticket_dir(ticket_id, root)
+    src = sources(ticket_id, root).get(source)
+    if src is None or src["map"] is None:
+        raise ValueError(f"source {source!r} has no map (sources: {sorted(sources(ticket_id, root))})")
+    ia = parse_recut_map(d / src["map"]).instrument_activity
+    act = getattr(ia, stem, None) if ia else None
+    if act is None:
+        raise ValueError(f"maps/{source}.json has no {stem} activity: run `recut ticket enrich {ticket_id} --force`")
+    audio = stems_dir(ticket_id, source, root) / f"{STEM_FILES[stem]}.flac"
+    if not audio.exists():
+        audio = d / src["file"]
+    sessions = session_numbers(ticket_id, root)
+    if not sessions:
+        raise ValueError(f"no session yet: run `recut ticket work {ticket_id}` first")
+    out_dir = session_dir(ticket_id, sessions[-1], root) / "audition"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for r0, r1 in act.ranges:
+        if r1 - r0 > max_s:
+            continue
+        a = max(0.0, r0 - pad_s)  # librosa reads every intake format (m4a too), like the engine
+        x, sr = librosa.load(str(audio), sr=None, mono=False, offset=a, duration=r1 + pad_s - a)
+        out = out_dir / f"{source}_{stem}_{r0:.1f}-{r1:.1f}.wav"
+        sf.write(str(out), x.T if x.ndim == 2 else x, sr)
+        written.append(out)
+    return written
+
+
 def stems_dir(ticket_id: str, source_id: str, root: Path = TICKETS_DIR) -> Path:
     """`<ticket>/stems/<source_id>/`: the separated stems (<stem>.flac). Audio: never committed
     (the data repo's .gitignore excludes *.flac, see recut.sync)."""
@@ -620,10 +664,13 @@ def export_cut(ticket_id: str, to: Optional[Path] = None, fmt: str = "mp3",
     folder.mkdir(parents=True, exist_ok=True)
     req = load_request(ticket_id, root)
     suffix = f"it{k}" if len(sessions) <= 1 else f"s{n}-it{k}"
-    if req.client_name:  # the client's name (e.g. "Ježci: čerti" -> "Ježci - čerti_it2")
-        safe = "".join(" -" if c == ":" else c if c.isalnum() or c in " -_" else "-"
-                       for c in req.client_name).strip(" -")[:60]
+    safe = "".join(" -" if c == ":" else c if c.isalnum() or c in " -_" else "-"
+                   for c in req.client_name or "").strip(" -")[:60]
+    if safe:  # the client's name (e.g. "Ježci: čerti" -> "Ježci - čerti_it2")
         out = folder / f"{safe}_{suffix}.{fmt}"
+        ours = {e.get("file") for e in ticket_timeline(ticket_id, root) if e.get("op") == "exported"}
+        if out.exists() and out.name not in ours:  # another ticket of this client: never overwrite it
+            out = folder / f"{safe}_{suffix}_{ticket_id}.{fmt}"
     else:
         stem = Path(next(iter(req.files.values()), "cut")).stem if req.files else "cut"
         safe = "".join(c if c.isalnum() or c in "-_" else "-" for c in stem).strip("-")[:40] or "cut"
