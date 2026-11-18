@@ -11,8 +11,8 @@ returns. There is no sidechain/ducking between tracks and no time-stretching, so
 
 ## Stems are separated after the fact
 
-A stem source (`stems/<source>/<stem>.flac`, with the song's map) exists only when the
-analysis kept the stems (`RECUT_KEEP_STEMS=1`). Demucs htdemucs separation has bleed and
+A stem source (`stems/<source>/<stem>.flac`, with the song's map) exists when the analysis kept
+the stems (the default; older tickets: `recut ticket enrich <id> --force`). Demucs htdemucs separation has bleed and
 artefacts: fine for a short voice hit or a drum loop, audible on long exposed parts (STATUS M7).
 Clips are otherwise full mixes and every device acts on what the clip contains.
 

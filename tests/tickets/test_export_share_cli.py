@@ -68,3 +68,22 @@ def test_export_named_after_client(shipped, tmp_path):
     rp.write_text(json.dumps(req))
     out = tickets.export_cut(tid, tmp_path / "out", fmt="wav", session=1, iteration=2, root=root)
     assert out.name == "Ježci - čerti_it2.wav"
+    again = tickets.export_cut(tid, tmp_path / "out", fmt="wav", session=1, iteration=2, root=root)
+    assert again == out  # re-exporting the same cut replaces its own file
+
+
+def test_export_never_overwrites_another_tickets_file(shipped, tmp_path):
+    import json
+    root, tid = shipped
+    rp = root / tid / "request.json"
+    req = json.loads(rp.read_text())
+    req["client_name"] = "Ježci: čerti"
+    rp.write_text(json.dumps(req))
+    (tmp_path / "out").mkdir()
+    other = tmp_path / "out" / "Ježci - čerti_it2.wav"  # same client, another ticket
+    other.write_bytes(b"other cut")
+    out = tickets.export_cut(tid, tmp_path / "out", fmt="wav", session=1, iteration=2, root=root)
+    assert out.name == f"Ježci - čerti_it2_{tid}.wav" and other.read_bytes() == b"other cut"
+    req["client_name"] = ":::"  # nothing usable left: the ticket-id name
+    rp.write_text(json.dumps(req))
+    assert tickets.export_cut(tid, tmp_path / "out", fmt="wav", session=1, iteration=2, root=root).name.startswith(tid)

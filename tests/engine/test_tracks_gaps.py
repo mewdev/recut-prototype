@@ -46,6 +46,7 @@ def test_gap_is_silence_and_nothing_joins_across_it(base):
     a, b = info.segments
     assert b.out_start == pytest.approx(a.out_end + 2.0, abs=1e-3)
     assert info.splices == []
+    assert not [i for i in info.issues if i.rule == "qc_gap"]  # a planned pause is not a defect
     sr = audio.sr
     assert rms_db(audio.samples[:, int((a.out_end + 0.1) * sr): int((b.out_start - 0.1) * sr)]) < -90
 
@@ -128,3 +129,16 @@ def test_layer_entry_loudness_is_reported(base):
     lv = [i for i in info.issues if i.rule == "layer_level"]
     assert len(lv) == 1 and lv[0].node == "f1" and lv[0].severity == "info"
     assert "enters at 1.00s" in lv[0].message and "LU against main" in lv[0].message
+
+
+def test_a_layer_does_not_hide_the_main_tracks_ending(base):
+    # review finding: an FX layer running past the main track must not mask a mid-section stop
+    d, p = base
+    main = ("main", [clip("n1", bars=2)], {})  # stops mid-verse, no fade_out
+    fx = ("fx", [gap("g", "3s"), clip("f1", "chorus", bars=2, fade_out={"length": "1 beat", "shape": "linear"})], {})
+    _, alone = render_plan(plan(p, main), d)
+    _, layered = render_plan(plan(p, main, fx), d)
+    ending = lambda info: [i.node for i in info.issues if i.rule == "ending"]  # noqa: E731
+    assert ending(alone) == ["n1"] and ending(layered) == ["n1"]
+    seq = lambda info: sorted(i.message for i in info.issues if i.rule == "structure")  # noqa: E731
+    assert seq(alone) and seq(alone) == [m for m in seq(layered) if "f1" not in m]

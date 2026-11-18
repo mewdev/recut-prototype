@@ -14,7 +14,7 @@ review rounds. Before writing the FX into the plan:
    source's `vocal` activity (`--stem drum|bass|other` for others) as a padded WAV into
    `<session>/audition/`, cut from the separated stem when it was kept. The filename is the
    source time, e.g. `a_vocal_13.3-14.9.wav`.
-2. If it says the map has no activity: `RECUT_KEEP_STEMS=1 recut ticket enrich <id> --force`.
+2. If it says the map has no activity (ticket analyzed before stems were kept): `recut ticket enrich <id> --force`.
 3. Ask the operator **one** question: "Which of these (by filename) is the FX? Several can be
    combined." Then build the plan from the answer.
 
@@ -34,8 +34,9 @@ has the song's timeline, so add it as a source with the song's map and cut it li
 }
 ```
 
-Stems are on disk only when the analysis kept them. If `stems/<source>/vocals.flac` is missing:
-`RECUT_KEEP_STEMS=1 recut ticket enrich <id> --force`. A stem gets the same loudness-matching
+Any stem works the same way (`drums.flac`, `bass.flac`, `other.flac`): a drum fill or a
+synth stab is an FX too. Stems are kept by default; if `stems/<source>/` is missing (older
+ticket): `recut ticket enrich <id> --force`. A stem gets the same loudness-matching
 gain as its own mix, so it keeps its natural level against the song.
 
 A phrase rarely starts on a beat: pick it with fractional `offset_beats` / `beats` from the

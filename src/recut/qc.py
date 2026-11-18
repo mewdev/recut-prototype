@@ -388,7 +388,7 @@ def run_qc(audio: Audio, info: RenderInfo, *, pre_master: Optional[np.ndarray] =
 
     `pre_master`: the mix before the master chain (for `qc_limiting`; skipped without it).
     `sources`: source id -> Audio (for `qc_bandwidth`). `fade_outs`: output-time spans of
-    deliberate clip fade-outs, which `qc_gap` ignores. `trim_db`: the master limiter's static
+    deliberate quiet (clip fade-outs and `gap` pauses), which `qc_gap` ignores. `trim_db`: the master limiter's static
     true-peak trim (<= 0), discounted from `qc_limiting` (a level offset, not squash). Fills `info.qc` when it has that field.
     `deep=False` is the fast path: basic detectors only, Essentia never touched (not even probed);
     `info._deep()` then runs the Essentia pass later (`deep_checks`).

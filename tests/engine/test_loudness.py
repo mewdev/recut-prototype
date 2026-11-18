@@ -88,3 +88,12 @@ def test_demo_medley_is_level_matched_and_reported(demo):
     a, b = info.sources["a"], info.sources["b"]
     assert a.lufs_in is not None and a.lufs_in - b.lufs_in == pytest.approx(6, abs=0.5)
     assert a.lufs_target == b.lufs_target <= LUFS_CAP
+
+
+def test_a_stem_without_its_mix_in_the_plan_still_gets_its_songs_gain():
+    # review finding: a lone vocal stem must not be raised to the other song's level
+    srcs = {"a_vox": loaded(-32), "b": loaded(-20)}
+    srcs["a_vox"].song, srcs["a_vox"].song_lufs = "maps/a.json", -20.0  # its mix is as loud as b
+    before = srcs["a_vox"].lufs_in
+    match_loudness(srcs)
+    assert integrated_lufs(srcs["a_vox"].audio.samples, SR) == pytest.approx(before, abs=0.1)  # no make-up gain

@@ -51,6 +51,7 @@ class LoadedSource:
     lufs_in: float | None = None      # integrated loudness of the file as loaded
     lufs_target: float | None = None  # what it was matched to (== lufs_in when no gain applied)
     song: str | None = None  # sources with the same song (map) - a mix and its stems - share one gain
+    song_lufs: float | None = None  # the song's full mix loudness when this source is a stem of it
 
 
 LUFS_CAP = -9.0        # multi-source target never exceeds this: a loud master is not made louder
@@ -88,18 +89,31 @@ def load_sources(plan: Plan, base_dir: Path) -> dict[str, LoadedSource]:
         if audio.sr != target_sr:
             audio = Audio(librosa.resample(audio.samples, orig_sr=audio.sr, target_sr=target_sr), target_sr)
         lufs = _cached(audio_path, lambda _p, a=audio: integrated_lufs(a.samples, a.sr), tag="lufs")
+        mix = _song_mix(base_dir, ref.file, ref.map)
+        song_lufs = None
+        if mix is not None:
+            mix_audio = _cached(mix, _load_audio)
+            song_lufs = _cached(mix, lambda _p, a=mix_audio: integrated_lufs(a.samples, a.sr), tag="lufs")
         out[sid] = LoadedSource(music_map, audio, lufs_in=lufs, lufs_target=lufs,
-                                song=str(map_path.resolve()))
+                                song=str(map_path.resolve()), song_lufs=song_lufs)
     match_loudness(out)
     return out
+
+
+def _song_mix(base_dir: Path, file: str, map_file: str) -> Path | None:
+    """The full mix of a stem source (`stems/<song>/<stem>.flac`): the ticket input with the
+    same name as the map (`inputs/<song>.*`). None for a source that is not a stem."""
+    if Path(file).parts[:1] != ("stems",):
+        return None
+    return next(iter(sorted((base_dir / "inputs").glob(f"{Path(map_file).stem}.*"))), None)
 
 
 def match_loudness(sources: dict[str, LoadedSource]) -> None:
     """Level-match a multi-song plan (PLAN §2 Loudness): every song is gained to one common
     integrated loudness, the loudest song's LUFS capped at LUFS_CAP, so the quiet ones come
     up to it and a loud master is never made louder (it may come down to the cap).
-    Sources of one song (same map: the mix and its stems) share one gain, the gain of their
-    loudest member (the mix), so a stem keeps its balance against its own mix.
+    Sources of one song (same map: the mix and its stems) share one gain, set by the song's
+    full mix (in the plan or not), so a stem keeps its balance against its own mix.
     A single-song plan is left byte-identical. Gain is applied to a copy of the samples."""
     songs: dict[str, list[str]] = {}
     for sid, s in sources.items():
@@ -107,7 +121,10 @@ def match_loudness(sources: dict[str, LoadedSource]) -> None:
             songs.setdefault(s.song or sid, []).append(sid)
     if len(songs) < 2:
         return
-    ref = {song: max(sources[sid].lufs_in for sid in sids) for song, sids in songs.items()}  # type: ignore[type-var]
+    # a song's loudness is its full mix: the loudest member, or the mix file of a stem whose mix
+    # is not in the plan (else a lone vocal stem would be raised to the other song's level)
+    ref = {song: max(x for sid in sids for x in (sources[sid].lufs_in, sources[sid].song_lufs) if x is not None)
+           for song, sids in songs.items()}
     target = min(max(ref.values()), LUFS_CAP)
     for song, sids in songs.items():
         gain_db = target - ref[song]
@@ -165,12 +182,13 @@ def _legacy_nodes(clips: list) -> list:
 
 
 def _validator_issues(plan: Plan, sources: dict[str, LoadedSource]) -> list[Issue]:
-    """Existing structural rules. Sequence rules (start/end boundaries) only for a single track
-    with one source and no gaps; otherwise each clip is checked on its own."""
+    """Existing structural rules. Sequence rules (start/end boundaries) for the main track when
+    it has one source and no gaps (layers never: they are not the song); otherwise each clip
+    is checked on its own."""
     results = []
     for track in plan.tracks:
         clips = [n for n in track.clips if isinstance(n, ClipNode)]
-        sequence = (len(plan.tracks) == 1 and len({n.source for n in clips}) == 1
+        sequence = (track is plan.tracks[0] and len({n.source for n in clips}) == 1
                     and not any(isinstance(n, GapNode) for n in track.clips))
         if sequence:
             results += validate(sources[clips[0].source].music_map, *_legacy_nodes(track.clips))
@@ -200,6 +218,7 @@ class _Placed:
     tail: np.ndarray  # (2, m) device tail (reverb/delay) ringing after the clip, not part of the layout
     sends: dict[str, "np.ndarray | float"]
     bpm: float
+    track: str
 
 
 def _legacy_overlap(ms: float, curve: str, sr: int, n_prev: int, n_next: int):
@@ -233,24 +252,24 @@ def _check_targets(autos, owner: str, device_ids: dict[str, object], return_ids:
 LAYER_WINDOW_S = 1.0  # loudness window at a layer's entry
 
 
-def _layer_levels(plan: Plan, placed: list, track_of: list[str], track_bus: dict[str, np.ndarray],
+def _layer_levels(track_id: str, main_id: str, placed: list, tbus: np.ndarray, main_bus: np.ndarray,
                   sr: int) -> list[Issue]:
     """For each clip on a layer (any track after the first): its loudness over its first second
     against the main track over the same second (post track volume/devices, pre returns/master).
     A layer has no splice, so this is the number to glue its level with."""
     out: list[Issue] = []
-    main = plan.tracks[0].id
-    for p, tid in zip(placed, track_of):
-        if tid == main:
+    for p in placed:
+        if p.track != track_id:
             continue
         a = p.start
         b = a + min(p.samples.shape[-1], int(LAYER_WINDOW_S * sr))
-        lay, under = _momentary(track_bus[tid], sr, a, b), _momentary(track_bus[main], sr, a, b)
+        lay, under = _momentary(tbus, sr, a, b), _momentary(main_bus, sr, a, b)
         if lay is None:
             continue
-        rel = f"{lay - under:+.1f} LU against {main} ({under:.1f} LUFS)" if under is not None else f"{main} is silent there"
+        rel = (f"{lay - under:+.1f} LU against {main_id} ({under:.1f} LUFS)" if under is not None
+               else f"{main_id} is silent there")
         out.append(Issue(severity="info", rule="layer_level", node=p.node.id,
-                         message=f"layer {tid}: {p.node.id} enters at {a / sr:.2f}s at {lay:.1f} LUFS, {rel}"))
+                         message=f"layer {track_id}: {p.node.id} enters at {a / sr:.2f}s at {lay:.1f} LUFS, {rel}"))
     return out
 
 
@@ -285,7 +304,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     segments: list[RenderSegment] = []
     splices: list[Splice] = []
     spans_auto: list[AutomationSpan] = []
-    track_of: list[str] = []  # track id of each placed clip, same order as `placed`
+    quiet: list[tuple[float, float]] = []  # output spans of main-track gaps: deliberate silence
 
     for track in plan.tracks:  # every track is laid out on its own, from 0 s
         cursor = 0
@@ -298,7 +317,10 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
                 pending = node
                 continue
             if isinstance(node, GapNode):  # silence: nothing joins across it
-                cursor += int(round(parse_time(node.length, bpm_prev, bpb_prev) * sr))
+                g = int(round(parse_time(node.length, bpm_prev, bpb_prev) * sr))
+                if track is plan.tracks[0] and len(placed) > first:  # a pause, not a layer's lead-in
+                    quiet.append((cursor / sr, (cursor + g) / sr))
+                cursor += g
                 prev_node = None
                 continue
             src = sources[node.source]
@@ -371,8 +393,7 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
                     in_shape=(legacy[pending.id][1] if pending.id in legacy else pending.shape_in)
                     if pending and overlap else None,
                 ))
-            placed.append(_Placed(node, start, clip, tail, send_curves, bpm))
-            track_of.append(track.id)
+            placed.append(_Placed(node, start, clip, tail, send_curves, bpm, track.id))
             segments.append(RenderSegment(
                 node_id=node.id, source=node.source, label=f"{node.segment}#{node.index}",
                 src_start=s0, src_end=s1, out_start=start / sr, out_end=(start + n_len) / sr,
@@ -392,11 +413,11 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     # ---- tracks: sum each track's clips, its devices, volume, pan; then sum the tracks ----
     returns_in = {rid: np.zeros((2, extent + pad), dtype=np.float32) for rid in return_ids}
     bus = np.zeros((2, extent + pad), dtype=np.float32)
-    track_bus: dict[str, np.ndarray] = {}
+    main_bus: np.ndarray | None = None  # kept only for the layers' level report
     for track in plan.tracks:
         tbus = np.zeros((2, extent + pad), dtype=np.float32)
-        for p, tid in zip(placed, track_of):
-            if tid != track.id:
+        for p in placed:
+            if p.track != track.id:
                 continue
             n = p.samples.shape[-1]
             m = p.tail.shape[-1]
@@ -417,13 +438,16 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
         tbus = tbus * (db_to_gain(track.volume) if tgain is None else tgain)
         if track.pan:
             tbus = _pan(tbus, track.pan)
-        bus = bus + tbus
-        track_bus[track.id] = tbus
+        bus += tbus
+        if main_bus is None:
+            main_bus = tbus
+        else:
+            issues += _layer_levels(track.id, plan.tracks[0].id, placed, tbus, main_bus, sr)
         for au in track.automation:
             rel0, rel1 = span_seconds(au, bpm0, bpb0, timeline / sr)
             spans_auto.append(AutomationSpan(node_id=track.id, target=au.target, out_start=rel0, out_end=rel1))
 
-    issues += _layer_levels(plan, placed, track_of, track_bus, sr)
+    del main_bus
 
     # ---- returns: one device chain over the whole send buffer, tails ring out ------------
     tail_end = 0
@@ -485,6 +509,6 @@ def render_plan(plan: Plan, base_dir: Path, *, _legacy_xfades: dict[str, tuple[f
     fade_outs = [(seg.out_end - parse_time(p.node.fade_out.length, p.bpm, sources[p.node.source].music_map.beats_per_bar), seg.out_end)
                  for p, seg in zip(placed, segments) if p.node.fade_out]
     info.issues += run_qc(out, info, pre_master=pre_master,
-                          sources={sid: s.audio for sid, s in sources.items()}, fade_outs=fade_outs,
+                          sources={sid: s.audio for sid, s in sources.items()}, fade_outs=fade_outs + quiet,
                           trim_db=mctx.trim_db, deep=deep_qc)
     return out, info

@@ -264,8 +264,8 @@ def _stem_result():
             "ranges": {}, "sample_rate": SR, "model": "demucs-htdemucs"}
 
 
-def test_analyze_raw_by_default_keeps_curves_but_no_stem_audio(tmp_path, monkeypatch):
-    monkeypatch.delenv("RECUT_KEEP_STEMS", raising=False)
+def test_analyze_raw_without_keep_stems_keeps_curves_but_no_stem_audio(tmp_path, monkeypatch):
+    monkeypatch.setenv("RECUT_KEEP_STEMS", "0")
     fn = _Fn(_stem_result())
     _fake_modal(monkeypatch, fn)
     audio = tmp_path / "song.wav"
@@ -277,14 +277,14 @@ def test_analyze_raw_by_default_keeps_curves_but_no_stem_audio(tmp_path, monkeyp
     assert set(raw["_activity"]["curves"]) == set(activity.STEM_NAMES)
 
 
-@pytest.mark.parametrize("value,expected", [("1", True), ("yes", True), ("0", False), ("", False)])
+@pytest.mark.parametrize("value,expected", [("1", True), ("yes", True), ("0", False), ("off", False), ("", True)])
 def test_keep_stems_env(monkeypatch, value, expected):
     monkeypatch.setenv("RECUT_KEEP_STEMS", value)
     assert analysis_client.keep_stems() is expected
 
 
 def test_analyze_raw_spawns_stems_saves_flac_and_returns_only_curves(tmp_path, monkeypatch):
-    monkeypatch.setenv("RECUT_KEEP_STEMS", "1")
+    monkeypatch.delenv("RECUT_KEEP_STEMS", raising=False)  # default: stems are kept
     _fake_modal(monkeypatch, _Fn(_stem_result()))
     audio = tmp_path / "song.wav"
     audio.write_bytes(b"x")

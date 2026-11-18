@@ -236,7 +236,9 @@ async function refreshIteration() {
 
 // ------------------------------------------------------------------ playback
 function curTime() { return S.cut.currentTime || 0; }
-function segAt(t) { const segs = S.render?.segments || []; let hit = null; for (const s of segs) if (t >= s.out_start && t < s.out_end) hit = s; return hit || segs[segs.length - 1]; }
+function segAt(t) { const all = S.render?.segments || [], main = all[0]?.track || "main", segs = all.filter((s) => (s.track || "main") === main); let hit = null;  // the main track: layers would hijack the source view
+  for (const s of segs) if (t >= s.out_start && t < s.out_end) hit = s;
+  return hit || [...segs].reverse().find((s) => s.out_start <= t) || segs[0]; }  // in a gap: the clip before it
 function togglePlay() {
   const a = S.mode === "cut" ? S.cut : S.orig[S.origSeg?.source];
   if (!a) return;

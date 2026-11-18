@@ -168,6 +168,7 @@ def write_auditions(ticket_id: str, source: str, stem: str = "vocal", max_s: flo
     no longer than `max_s`, each padded by `pad_s`, cut from the separated stem when it was kept
     (else from the mix). Written to `<latest session>/audition/<source>_<stem>_<start>-<end>.wav`
     so the operator can pick an FX by ear in one go (the agent can't listen)."""
+    import librosa
     import soundfile as sf
 
     from recut.map.parser import parse_recut_map
@@ -190,15 +191,14 @@ def write_auditions(ticket_id: str, source: str, stem: str = "vocal", max_s: flo
         raise ValueError(f"no session yet: run `recut ticket work {ticket_id}` first")
     out_dir = session_dir(ticket_id, sessions[-1], root) / "audition"
     out_dir.mkdir(parents=True, exist_ok=True)
-    info = sf.info(str(audio))
     written = []
     for r0, r1 in act.ranges:
         if r1 - r0 > max_s:
             continue
-        a, b = max(0.0, r0 - pad_s), min(info.duration, r1 + pad_s)
-        x, sr = sf.read(str(audio), start=int(a * info.samplerate), stop=int(b * info.samplerate))
+        a = max(0.0, r0 - pad_s)  # librosa reads every intake format (m4a too), like the engine
+        x, sr = librosa.load(str(audio), sr=None, mono=False, offset=a, duration=r1 + pad_s - a)
         out = out_dir / f"{source}_{stem}_{r0:.1f}-{r1:.1f}.wav"
-        sf.write(str(out), x, sr)
+        sf.write(str(out), x.T if x.ndim == 2 else x, sr)
         written.append(out)
     return written
 
@@ -664,10 +664,13 @@ def export_cut(ticket_id: str, to: Optional[Path] = None, fmt: str = "mp3",
     folder.mkdir(parents=True, exist_ok=True)
     req = load_request(ticket_id, root)
     suffix = f"it{k}" if len(sessions) <= 1 else f"s{n}-it{k}"
-    if req.client_name:  # the client's name (e.g. "Ježci: čerti" -> "Ježci - čerti_it2")
-        safe = "".join(" -" if c == ":" else c if c.isalnum() or c in " -_" else "-"
-                       for c in req.client_name).strip(" -")[:60]
+    safe = "".join(" -" if c == ":" else c if c.isalnum() or c in " -_" else "-"
+                   for c in req.client_name or "").strip(" -")[:60]
+    if safe:  # the client's name (e.g. "Ježci: čerti" -> "Ježci - čerti_it2")
         out = folder / f"{safe}_{suffix}.{fmt}"
+        ours = {e.get("file") for e in ticket_timeline(ticket_id, root) if e.get("op") == "exported"}
+        if out.exists() and out.name not in ours:  # another ticket of this client: never overwrite it
+            out = folder / f"{safe}_{suffix}_{ticket_id}.{fmt}"
     else:
         stem = Path(next(iter(req.files.values()), "cut")).stem if req.files else "cut"
         safe = "".join(c if c.isalnum() or c in "-_" else "-" for c in stem).strip("-")[:40] or "cut"

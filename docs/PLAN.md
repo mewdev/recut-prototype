@@ -160,8 +160,8 @@ places a layer later on the timeline) but must end with a clip.
 
 **Stems as sources** (2026-11-18): a source may be a separated stem with its song's map,
 e.g. `"a_vox": {"file": "stems/a/vocals.flac", "map": "maps/a.json"}`. The stem has the
-song's timeline, so sections and bars work as for the mix. Stems are on disk only when the
-analysis kept them (`RECUT_KEEP_STEMS=1`).
+song's timeline, so sections and bars work as for the mix. Stems are kept by default
+(`RECUT_KEEP_STEMS=0` turns it off); maps analyzed before that need `recut ticket enrich <id> --force`.
 
 **Devices (week 1)**, with Ableton names; parameters as in the example:
 | Device | Parameters |

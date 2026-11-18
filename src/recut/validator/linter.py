@@ -195,7 +195,8 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
                                 f"with no fade or crossfade"))
 
     # ending: the last clip stops at a section end / the song's end, or has a fade_out
-    final = max(segments, key=lambda s: s.out_end) if segments else None  # over all tracks
+    main = [s for s in segments if s.track == plan.tracks[0].id]  # the cut ends where the main track does
+    final = max(main, key=lambda s: s.out_end) if main else None
     if final:
         last = clips.get(final.node_id)
         if last is not None and last.fade_out is None:

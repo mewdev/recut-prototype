@@ -518,7 +518,7 @@ def main() -> None:
 
     analyze = sub.add_parser("analyze", help="Analyze audio via Modal pipeline → raw JSON")
     analyze.add_argument("audio", help="path to audio file (mp3, wav, ...)")
-    analyze.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
+    analyze.add_argument("--keep-stems", action=argparse.BooleanOptionalAction, default=None, help="keep the separated stem audio for use as plan sources (~150 MB/track FLAC, local only; default: on). --no-keep-stems = RECUT_KEEP_STEMS=0")
     analyze.set_defaults(func=cmd_analyze)
 
     map_cmd = sub.add_parser("map", help="Build enriched maps for all needs_map sources")
@@ -530,7 +530,7 @@ def main() -> None:
                               "named sources are recomputed)")
     map_cmd.add_argument("--no-activity", dest="activity", action="store_false",
                          help="with --enrich: skip instrument activity (it needs saved stems or Modal)")
-    map_cmd.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
+    map_cmd.add_argument("--keep-stems", action=argparse.BooleanOptionalAction, default=None, help="keep the separated stem audio for use as plan sources (~150 MB/track FLAC, local only; default: on). --no-keep-stems = RECUT_KEEP_STEMS=0")
     map_cmd.add_argument("stems", nargs="*", help="with --force / --enrich: only these sources")
     map_cmd.set_defaults(func=cmd_map)
 
@@ -572,7 +572,7 @@ def main() -> None:
     t_work.add_argument("id")
     t_work.add_argument("--agent", default="claude-code")
     t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
-    t_work.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
+    t_work.add_argument("--keep-stems", action=argparse.BooleanOptionalAction, default=None, help="keep the separated stem audio for use as plan sources (~150 MB/track FLAC, local only; default: on). --no-keep-stems = RECUT_KEEP_STEMS=0")
     t_au = tsub.add_parser("audition", help="Short audition files of a source's vocal/drum/... phrases (from the stem when kept), for the operator to pick an FX by ear")
     t_au.add_argument("id")
     t_au.add_argument("source", help="source id, e.g. a")
@@ -583,7 +583,7 @@ def main() -> None:
     t_en.add_argument("--force", action="store_true", help="recompute even if present")
     t_en.add_argument("--no-activity", dest="activity", action="store_false",
                       help="skip instrument activity (it needs saved stems or Modal)")
-    t_en.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
+    t_en.add_argument("--keep-stems", action=argparse.BooleanOptionalAction, default=None, help="keep the separated stem audio for use as plan sources (~150 MB/track FLAC, local only; default: on). --no-keep-stems = RECUT_KEEP_STEMS=0")
     t_it = tsub.add_parser("iterate", help="New iteration in the latest session (copies the plan)")
     t_it.add_argument("id")
     t_c = tsub.add_parser("client", help="Log the client's decision on a delivered cut")
@@ -646,8 +646,8 @@ def main() -> None:
     serve_cmd.set_defaults(func=cmd_serve)
 
     args = parser.parse_args()
-    if getattr(args, "keep_stems", False):  # read by recut.analysis_client.keep_stems()
-        os.environ["RECUT_KEEP_STEMS"] = "1"
+    if getattr(args, "keep_stems", None) is not None:  # read by recut.analysis_client.keep_stems()
+        os.environ["RECUT_KEEP_STEMS"] = "1" if args.keep_stems else "0"
 
     if not args.command:
         print(WELCOME)
