@@ -689,9 +689,12 @@ def export_cut(ticket_id: str, to: Optional[Path] = None, fmt: str = "mp3",
     if fmt == "wav":
         shutil.copy2(src, out)
     else:
-        if shutil.which("ffmpeg") is None:
+        from recut.intake import tool
+
+        ffmpeg = tool("ffmpeg")
+        if ffmpeg is None:
             raise FileNotFoundError("ffmpeg not found: install it (brew install ffmpeg) or use --format wav")
-        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-codec:a", "libmp3lame",
+        subprocess.run([ffmpeg, "-loglevel", "error", "-y", "-i", str(src), "-codec:a", "libmp3lame",
                         "-b:a", "320k", str(out)], check=True)
     ticket_event(ticket_id, "exported", root, n=n, k=k, file=out.name)
     return out
