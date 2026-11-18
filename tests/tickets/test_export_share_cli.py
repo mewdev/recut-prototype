@@ -57,3 +57,14 @@ def test_export_wav_and_refuses_without_ship(tmp_path, demo):
         tickets.export_cut(dtid, tmp_path / "out", root=root)
     out = tickets.export_cut(dtid, tmp_path / "out", fmt="wav", session=1, iteration=1, root=root)
     assert out.suffix == ".wav" and out.exists()
+
+
+def test_export_named_after_client(shipped, tmp_path):
+    import json
+    root, tid = shipped
+    rp = root / tid / "request.json"
+    req = json.loads(rp.read_text())
+    req["client_name"] = "Ježci: čerti"
+    rp.write_text(json.dumps(req))
+    out = tickets.export_cut(tid, tmp_path / "out", fmt="wav", session=1, iteration=2, root=root)
+    assert out.name == "Ježci - čerti_it2.wav"

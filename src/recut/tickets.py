@@ -594,7 +594,8 @@ def export_cut(ticket_id: str, to: Optional[Path] = None, fmt: str = "mp3",
                root: Path = TICKETS_DIR) -> Path:
     """Write the shipped cut (default: newest `ship` iteration) to `to` as a named file for
     sending to the client, e.g. into a Google Drive-synced folder. Folder: `to`, else
-    $RECUT_EXPORT_DIR, else ~/Desktop. Name: <ticket>_s<n>-it<k>_<first source name>.<fmt>.
+    $RECUT_EXPORT_DIR, else ~/Desktop. Name: <client name>_it<k>.<fmt> (s<n>-it<k> with several sessions); without a client name
+    <ticket>_s<n>-it<k>_<first source name>.<fmt>.
     MP3 is 320 kbps (ffmpeg). Logs an `exported` timeline event."""
     sessions = session_numbers(ticket_id, root)
     if session is None and iteration is None:
@@ -617,10 +618,16 @@ def export_cut(ticket_id: str, to: Optional[Path] = None, fmt: str = "mp3",
         raise FileNotFoundError(f"s{n}·it{k} has no rendered audio (render it first)")
     folder = Path(to or os.environ.get("RECUT_EXPORT_DIR") or Path.home() / "Desktop").expanduser()
     folder.mkdir(parents=True, exist_ok=True)
-    files = load_request(ticket_id, root).files
-    stem = Path(next(iter(files.values()), "cut")).stem if files else "cut"
-    safe = "".join(c if c.isalnum() or c in "-_" else "-" for c in stem).strip("-")[:40] or "cut"
-    out = folder / f"{ticket_id}_s{n}-it{k}_{safe}.{fmt}"
+    req = load_request(ticket_id, root)
+    suffix = f"it{k}" if len(sessions) <= 1 else f"s{n}-it{k}"
+    if req.client_name:  # the client's name (e.g. "Ježci: čerti" -> "Ježci - čerti_it2")
+        safe = "".join(" -" if c == ":" else c if c.isalnum() or c in " -_" else "-"
+                       for c in req.client_name).strip(" -")[:60]
+        out = folder / f"{safe}_{suffix}.{fmt}"
+    else:
+        stem = Path(next(iter(req.files.values()), "cut")).stem if req.files else "cut"
+        safe = "".join(c if c.isalnum() or c in "-_" else "-" for c in stem).strip("-")[:40] or "cut"
+        out = folder / f"{ticket_id}_s{n}-it{k}_{safe}.{fmt}"
     if fmt == "wav":
         shutil.copy2(src, out)
     else:
