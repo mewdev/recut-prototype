@@ -168,7 +168,7 @@ recut render <composition-name> [--out PATH] [--force]  # validate, then compose
 
 ## Where to write agent-authored cut scripts
 
-There's no MCP tool or REPL for the compositor — build a cut by writing a plain, throwaway `.py` script and running it with `/Users/michal/miniconda3/envs/recut/bin/python script.py`, same as any other coding task. Put it in the session's scratch directory, not the repo — it's disposable once run. It ends one of two ways:
+There's no MCP tool or REPL for the compositor — build a cut by writing a plain, throwaway `.py` script and running it with the `recut` env's Python (`"$(dirname "$(command -v recut)")/python" script.py`, see AGENTS.md), same as any other coding task. Put it in the session's scratch directory, not the repo — it's disposable once run. It ends one of two ways:
 
 - **One-shot render**: script itself calls `compose()` and writes the output audio (path 2 below) — nothing needs to persist.
 - **Saved for CLI reuse**: script calls `save_composition(...)` (`recut.project`) to write `.appdata/compositions/<name>.json`, then `recut validate <name>` / `recut render <name>` do the rest — the script can be discarded once the composition is saved.
