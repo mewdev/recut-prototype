@@ -128,7 +128,7 @@ def test_five_minute_file_under_one_second(tmp_path):
 
 
 def test_works_without_ffprobe(files, monkeypatch):
-    monkeypatch.setattr(shutil, "which", lambda name: None)
+    monkeypatch.setattr(intake, "tool", lambda name: None)
     assert intake.check_audio(files["clean"]).ok
     assert codes(intake.check_audio(files["lp15"])) == {"low_bandwidth"}
 

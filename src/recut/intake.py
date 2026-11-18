@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -30,6 +31,16 @@ WINDOW_S = 30.0
 FAKE_STEREO_CORR = 0.999
 
 _LOSSY = {"mp3", "aac", "vorbis", "opus", "wmav1", "wmav2", "ac3", "eac3", "mp2", "amr_nb", "amr_wb"}
+
+
+def tool(name: str) -> str | None:
+    """Path of an ffmpeg/ffprobe binary: on PATH, else next to this Python (the conda env ships
+    one, but its bin/ is not on PATH when recut runs without activating the env)."""
+    found = shutil.which(name)
+    if found:
+        return found
+    local = Path(sys.executable).parent / name
+    return str(local) if local.is_file() else None
 
 
 @dataclass
@@ -54,11 +65,12 @@ class IntakeResult:
 
 def _probe(path: Path) -> dict | None:
     """ffprobe summary, {"error": True} for an unprobeable file, None when ffprobe is missing."""
-    if shutil.which("ffprobe") is None:
+    ffprobe = tool("ffprobe")
+    if ffprobe is None:
         return None
     try:
         r = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries",
+            [ffprobe, "-v", "error", "-select_streams", "a:0", "-show_entries",
              "stream=codec_name,sample_rate,channels,bit_rate,duration:format=bit_rate,duration",
              "-of", "json", str(path)], capture_output=True, timeout=20)
         d = json.loads(r.stdout or b"{}")
@@ -84,10 +96,11 @@ def _probe(path: Path) -> dict | None:
 def _decode_window(path: Path, start: float, sr: int, channels: int) -> np.ndarray | None:
     """(channels, n) float32 of up to WINDOW_S seconds from `start`; None if nothing decodes."""
     ch = max(1, min(int(channels or 2), 2))
-    if shutil.which("ffmpeg"):
+    ffmpeg = tool("ffmpeg")
+    if ffmpeg:
         try:
             r = subprocess.run(
-                ["ffmpeg", "-v", "error", "-ss", f"{start:.3f}", "-t", f"{WINDOW_S}", "-i", str(path),
+                [ffmpeg, "-v", "error", "-ss", f"{start:.3f}", "-t", f"{WINDOW_S}", "-i", str(path),
                  "-vn", "-ac", str(ch), "-ar", str(sr), "-f", "f32le", "-"],
                 capture_output=True, timeout=30)
             if r.returncode == 0 and len(r.stdout) >= 4 * ch * sr:
