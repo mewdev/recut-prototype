@@ -284,8 +284,22 @@ def cmd_sync(args) -> None:
     res = sync.sync(TICKETS_DIR, message=args.message)
     if not args.quiet or res["status"] not in ("pushed", "clean", "committed", "no-data-repo"):
         print(f"sync: {res['status']}" + (f" ({res['error']})" if res.get("error") else "")
-              + ("" if res["status"] != "no-data-repo" else
-                 f" — tickets are in {TICKETS_DIR}; clone mewdev/recut-data next to this repo to save them remotely"))
+              + SYNC_MEANING.get(res["status"], "").format(tickets=TICKETS_DIR))
+
+
+# What each status means for the data, so nobody re-runs a sync that already did its job.
+SYNC_MEANING = {
+    "pushed": " — saved: committed and pushed to the data repo",
+    "clean": " — nothing changed; no remote, so nothing to push",
+    "committed": " — committed locally; the data repo has no remote, nothing pushed",
+    "queued": " — another sync is running right now; it goes round once more and pushes these "
+              "changes too. Nothing to do",
+    "push-failed": " — committed locally, NOT pushed. Re-run `recut sync` where git can reach the "
+                   "remote (an agent sandbox can't: no network or credentials)",
+    "error": " — the sync crashed; nothing was pushed",
+    "no-data-repo": " — tickets are in {tickets}; clone mewdev/recut-data next to this repo to save "
+                    "them remotely",
+}
 
 
 REVIEW_PROVENANCE = "Recorded by agent from operator verdict in session."
