@@ -178,6 +178,41 @@ def test_hook_routes_parallel_agents_to_their_own_tickets(tmp_path):
         assert (sd / "transcript.jsonl").read_text() == t.read_text()
 
 
+def test_hook_keeps_every_claude_session_of_one_ticket_session(tmp_path):
+    """Regression (ticket 20261118-5hiy): a second Claude session on the same ticket session
+    overwrote the first one's transcript. Now each Stop replaces only its own part."""
+    sd, root = tmp_path / "tickets" / "T1" / "sessions" / "1", tmp_path / "tickets"
+    sd.mkdir(parents=True)
+    (root / tickets.AGENT_SESSIONS_DIR).mkdir()
+
+    def line(sid, i):
+        return json.dumps({"type": "user", "sessionId": sid, "i": i}) + "\n"
+
+    snap = '{"type":"file-history-snapshot"}\n'  # no sessionId: belongs to the next line's session
+
+    def stop(sid, text):
+        (root / tickets.AGENT_SESSIONS_DIR / sid).write_text(f"{sd}\n")
+        t = tmp_path / f"{sid}.jsonl"
+        t.write_text(text)
+        run_hook(json.dumps({"session_id": sid, "transcript_path": str(t)}), {"RECUT_TICKETS_DIR": str(root)}, tmp_path)
+        return [(d.get("sessionId"), d["type"], d.get("i"))
+                for d in map(json.loads, (sd / "transcript.jsonl").read_text().splitlines())]
+
+    S, U = "file-history-snapshot", "user"
+    a1 = snap + line("A", 1)
+    assert stop("A", a1) == [("A", S, None), ("A", U, 1)]  # the snapshot gets its session's id
+    b1 = snap + line("B", 1)
+    assert stop("B", b1) == [("A", S, None), ("A", U, 1), ("B", S, None), ("B", U, 1)]  # A's part kept
+    a2 = a1 + line("A", 2) + snap  # A's trailing snapshot sits right before B's leading one
+    want_a2 = [("A", S, None), ("A", U, 1), ("A", U, 2), ("A", S, None)]
+    assert stop("A", a2) == want_a2 + [("B", S, None), ("B", U, 1)]  # refreshed in place
+    b2 = b1 + line("B", 2)
+    want = want_a2 + [("B", S, None), ("B", U, 1), ("B", U, 2)]
+    assert stop("B", b2) == want  # B's refresh doesn't take A's trailing snapshot
+    assert stop("B", b2) == want  # repeated Stops don't duplicate anything
+    assert stop("A", a2) == want
+
+
 def test_hook_test_override_env_and_quiet_failures(tmp_path):
     t, sd = fake_transcript(tmp_path), tmp_path / "sess"
     sd.mkdir()

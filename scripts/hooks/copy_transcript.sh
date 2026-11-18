@@ -13,7 +13,9 @@
 # <repo>/.appdata/tickets. Test override: $RECUT_TRANSCRIPT_PATH replaces the stdin path.
 #
 # It never fails the agent: every problem exits 0 (silently, a Stop hook's output is noise).
-# The copy is overwritten on each Stop, so the file always holds the whole transcript so far.
+# Each Stop refreshes this session's part of transcript.jsonl (merge_transcript.py): when several
+# Claude sessions work the same ticket session, the file holds all of them, one after another,
+# and a Stop never removes another session's part. Without python3 it only creates a missing file.
 
 set -u
 
@@ -44,7 +46,11 @@ if [ -z "$dest" ]; then
 fi
 [ -n "$dest" ] && [ -d "$dest" ] || exit 0
 
-cp -f "$src" "$dest/transcript.jsonl.tmp" 2>/dev/null && mv -f "$dest/transcript.jsonl.tmp" "$dest/transcript.jsonl" 2>/dev/null
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$(dirname "${BASH_SOURCE[0]}")/merge_transcript.py" "$src" "$dest/transcript.jsonl" >/dev/null 2>&1 || true
+elif [ ! -f "$dest/transcript.jsonl" ]; then  # can't merge: never overwrite another session's part
+  cp -f "$src" "$dest/transcript.jsonl.tmp" 2>/dev/null && mv -f "$dest/transcript.jsonl.tmp" "$dest/transcript.jsonl" 2>/dev/null
+fi
 # save to the data repo (recut-data) in the background; never blocks or fails the agent
 if [ "${RECUT_AUTOSYNC:-1}" != "0" ] && command -v recut >/dev/null 2>&1; then
   # sync exactly the tickets folder that holds this session (<tickets>/<ticket>/sessions/<n>)
