@@ -208,7 +208,7 @@ async function refreshIteration() {
   $("#notes").textContent = it.plan?.notes || "";
   // source maps + peaks (once per source)
   if (it.plan) for (const [sid, ref] of Object.entries(it.plan.sources)) {
-    if (!S.maps[sid]) S.maps[sid] = await api(`/api/tickets/${encodeURIComponent(S.tid)}/maps/${sid}`).catch(() => null);
+    if (!S.maps[sid]) S.maps[sid] = await api(`/api/tickets/${encodeURIComponent(S.tid)}/maps/${ref.map.replace(/^maps\//, "").replace(/\.json$/, "")}`).catch(() => null);  // a stem source uses its song's map
     if (!S.peaks[sid]) S.peaks[sid] = await api(`/api/tickets/${encodeURIComponent(S.tid)}/peaks/${ref.file}?n=2000`).catch(() => null);
     if (!S.orig[sid]) { S.orig[sid] = new Audio(`/media/tickets/${encodeURIComponent(S.tid)}/${ref.file}`); S.orig[sid].preload = "auto"; }
   }
@@ -334,11 +334,13 @@ function draw() {
   const X = (t) => (t / R.duration_s) * W;
   const sidx = Object.keys(rows);
   // composition segments
+  const tracks = [...new Set(R.segments.map((s) => s.track || "main"))];  // one bar row per track
   R.segments.forEach((s, i) => {
-    const c = rows[s.source].color, x0 = X(s.out_start), x1 = X(s.out_end), lane = i % 2 && overlapsPrev(i) ? 1 : 0;
+    const c = rows[s.source].color, x0 = X(s.out_start), x1 = X(s.out_end), t = tracks.indexOf(s.track || "main");
+    const lane = tracks.length > 1 ? t : (i % 2 && overlapsPrev(i) ? 1 : 0);
     ctx.fillStyle = c + "22"; ctx.fillRect(x0, L.compY, x1 - x0, L.compH);
-    ctx.fillStyle = c; ctx.fillRect(x0, L.compY + (lane ? L.compH - 4 : 0), x1 - x0, 4);
-    ctx.fillStyle = "#16181d"; ctx.fillText(`${s.label} · ${s.source}`, x0 + 5, L.compY + 16 + lane * 0);
+    ctx.fillStyle = c; ctx.fillRect(x0, L.compY + (tracks.length > 1 ? lane * 5 : (lane ? L.compH - 4 : 0)), x1 - x0, 4);
+    ctx.fillStyle = "#16181d"; ctx.fillText(`${tracks.length > 1 ? s.track + ": " : ""}${s.label} · ${s.source}`, x0 + 5, L.compY + 16 + (tracks.length > 1 ? lane * 12 : 0));
   });
   wave(ctx, S.cutPeaks, 0, W, L.compY + 20, L.compH - 26, "#374151aa");
   // overlaps (bowties) and splices

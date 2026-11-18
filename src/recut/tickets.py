@@ -159,6 +159,50 @@ def ensure_maps(ticket_id: str, root: Path = TICKETS_DIR, analyze=None) -> list[
     return done
 
 
+STEM_FILES = {"vocal": "vocals", "drum": "drums", "bass": "bass", "other": "other"}
+
+
+def write_auditions(ticket_id: str, source: str, stem: str = "vocal", max_s: float = 4.0,
+                    pad_s: float = 0.3, root: Path = TICKETS_DIR) -> list[Path]:
+    """Short audition files of a source's `stem` activity ranges (map `instrument_activity`)
+    no longer than `max_s`, each padded by `pad_s`, cut from the separated stem when it was kept
+    (else from the mix). Written to `<latest session>/audition/<source>_<stem>_<start>-<end>.wav`
+    so the operator can pick an FX by ear in one go (the agent can't listen)."""
+    import soundfile as sf
+
+    from recut.map.parser import parse_recut_map
+
+    if stem not in STEM_FILES:
+        raise ValueError(f"stem must be one of {sorted(STEM_FILES)}")
+    d = ticket_dir(ticket_id, root)
+    src = sources(ticket_id, root).get(source)
+    if src is None or src["map"] is None:
+        raise ValueError(f"source {source!r} has no map (sources: {sorted(sources(ticket_id, root))})")
+    ia = parse_recut_map(d / src["map"]).instrument_activity
+    act = getattr(ia, stem, None) if ia else None
+    if act is None:
+        raise ValueError(f"maps/{source}.json has no {stem} activity: run `recut ticket enrich {ticket_id} --force`")
+    audio = stems_dir(ticket_id, source, root) / f"{STEM_FILES[stem]}.flac"
+    if not audio.exists():
+        audio = d / src["file"]
+    sessions = session_numbers(ticket_id, root)
+    if not sessions:
+        raise ValueError(f"no session yet: run `recut ticket work {ticket_id}` first")
+    out_dir = session_dir(ticket_id, sessions[-1], root) / "audition"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    info = sf.info(str(audio))
+    written = []
+    for r0, r1 in act.ranges:
+        if r1 - r0 > max_s:
+            continue
+        a, b = max(0.0, r0 - pad_s), min(info.duration, r1 + pad_s)
+        x, sr = sf.read(str(audio), start=int(a * info.samplerate), stop=int(b * info.samplerate))
+        out = out_dir / f"{source}_{stem}_{r0:.1f}-{r1:.1f}.wav"
+        sf.write(str(out), x, sr)
+        written.append(out)
+    return written
+
+
 def stems_dir(ticket_id: str, source_id: str, root: Path = TICKETS_DIR) -> Path:
     """`<ticket>/stems/<source_id>/`: the separated stems (<stem>.flac). Audio: never committed
     (the data repo's .gitignore excludes *.flac, see recut.sync)."""

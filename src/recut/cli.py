@@ -346,6 +346,17 @@ def _cmd_ticket(args) -> None:
         tickets.mark_current_session(tid, n)
         k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
+    elif args.action == "audition":
+        try:
+            files = tickets.write_auditions(args.id, args.source, stem=args.stem, max_s=args.max_s)
+        except ValueError as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        print(f"{len(files)} audition file(s) (≤ {args.max_s:g} s {args.stem} phrases of {args.source!r}):")
+        for f in files:
+            print(f"  {f}")
+        if files:
+            print("Ask the operator which one(s) to use, by filename (the name is the source time).")
     elif args.action == "enrich":
         done = tickets.enrich_maps(args.id, force=args.force, activity=getattr(args, "activity", False))
         print(f"Enriched maps (pace, loudness, key ranges, instrument activity): {', '.join(done)}" if done
@@ -562,6 +573,11 @@ def main() -> None:
     t_work.add_argument("--agent", default="claude-code")
     t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
     t_work.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
+    t_au = tsub.add_parser("audition", help="Short audition files of a source's vocal/drum/... phrases (from the stem when kept), for the operator to pick an FX by ear")
+    t_au.add_argument("id")
+    t_au.add_argument("source", help="source id, e.g. a")
+    t_au.add_argument("--stem", default="vocal", choices=["vocal", "drum", "bass", "other"])
+    t_au.add_argument("--max-s", dest="max_s", type=float, default=4.0, help="skip phrases longer than this (s)")
     t_en = tsub.add_parser("enrich", help="Add pace / loudness / key ranges / instrument activity to the ticket's existing maps")
     t_en.add_argument("id")
     t_en.add_argument("--force", action="store_true", help="recompute even if present")

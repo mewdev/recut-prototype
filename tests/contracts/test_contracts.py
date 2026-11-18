@@ -62,7 +62,7 @@ def test_reference_errors():
 def test_xfade_cannot_end_track():
     data = _plan()
     data["tracks"][0]["clips"].append({"id": "x9", "type": "xfade"})
-    with pytest.raises(ValidationError, match="must start and end with a clip"):
+    with pytest.raises(ValidationError, match="must end with a clip"):
         Plan.model_validate(data)
 
 

@@ -36,7 +36,7 @@ The `MusicMap` (`src/recut/map/schema.py`) tells you **structure**. It does not 
 ## What the map misses
 
 - **Phrase-level detail below `phrases`**: `phrases` gives sub-segment timestamps, but nothing marks "this phrase is a literal repeat of the previous one." If the user says "cut when it repeats," that's still a judgment call between `phrases` entries — ask which repeat they mean if ambiguous.
-- **No per-instrument/stem activity.** The map describes the full mix. It cannot tell you which instrument is carrying a section, or when a specific instrument enters/exits within it — see `known-limitations.md`. `loudness_db` is your only quantitative signal for "this section is dense/sparse."
+- **Per-instrument activity only when enriched.** `instrument_activity` (drum/bass/vocal/other curves and `ranges`, from Demucs) and segment `drum_activity`/`vocal_activity` exist only when the map was enriched with stems; otherwise `loudness_db` is your only signal for "this section is dense/sparse". Use the `vocal` ranges to find sung/spoken phrases (e.g. a voice FX) and the `drum` ranges to find breaks.
 
 ## Verify `bpm` before using `bars=`/`beats=`/`offset_bars=`
 
