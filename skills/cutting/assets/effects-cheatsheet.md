@@ -33,7 +33,7 @@ A fade-out uses the mirror of the shape. Level automation (`gain`, `sends.*`) in
 | `auto_filter` | `filter` (`lowpass`/`highpass`/`bandpass`), `frequency` (20000), `resonance` (0–1.25, default 0) | 12 dB/oct. Automatable: `frequency`, `resonance`. A transparent start: lowpass at 18000+ then sweep down |
 | `reverb` | `decay` ("2s"), `pre_delay` ("0ms"), `size` (50), `hi_cut` (8000), `width` (100), `dry_wet` (100) | automatable: `dry_wet`, `hi_cut`. On a return keep `dry_wet: 100` |
 | `delay` | `time` ("1/8"), `feedback` (30, max 95), `ping_pong` (false), `filter_lo` (100), `filter_hi` (8000), `dry_wet` (100) | filters sit in the feedback path, so each repeat is darker. Automatable: `dry_wet`, `feedback`, `filter_lo`, `filter_hi` |
-| `limiter` | `ceiling` (-1 dB) | only reduces the signal if it is over the ceiling. The master has one at -1 dB by default |
+| `limiter` | `ceiling` (-1 dB) | only reduces the signal around true-peak overs (5 ms ramps); audio under the ceiling passes bit-identical. The master has one at -1 dB by default: keep it, removing it makes a loud source clip |
 
 Clip `devices` run after the clip's gain and fades; their tails ring on past the clip. Track and master `devices` run on the summed track. Return devices run once over everything sent to the return.
 
