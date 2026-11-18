@@ -33,9 +33,8 @@ from pedalboard import (  # type: ignore
     PeakFilter,
     Pedalboard,
 )
-from pedalboard import Limiter as PbLimiter
 from pedalboard import Reverb as PbReverb
-from scipy import signal
+from scipy import ndimage, signal
 
 from recut.automation import build_curve
 from recut.contracts.plan import Automation, Device
@@ -94,45 +93,70 @@ BLOCK = 512
 
 
 def limit(x: np.ndarray, sr: int, ceiling_db: float) -> tuple[np.ndarray, float]:
-    """Limit to `ceiling_db`, true-peak aware. Returns (audio, static trim in dB, <= 0).
+    """Transparent true-peak limiter. Returns (audio, static trim in dB, <= 0).
 
-    1. pedalboard's (JUCE) Limiter holds the *sample* peak at the threshold and normalizes to
-       0 dBFS, so rescale to the ceiling.
-    2. Sample peaks at the ceiling can reconstruct (4x oversampled, BS.1770) above it by
-       0.2 to 1 dB on a loud master, which made `qc_true_peak` fire on every limited render. So
-       measure the 4x true peak and, when it is over the ceiling, apply one static gain trim
-       that brings it down to the ceiling. A static trim is inaudible (about 1 dB for the whole
-       render) and simpler and safer than an oversampled look-ahead limiter; the cost is that
-       the sample peaks sit that much below the ceiling. QC discounts the trim when it measures
-       limiter gain reduction (it is a level offset, not squash).
+    Audio whose 4x-oversampled peak stays under the ceiling passes through bit-identical: only
+    the samples around an over get less gain. (pedalboard's JUCE Limiter was used before: it is
+    a 4:1 compressor above -10 dBFS plus make-up gain, so it raised quiet passages by ~3.7 dB
+    and squashed loud ones that were under the ceiling, changing audio nobody edited; tickets
+    20261118-fzsv, -ypag, -idzo.)
+
+    Gain = 1 except near overs: the required gain per sample (ceiling / oversampled peak) goes
+    through a min filter and then a moving average over the same window. Every average then
+    includes the minimum that covers its own sample, so the smoothed gain never exceeds the
+    required one (no overshoot) and ramps over LIMIT_RAMP_S on both sides of a peak (look-ahead
+    attack and release, offline so non-causal). A static true-peak trim stays as the safety net
+    (QC discounts it from `qc_limiting`: a level offset, not squash).
     """
-    y = Pedalboard([PbLimiter(threshold_db=ceiling_db)])(x, sr) * (10 ** (ceiling_db / 20))
-    return trim_true_peak(y.astype(np.float32), ceiling_db)
+    ceil = 10 ** ((ceiling_db - 0.05) / 20)
+    req = np.minimum(1.0, ceil / np.maximum(_true_peak_env(x, sr, floor=ceil / 10 ** (3 / 20)), 1e-12))
+    if req.min() >= 1.0:
+        return trim_true_peak(x, ceiling_db, sr)
+    w = max(1, int(LIMIT_RAMP_S * sr)) * 2 + 1
+    g = ndimage.uniform_filter1d(ndimage.minimum_filter1d(req, w, mode="nearest"), w, mode="nearest")
+    g = np.minimum(g, 1.0)
+    g[ndimage.minimum_filter1d(req, 2 * w, mode="nearest") >= 1.0] = 1.0  # untouched far from overs
+    return trim_true_peak((x * g[None, :]).astype(np.float32), ceiling_db, sr)
 
 
-def exact_true_peak(y: np.ndarray, chunk_s: float = 10.0, sr_hint: int = 48000) -> float:
+LIMIT_RAMP_S = 0.005  # gain ramp on each side of an over: short enough to stay local, long enough not to distort bass
+
+
+def _true_peak_env(x: np.ndarray, sr: int, floor: float = 0.0, chunk_s: float = 0.5) -> np.ndarray:
+    """Per-sample 4x-oversampled peak over the channels (linear), shape (N,). Chunks whose sample
+    peak is under `floor` keep the sample peak (an inter-sample over is 3 dB at most in practice,
+    and the limiter's final true-peak trim still catches a rarer one)."""
+    if x.ndim == 1:
+        x = x[None, :]
+    env = np.abs(x).max(axis=0).astype(np.float64)
+    n, step, ov = x.shape[-1], int(chunk_s * sr), 64
+    for i in range(0, n, step):
+        if env[i:i + step].max(initial=0.0) < floor:
+            continue
+        a, b = max(0, i - ov), min(n, i + step + ov)
+        up = np.abs(signal.resample_poly(x[:, a:b], 4, 1, axis=-1)).max(axis=0)
+        k = min(n, i + step) - i
+        env[i:i + k] = np.maximum(env[i:i + k], up[4 * (i - a): 4 * (i - a + k)].reshape(k, 4).max(axis=1))
+    return env
+
+
+def exact_true_peak(y: np.ndarray, sr_hint: int = 48000, floor: float = 0.0) -> float:
     """4x-oversampled peak over the WHOLE signal (linear). Exact, unlike `qc.true_peak`, which
     only oversamples around the largest sample peaks: on a heavily limited master the worst
     inter-sample peak is not always next to one of them (missed by up to ~1.2 dB on an Intel
     Mac's pedalboard build). The limiter must never overshoot, so it pays the full cost here
-    (about 1 s per 3 minutes of stereo). Processed in overlapping chunks to bound memory."""
-    if y.ndim == 1:
-        y = y[None, :]
-    n = y.shape[-1]
-    step, ov = int(chunk_s * sr_hint), 64
-    best = 0.0
-    for i in range(0, n, step):
-        seg = y[:, max(0, i - ov): min(n, i + step + ov)]
-        if seg.shape[-1] == 0:
-            continue
-        best = max(best, float(np.abs(signal.resample_poly(seg, 4, 1, axis=-1)).max()))
-    return best
+    (about 1 s per 3 minutes of stereo). Processed in overlapping chunks to bound memory; only
+    each chunk's own span is read (the overlap absorbs resample_poly's zero-padding ringing at
+    the chunk edges, which read up to ~1.2 dB too high and made the limiter trim needlessly).
+    `floor`: chunks with a sample peak under it are not oversampled (see `_true_peak_env`)."""
+    return float(_true_peak_env(y, sr_hint, floor=floor).max(initial=0.0))
 
 
-def trim_true_peak(y: np.ndarray, ceiling_db: float) -> tuple[np.ndarray, float]:
+def trim_true_peak(y: np.ndarray, ceiling_db: float, sr: int = 48000) -> tuple[np.ndarray, float]:
     """Scale `y` down so its 4x-oversampled peak is at `ceiling_db` (minus a 0.01 dB margin for
-    the oversampling estimate); untouched if already under. Returns (audio, trim in dB)."""
-    tp = exact_true_peak(y)
+    the oversampling estimate); untouched if already under. Returns (audio, trim in dB).
+    Chunks more than 6 dB under the ceiling can't reconstruct over it and are not oversampled."""
+    tp = exact_true_peak(y, sr_hint=sr, floor=10 ** ((ceiling_db - 6) / 20))
     ceil = 10 ** ((ceiling_db - 0.01) / 20)
     if tp <= ceil:
         return y, 0.0
@@ -257,15 +281,11 @@ def _delay(dev, x, ctx):
 
 
 def _limiter(dev, x, ctx):
-    peak = float(np.abs(x).max()) if x.size else 0.0
-    if peak <= 0:
+    if not x.size or not np.abs(x).max() > 0:
         return x
-    if 20 * math.log10(peak) > dev.ceiling:
-        y, trim = limit(x, ctx.sr, dev.ceiling)
-    else:  # sample peaks are under the ceiling: only a true-peak overshoot needs the trim
-        y, trim = trim_true_peak(x, dev.ceiling)
-        if not trim:
-            return x
+    y, trim = limit(x, ctx.sr, dev.ceiling)  # also catches inter-sample overs under sample peaks
+    if y is x:
+        return x
     ctx.limited = True
     ctx.trim_db += trim
     return y

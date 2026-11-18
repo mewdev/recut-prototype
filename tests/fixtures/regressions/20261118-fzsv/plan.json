@@ -1,0 +1,128 @@
+{
+  "version": 2,
+  "sources": {
+    "a": {
+      "file": "inputs/a.mp3",
+      "map": "maps/a.json"
+    }
+  },
+  "tracks": [
+    {
+      "id": "main",
+      "clips": [
+        {
+          "id": "n1",
+          "type": "clip",
+          "source": "a",
+          "segment": "intro",
+          "index": 1
+        },
+        {
+          "id": "n2",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 1
+        },
+        {
+          "id": "n3",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 2
+        },
+        {
+          "id": "n4",
+          "type": "clip",
+          "source": "a",
+          "segment": "inst",
+          "index": 1
+        },
+        {
+          "id": "n5",
+          "type": "clip",
+          "source": "a",
+          "segment": "chorus",
+          "index": 1
+        },
+        {
+          "id": "n6",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 3
+        },
+        {
+          "id": "n7",
+          "type": "clip",
+          "source": "a",
+          "segment": "verse",
+          "index": 4
+        },
+        {
+          "id": "n8",
+          "type": "clip",
+          "source": "a",
+          "segment": "chorus",
+          "index": 2
+        },
+        {
+          "id": "n9",
+          "type": "clip",
+          "source": "a",
+          "segment": "inst",
+          "index": 2
+        },
+        {
+          "id": "n10",
+          "type": "clip",
+          "source": "a",
+          "segment": "inst",
+          "index": 3,
+          "beats": 15.75,
+          "sends": {
+            "A": -26
+          },
+          "automation": [
+            {
+              "target": "sends.A",
+              "from": -26,
+              "to": -12,
+              "over": "4 beats",
+              "at": "end",
+              "shape": "linear"
+            }
+          ],
+          "fade_out": {
+            "length": "150ms",
+            "shape": "exp"
+          }
+        }
+      ]
+    }
+  ],
+  "target_duration_s": 179,
+  "notes": "Iteration 1: original untouched from 0:00 through the final D-major chord: sections intro..inst#2 back to back (contiguous in the source, so the butt joins are sample-continuous), then inst#3 (starts 172.71 s) cut at 15.75 beats (map tempo 153.85 bpm, ends ~178.85 s), just before the solo piano D tone whose first attack is at ~178.97 s. 150 ms exp fade-out against a click. Reverb return A (low cut 200 Hz, 3 s decay, size 60, hi cut 5 kHz) fed from -26 dB rising to -12 dB over the last 4 beats so the final chord rings out instead of stopping dry.",
+  "returns": [
+    {
+      "id": "A",
+      "name": "Reverb",
+      "devices": [
+        {
+          "id": "lc",
+          "type": "eq",
+          "low_cut": 200
+        },
+        {
+          "id": "verb",
+          "type": "reverb",
+          "decay": "3s",
+          "pre_delay": "20ms",
+          "size": 60,
+          "hi_cut": 5000,
+          "dry_wet": 100
+        }
+      ]
+    }
+  ]
+}
