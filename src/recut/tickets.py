@@ -795,7 +795,7 @@ def awaiting_client_message(root: Path = TICKETS_DIR) -> str:
              "When the client answers, log it (it's what the client approval rate is built from):"]
     for it in items:
         lines.append(f"  - {it['id']} (s{it['session']}·it{it['iteration']}, shipped {it['shipped_at'][:10]}): "
-                     f"{it['text'][:60]}")
+                     f"{' '.join(it['text'].split())[:60]}")  # one line: requests are multi-line
         lines.append(f"    recut ticket client {it['id']} --approved|--changes --rating 1-5 --note \"what the client said\"")
     return "\n".join(lines)
 

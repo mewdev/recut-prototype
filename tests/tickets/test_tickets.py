@@ -94,3 +94,12 @@ def test_demo_tickets_never_await_client(demo):
     root, tid = demo
     tickets.save_review(tid, 1, Review(iteration=2, verdict="ship"), root)
     assert tid not in [w["id"] for w in tickets.awaiting_client(root)]
+
+
+def test_awaiting_message_keeps_each_request_on_one_line(tmp_path):
+    tid = tickets.create_ticket("Pause reqs:\r\n4seconds\r\n\r\n8seconds", [], root=tmp_path)
+    n = tickets.new_session(tid, agent="t", root=tmp_path)
+    k = tickets.new_iteration(tid, n, root=tmp_path)
+    tickets.save_review(tid, n, Review(iteration=k, verdict="ship"), tmp_path)
+    lines = tickets.awaiting_client_message(tmp_path).splitlines()
+    assert len(lines) == 3 and lines[1].endswith(": Pause reqs: 4seconds 8seconds")
