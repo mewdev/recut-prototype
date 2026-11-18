@@ -58,11 +58,20 @@ and `recut-data`, so the work is saved. To work one:
 6. In every iteration's `plan.notes`, write what you changed and why (it is the only record of
    your reasoning besides the transcript). `recut ticket render` warns when the notes are
    identical to the previous iteration's, or empty.
+7. **Record the operator's review.** When the operator gives a verdict in the session ("ship",
+   "fixable, s3 is abrupt", ...), save it at once with
+   `recut ticket review <id> --verdict ship|fixable|reject --ok all|s1,s2 --bad s3:abrupt+energy_drop --note "..."`.
+   It writes the same files as the GUI and syncs. In the note, put the operator's words plus the
+   session's facts (what changed, what you measured). **Never choose the verdict or splice marks
+   yourself**: the review is the operator's judgment and the improvement loop learns from it. If
+   no verdict was given, ask for one; don't record a guess.
 
 **Hooks (operator, once).** `.claude/` is git-ignored, so each operator adds both hooks to
 their own `.claude/settings.local.json` (use the absolute path of the checkout):
 - `scripts/hooks/copy_transcript.sh` (Stop) copies the session transcript to
-  `<session>/transcript.jsonl` for the weekly improvement pass.
+  `<session>/transcript.jsonl` for the weekly improvement pass. When the latest iteration is
+  rendered but has no review, it blocks the stop once per iteration so the agent asks the
+  operator for a verdict (step 7).
 - `scripts/hooks/session_start.sh` (SessionStart) reminds about shipped cuts with no client
   feedback logged (see "Operator reminder" above).
 

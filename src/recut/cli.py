@@ -284,12 +284,49 @@ def cmd_sync(args) -> None:
                  f" — tickets are in {TICKETS_DIR}; clone mewdev/recut-data next to this repo to save them remotely"))
 
 
+REVIEW_PROVENANCE = "Recorded by agent from operator verdict in session."
+
+
+def _review_from_args(args):
+    """Build the same Review the GUI saves from `recut ticket review` flags. Splice ids must be
+    in the iteration's render.json; `--bad s3:abrupt+energy_drop` marks a splice bad with tags."""
+    from recut import tickets
+    from recut.contracts import TAGS, Review
+
+    tid = args.id
+    n = args.session or tickets.session_numbers(tid)[-1]
+    k = args.iteration or tickets.iteration_numbers(tid, n)[-1]
+    render = tickets.iteration_dir(tid, n, k) / "render.json"
+    if not render.exists():
+        raise ValueError(f"s{n}·it{k} has no render.json: render it before reviewing")
+    known = [s["id"] for s in json.loads(render.read_text()).get("splices", [])]
+
+    def tags_of(text: str) -> list[str]:
+        tags = [t for t in text.split("+") if t]
+        if unknown := [t for t in tags if t not in TAGS]:
+            raise ValueError(f"unknown tag(s) {unknown}; allowed: {', '.join(TAGS)}")
+        return tags
+
+    splices: dict[str, dict] = {}
+    for item in args.bad or []:
+        sid, _, tag_text = item.partition(":")
+        splices[sid] = {"ok": False, "tags": tags_of(tag_text)}
+    ok = known if args.ok == "all" else [s for s in (args.ok or "").split(",") if s]
+    for sid in ok:
+        splices.setdefault(sid, {"ok": True})
+    if unknown := [s for s in splices if s not in known]:
+        raise ValueError(f"unknown splice id(s) {unknown}; s{n}·it{k} has {known or 'no splices'}")
+    note = f"{args.note.strip()}\n\n{REVIEW_PROVENANCE}" if args.note else REVIEW_PROVENANCE
+    return Review(iteration=k, verdict=args.verdict, splices=splices,
+                  tags=tags_of("+".join(args.tags or [])), note=note), n
+
+
 def cmd_ticket(args) -> None:
     try:
         _cmd_ticket(args)
     finally:
         # import-legacy syncs only the default store (a --root elsewhere is not the data repo)
-        if args.action in ("new", "demo", "work", "iterate", "render", "client", "usage", "share", "enrich", "export") or (
+        if args.action in ("new", "demo", "work", "iterate", "render", "client", "review", "usage", "share", "enrich", "export") or (
                 args.action == "import-legacy" and args.root is None):
             from recut import sync
 
@@ -391,6 +428,16 @@ def _cmd_ticket(args) -> None:
               f"→ {'client_approved' if fb.decision == 'approved' else 'client_changes'}")
         if fb.note:
             print(f"  note: {fb.note}")
+    elif args.action == "review":
+        try:
+            review, n = _review_from_args(args)
+            tickets.save_review(args.id, n, review)
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Error: {e}")
+            raise SystemExit(1)
+        bad = [s for s, r in review.splices.items() if not r.ok]
+        print(f"Recorded review {review.verdict} on s{n}·it{review.iteration} · ticket {args.id} "
+              f"({len(review.splices)} splices marked, bad: {', '.join(bad) or 'none'})")
     elif args.action in ("usage", "show"):
         from recut import usage
 
@@ -595,6 +642,17 @@ def main() -> None:
     t_c.add_argument("--note", help="what the client said, verbatim when possible")
     t_c.add_argument("--session", type=int, help="session (default: the latest shipped iteration)")
     t_c.add_argument("--iteration", type=int, help="iteration (default: the latest shipped iteration)")
+    t_rv = tsub.add_parser("review", help="Record the operator's review of an iteration (same files as the GUI). "
+                                          "The verdict must come from the operator, never from the agent")
+    t_rv.add_argument("id")
+    t_rv.add_argument("--verdict", required=True, choices=["ship", "fixable", "reject"])
+    t_rv.add_argument("--session", type=int, help="default: the latest session")
+    t_rv.add_argument("--iteration", type=int, help="default: the latest iteration")
+    t_rv.add_argument("--ok", help="splices the operator found ok: 'all' or ids, e.g. s1,s2")
+    t_rv.add_argument("--bad", action="append", metavar="SPLICE:TAG+TAG",
+                      help="a bad splice with its tags, e.g. s3:abrupt+energy_drop (repeatable)")
+    t_rv.add_argument("--tags", nargs="*", help="overall tags for the cut")
+    t_rv.add_argument("--note", help="the operator's words, plus the facts from the session")
     t_sh = tsub.add_parser("show", help="Ticket timeline + per-session token use and cost")
     t_sh.add_argument("id")
     t_us = tsub.add_parser("usage", help="Compute usage.json (tokens, duration, cost) from session transcripts")

@@ -49,4 +49,18 @@ if [ "${RECUT_AUTOSYNC:-1}" != "0" ] && command -v recut >/dev/null 2>&1; then
   [ -n "$tickets_root" ] && (RECUT_TICKETS_DIR="$tickets_root" recut sync --quiet \
     -m "sync: transcript $(basename "$(dirname "$(dirname "$dest")")")/s$(basename "$dest")" >/dev/null 2>&1 &)
 fi
+
+# Review reminder: the latest iteration is rendered but has no review. Block the stop ONCE per
+# iteration (marker in $TMPDIR, not the data repo) so the agent asks the operator for a verdict
+# and records it with `recut ticket review`. The agent must never pick the verdict itself.
+case "$stdin_json" in *'"stop_hook_active": true'*|*'"stop_hook_active":true'*) exit 0 ;; esac
+k="$(ls "$dest/iterations" 2>/dev/null | grep -E '^[0-9]+$' | sort -n | tail -n1)"
+it="$dest/iterations/$k"
+[ -n "$k" ] && [ -f "$it/render.json" ] && [ ! -f "$it/review.json" ] || exit 0
+n="$(basename "$dest")"; tid="$(basename "$(dirname "$(dirname "$dest")")")"
+marker="${TMPDIR:-/tmp}/recut-review-asked-$tid-s$n-it$k"
+[ -f "$marker" ] && exit 0
+touch "$marker" 2>/dev/null || exit 0
+printf '{"decision": "block", "reason": "Ticket %s s%s it%s is rendered but has no review. If the operator already gave a verdict in this session, record it with `recut ticket review %s --verdict ship|fixable|reject --ok all|s1,... --bad sN:tag+tag --note \\"<their words + session facts>\\"`. Otherwise ask them for their verdict (and any bad splices) and stop. Never choose the verdict yourself."}\n' \
+  "$tid" "$n" "$k" "$tid"
 exit 0

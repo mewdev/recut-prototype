@@ -196,3 +196,23 @@ def test_hook_syncs_only_the_repo_holding_the_session(tmp_path):
     files = subprocess.run(["git", "-C", str(remote), "ls-tree", "-r", "--name-only", "main"],
                            capture_output=True, text=True).stdout.split()
     assert "tickets/20261114-test/sessions/1/transcript.jsonl" in files
+
+
+def test_hook_asks_once_for_a_review_of_an_unreviewed_render(tmp_path):
+    t, sd = fake_transcript(tmp_path), tmp_path / "tickets" / "T1" / "sessions" / "1"
+    it = sd / "iterations" / "2"
+    it.mkdir(parents=True)
+    (sd / "iterations" / "1").mkdir()
+    env = {"RECUT_SESSION": str(sd), "TMPDIR": str(tmp_path)}
+    stdin = json.dumps({"transcript_path": str(t), "stop_hook_active": False})
+    assert run_hook(stdin, env, tmp_path).stdout == ""  # not rendered yet: nothing to review
+    (it / "render.json").write_text("{}")
+    out = json.loads(run_hook(stdin, env, tmp_path).stdout)
+    assert out["decision"] == "block" and "T1 s1 it2" in out["reason"] and "Never choose" in out["reason"]
+    assert run_hook(stdin, env, tmp_path).stdout == ""  # once per iteration
+    (tmp_path / "recut-review-asked-T1-s1-it2").unlink()
+    active = json.dumps({"transcript_path": str(t), "stop_hook_active": True})
+    assert run_hook(active, env, tmp_path).stdout == ""  # never loops a stop it already blocked
+    (it / "review.json").write_text("{}")
+    assert run_hook(stdin, env, tmp_path).stdout == ""  # reviewed: nothing to ask
+    assert (sd / "transcript.jsonl").exists()
