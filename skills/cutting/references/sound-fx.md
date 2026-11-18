@@ -88,3 +88,13 @@ per layer clip, e.g. `layer fx1: v1 enters at 19.55s at -12.7 LUFS, +9.0 LU agai
 Use a `gap` node on the main track: `{"id": "p1", "type": "gap", "length": "5s"}`. Return
 tails keep ringing through it, so the measured silence (`qc_gap`) is shorter than the gap by
 the tail. Nothing joins across a gap, so no splice checks run there.
+
+- **No pause asked = no dead air.** Back-to-back songs (e.g. for dancers): the next song enters
+  when the previous tail is about -50 dB (inaudible in a room), with a fraction of a second of
+  silence at most. Measure the tail's dB curve and cut there; never wait for it to reach -90 dB,
+  and don't add a "breath" `gap` nobody asked for.
+- **A pause asked in seconds is the audible silence.** If the clip before the gap already ends
+  in a rest or a decaying tail, that counts: `gap length` = requested pause − the rest the clip
+  keeps. Measure the result in the render (last sound to next hit) and write the numbers in
+  `plan.notes`. Say in the notes how you read "pause" (total silence vs. added time) so the
+  operator can flip it if the client meant the other.
