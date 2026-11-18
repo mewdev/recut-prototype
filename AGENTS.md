@@ -70,6 +70,11 @@ and `recut-data`, so the work is saved. To work one:
    yourself**: the review is the operator's judgment and the improvement loop learns from it. If
    no verdict was given, ask for one; don't record a guess.
 
+A command the operator must run themselves goes in its own code block, exactly as typed, with no
+punctuation after it (`! recut sync.` failed as `invalid choice: 'sync.'`). `recut sync` prints
+what its status means: `queued` and `pushed` need nothing more; only `push-failed` needs a re-run
+where git can reach the remote.
+
 **Hooks (operator, once).** `.claude/` is git-ignored, so each operator adds both hooks to
 their own `.claude/settings.local.json` (use the absolute path of the checkout):
 - `scripts/hooks/copy_transcript.sh` (Stop) copies the session transcript to
