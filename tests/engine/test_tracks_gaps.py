@@ -142,3 +142,16 @@ def test_a_layer_does_not_hide_the_main_tracks_ending(base):
     assert ending(alone) == ["n1"] and ending(layered) == ["n1"]
     seq = lambda info: sorted(i.message for i in info.issues if i.rule == "structure")  # noqa: E731
     assert seq(alone) and seq(alone) == [m for m in seq(layered) if "f1" not in m]
+
+
+def test_a_send_on_a_layer_feeds_the_return(base):
+    # layers share the returns with the main track: a voice FX's reverb tail rings on
+    d, p = base
+    main = ("main", [clip("n1", bars=2)], {})
+    dry, _ = render_plan(plan(p, main, ("fx", [clip("f1", "chorus", bars=1)], {})), d)
+    wet, info = render_plan(plan(p, main, ("fx", [clip("f1", "chorus", bars=1, sends={"A": 0})], {})), d)
+    end = max(s.out_end for s in info.segments)
+    assert info.returns_tail_end > end + 0.5
+    assert wet.samples.shape[-1] > dry.samples.shape[-1]  # the tail extends the render
+    tail = wet.samples[:, int((end + 0.1) * wet.sr): int((end + 0.5) * wet.sr)]
+    assert rms_db(tail) > -60
