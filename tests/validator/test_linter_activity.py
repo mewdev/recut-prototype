@@ -83,3 +83,13 @@ def test_mid_vocal_quiet_at_range_edges_and_without_vocals(ticket):
 
 def test_rules_skip_silently_when_the_map_has_no_activity(ticket):
     assert not lint(ticket, [clip("n1", "chorus", bars=4, fade_out=FADE), clip("n2", "verse")])
+
+
+def test_ending_drums_ignores_a_click_cover_on_a_final_hit(ticket):
+    """Regression 20261118-idzo: a one-beat final chord hit with a 30 ms anti-click fade drew
+    `ending_drums` on every iteration (it5-it9, the shipped one too). That is not a fade-out."""
+    set_activity(ticket[0], drums=0.9)
+    hit = clip("n2", "chorus", beats=1, fade_out={"length": "30ms", "shape": "linear"})
+    assert not lint(ticket, [clip("n1", "verse"), hit])
+    hit["fade_out"] = {"length": "100ms", "shape": "linear"}  # from 100 ms on it is a fade
+    assert [i.rule for i in lint(ticket, [clip("n1", "verse"), hit])] == ["ending_drums"]

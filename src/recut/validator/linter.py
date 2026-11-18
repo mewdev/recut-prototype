@@ -8,7 +8,8 @@ Runs from `engine.render_plan` once clip bounds and splices are known, and retur
 - `energy_drop`: loudness falls by more than 6 dB across a splice with no fade or xfade
 - `duration`: rendered length misses the target (warn > 2 s, error > 10 %)
 - `ending_drums` (M3, needs `instrument_activity`): the cut ends with a `fade_out` while drum
-  activity in the last bar before the fade is above 0.6: the fade switches a busy groove off
+  activity in the last bar before the fade is above 0.6: the fade switches a busy groove off.
+  A fade under 100 ms is a click cover on a final hit, not a fade, and is not judged
 - `mid_vocal` (M3, needs `instrument_activity`): a splice lands inside a vocal range, more than
   one beat from the range's edges: it cuts a phrase in half
   (both skip silently when the map has no activity)
@@ -40,7 +41,7 @@ import numpy as np
 from recut.audio import Audio
 from recut.contracts.plan import ClipNode, Plan
 from recut.contracts.render import Issue, RenderSegment, Splice
-from recut.contracts.units import level_db
+from recut.contracts.units import level_db, parse_time
 from recut.map.activity import bar_seconds
 from recut.map.helpers import key_at
 from recut.map.musicdata import segment_mean
@@ -299,7 +300,9 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
         last = clips.get(final.node_id)
         m = maps[last.source] if last is not None else None
         ia = m.instrument_activity if m else None
-        if last is not None and last.fade_out is not None and ia is not None and ia.drum is not None:
+        fades = (last is not None and last.fade_out is not None and m is not None
+                 and parse_time(last.fade_out.length, m.bpm, m.beats_per_bar) * 1000 >= SMOOTHING_XFADE_MS)
+        if fades and ia is not None and ia.drum is not None:
             end = final.src_end
             bar = bar_seconds(m.bars, m.beats, m.bpm, m.beats_per_bar)
             drums = segment_mean(ia.drum.values, ia.drum.hop_s, max(0.0, end - bar), end)

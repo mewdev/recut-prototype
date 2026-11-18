@@ -8,6 +8,10 @@ Read them with `recut.map.helpers.pace_at(map, t)`; each section also has a mean
 Maps made before pace existed have none: run `recut ticket enrich <id>`. Loudness alone
 cannot tell "quiet but busy" from "sparse": for that use the instrument activity below.
 
+- **Character before place.** First decide what kind of ending the request wants (natural /
+  soft vs. big finish) and measure the candidate ending against the bars before the cut: a
+  song's real finale is often its loudest part and is wrong for a "natural" request. Recipes,
+  including the final chord hit: `skills/cutting/references/exit-design.md`.
 - **Exit on a falling pace.** A clean ending usually comes where pace is already dropping
   (about 0.3 or lower, for a few seconds). A fade over a section still at pace 0.7 or higher
   cuts a busy groove: the fade sounds like the song being switched off.

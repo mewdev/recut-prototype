@@ -15,7 +15,7 @@ Read this before anything else, every time. Find the row matching the request, l
 | Songs back to back ("A, then B"), where the next song enters, a pause between songs | `song-sequence.md` |
 | Sound FX between songs: voice hits, screams, stingers; stacking phrases | `sound-fx.md` |
 | Clicks, clipping, "why does this sound bad at the cut point", stagger/taper timing | `transitions-and-masking.md` |
-| How to end a track, fade timing, exit types | `exit-design.md` |
+| How to end a track ("natural" vs big finish, final chord hit, a drum hit on the last note), fade timing, exit types | `exit-design.md` |
 | Whether to trust `validate()`, what it catches vs. what it silently allows | `validation-workflow.md` |
 | "Can recut do X" / stem separation / eq / test coverage | `known-limitations.md` |
 | Ambient/generative soundscape from song fragments, "Fripp/Eno style", "tape loop", "dreamy soundscape" | `ambient-soundscapes.md` |
