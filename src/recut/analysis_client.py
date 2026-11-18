@@ -4,6 +4,7 @@ Needs a deployed `recut-analysis` app and a Modal token on this machine (`modal 
 """
 
 import json
+import os
 import tempfile
 import time
 from pathlib import Path
@@ -14,25 +15,34 @@ from recut.map.schema import MusicMap
 _APP = "recut-analysis"
 
 
-def _spawn_stems(audio_bytes: bytes, filename: str, log):
-    """Start stem separation; None (and a warning) if it cannot even be started."""
+def keep_stems() -> bool:
+    """Keep the separated stem audio (~150 MB per track as FLAC)? Off by default: the map only
+    needs the activity curves, and mashups will use a better separator (STATUS M7). Turn on
+    with `RECUT_KEEP_STEMS=1` or the `--keep-stems` CLI flag."""
+    return os.environ.get("RECUT_KEEP_STEMS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _spawn_stems(audio_bytes: bytes, filename: str, log, return_stems: bool = False):
+    """Start stem separation; None (and a warning) if it cannot even be started. Modal sends
+    the stem audio back only with `return_stems`; the activity curves always come back."""
     from modal import Function
 
     try:
-        return Function.from_name(_APP, "run_stems").spawn(audio_bytes, filename)
+        return Function.from_name(_APP, "run_stems").spawn(audio_bytes, filename,
+                                                           return_stems=return_stems)
     except Exception as e:  # noqa: BLE001  stems are optional (e.g. app deployed before M1)
         log(f"  ! stems unavailable, no instrument activity: {e}")
         return None
 
 
 def _collect_stems(call, stems_dir: Optional[Path], log) -> Optional[dict]:
-    """Wait for run_stems. Saves the FLACs to `stems_dir` (when given) and returns
+    """Wait for run_stems. Saves returned FLACs to `stems_dir` (when given) and returns
     {"hop_s", "curves"}; on any failure logs a warning and returns None."""
     if call is None:
         return None
     try:
         res = call.get()
-        if stems_dir is not None:
+        if stems_dir is not None and res.get("stems"):
             stems_dir.mkdir(parents=True, exist_ok=True)
             for name, data in res["stems"].items():
                 (stems_dir / f"{name}.flac").write_bytes(data)
@@ -43,15 +53,18 @@ def _collect_stems(call, stems_dir: Optional[Path], log) -> Optional[dict]:
 
 
 def fetch_activity(audio_path: Path, stems_dir: Optional[Path] = None, log=print) -> Optional[dict]:
-    """Modal only for stems: {"hop_s", "curves"} for one track (saves FLACs to `stems_dir`)."""
+    """Modal only for stems: {"hop_s", "curves"} for one track. The stem FLACs are saved to
+    `stems_dir` only when `keep_stems()` is on."""
     log(f"Sending {audio_path.name} → Modal (stems)...")
-    call = _spawn_stems(audio_path.read_bytes(), audio_path.name, log)
+    call = _spawn_stems(audio_path.read_bytes(), audio_path.name, log,
+                        return_stems=stems_dir is not None and keep_stems())
     return _collect_stems(call, stems_dir, log)
 
 
 def analyze_raw(audio_path: Path, log=print, stems_dir: Optional[Path] = None) -> dict:
     """Run beats + chords + structure + key (+ stems, optional) on Modal in parallel → raw
-    analysis dict. With `stems_dir`, the four stem FLACs are saved there; the raw dict only
+    analysis dict. With `stems_dir` and `keep_stems()` on, the four stem FLACs are saved there
+    (otherwise only the curves come back from Modal); the raw dict only
     carries the activity curves (`_activity`), never audio."""
     from modal import Function  # lazy: only machines that analyze need Modal configured
 
@@ -63,7 +76,8 @@ def analyze_raw(audio_path: Path, log=print, stems_dir: Optional[Path] = None) -
         name: Function.from_name(_APP, f"run_{name}").spawn(audio_bytes, filename)
         for name in ("beats", "chords", "structure", "key")
     }
-    stems_call = _spawn_stems(audio_bytes, filename, log)
+    stems_call = _spawn_stems(audio_bytes, filename, log,
+                              return_stems=stems_dir is not None and keep_stems())
     beats = calls["beats"].get()
     log(f"  ✓ beats      bpm={beats['bpm']}  ({time.time() - t0:.0f}s)")
     chords = calls["chords"].get()

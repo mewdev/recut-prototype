@@ -29,8 +29,10 @@ version now on Modal, and add Apple MU later as a second source for the same fie
     -50 dBFS = 0 and the stem's own 95th percentile = 1, smoothed over 300 ms.
   - Also returns detected ranges where activity > 0.25 for ≥ 1 bar.
 - `analyze_raw` spawns it in parallel with the others.
-- Stems are saved to `.appdata/tickets/<id>/stems/<source_id>/<stem>.flac` (week-2 mashups
-  will use them); only the curves go into the map.
+- **Stem audio is not kept by default** (decision 2026-11-18: ~150 MB/track, nothing reads it yet,
+  and mashups will use a better separator, M7). Modal returns only the curves unless
+  `return_stems=True`; the client asks for it with `RECUT_KEEP_STEMS=1` or `--keep-stems`, and then
+  saves `<ticket>/stems/<source_id>/<stem>.flac` (git-ignored). Saved stems are reused by enrich.
 - Done when: a test with a mocked Modal function covers the curve maths, and the
   operator runs one real track and the curves look right in the GUI (M3).
 

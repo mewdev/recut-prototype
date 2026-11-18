@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import pathlib
 import shutil
 from datetime import datetime
@@ -506,6 +507,7 @@ def main() -> None:
 
     analyze = sub.add_parser("analyze", help="Analyze audio via Modal pipeline → raw JSON")
     analyze.add_argument("audio", help="path to audio file (mp3, wav, ...)")
+    analyze.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
     analyze.set_defaults(func=cmd_analyze)
 
     map_cmd = sub.add_parser("map", help="Build enriched maps for all needs_map sources")
@@ -517,6 +519,7 @@ def main() -> None:
                               "named sources are recomputed)")
     map_cmd.add_argument("--no-activity", dest="activity", action="store_false",
                          help="with --enrich: skip instrument activity (it needs saved stems or Modal)")
+    map_cmd.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
     map_cmd.add_argument("stems", nargs="*", help="with --force / --enrich: only these sources")
     map_cmd.set_defaults(func=cmd_map)
 
@@ -558,11 +561,13 @@ def main() -> None:
     t_work.add_argument("id")
     t_work.add_argument("--agent", default="claude-code")
     t_work.add_argument("--model", help="model doing the cut, e.g. sonnet — logged for comparison")
+    t_work.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
     t_en = tsub.add_parser("enrich", help="Add pace / loudness / key ranges / instrument activity to the ticket's existing maps")
     t_en.add_argument("id")
     t_en.add_argument("--force", action="store_true", help="recompute even if present")
     t_en.add_argument("--no-activity", dest="activity", action="store_false",
                       help="skip instrument activity (it needs saved stems or Modal)")
+    t_en.add_argument("--keep-stems", action="store_true", help="keep the separated stem audio (~150 MB/track FLAC; default: activity curves only). Same as RECUT_KEEP_STEMS=1")
     t_it = tsub.add_parser("iterate", help="New iteration in the latest session (copies the plan)")
     t_it.add_argument("id")
     t_c = tsub.add_parser("client", help="Log the client's decision on a delivered cut")
@@ -625,6 +630,8 @@ def main() -> None:
     serve_cmd.set_defaults(func=cmd_serve)
 
     args = parser.parse_args()
+    if getattr(args, "keep_stems", False):  # read by recut.analysis_client.keep_stems()
+        os.environ["RECUT_KEEP_STEMS"] = "1"
 
     if not args.command:
         print(WELCOME)
