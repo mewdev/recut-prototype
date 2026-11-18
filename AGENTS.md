@@ -73,7 +73,9 @@ and `recut-data`, so the work is saved. To work one:
 **Hooks (operator, once).** `.claude/` is git-ignored, so each operator adds both hooks to
 their own `.claude/settings.local.json` (use the absolute path of the checkout):
 - `scripts/hooks/copy_transcript.sh` (Stop) copies the session transcript to
-  `<session>/transcript.jsonl` for the weekly improvement pass. When the latest iteration is
+  `<session>/transcript.jsonl` for the weekly improvement pass. If several Claude sessions work
+  the same ticket session, the file holds all of them one after another (each line's `sessionId`
+  says whose it is), and each Stop refreshes only its own part. When the latest iteration is
   rendered but has no review, it blocks the stop once per iteration so the agent asks the
   operator for a verdict (step 7).
 - `scripts/hooks/session_start.sh` (SessionStart) reminds about shipped cuts with no client
