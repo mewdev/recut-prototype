@@ -235,10 +235,14 @@ class _Fn:
     def __init__(self, value=None, error=None, spawn_error=None):
         self.value, self.error, self.spawn_error = value, error, spawn_error
 
-    def spawn(self, *args):
+    def spawn(self, *args, **kwargs):
+        self.kwargs = kwargs
         if self.spawn_error:
             raise self.spawn_error
-        return _Call(self.value, self.error)
+        value = self.value
+        if isinstance(value, dict) and "stems" in value and not kwargs.get("return_stems"):
+            value = {**value, "stems": {}}  # like run_stems: audio only on request
+        return _Call(value, self.error)
 
 
 def _fake_modal(monkeypatch, stems: _Fn):
@@ -260,7 +264,27 @@ def _stem_result():
             "ranges": {}, "sample_rate": SR, "model": "demucs-htdemucs"}
 
 
+def test_analyze_raw_by_default_keeps_curves_but_no_stem_audio(tmp_path, monkeypatch):
+    monkeypatch.delenv("RECUT_KEEP_STEMS", raising=False)
+    fn = _Fn(_stem_result())
+    _fake_modal(monkeypatch, fn)
+    audio = tmp_path / "song.wav"
+    audio.write_bytes(b"x")
+    stems = tmp_path / "stems" / "a"
+    raw = analysis_client.analyze_raw(audio, log=lambda *_: None, stems_dir=stems)
+    assert fn.kwargs == {"return_stems": False}  # Modal doesn't even send the audio back
+    assert not stems.exists()
+    assert set(raw["_activity"]["curves"]) == set(activity.STEM_NAMES)
+
+
+@pytest.mark.parametrize("value,expected", [("1", True), ("yes", True), ("0", False), ("", False)])
+def test_keep_stems_env(monkeypatch, value, expected):
+    monkeypatch.setenv("RECUT_KEEP_STEMS", value)
+    assert analysis_client.keep_stems() is expected
+
+
 def test_analyze_raw_spawns_stems_saves_flac_and_returns_only_curves(tmp_path, monkeypatch):
+    monkeypatch.setenv("RECUT_KEEP_STEMS", "1")
     _fake_modal(monkeypatch, _Fn(_stem_result()))
     audio = tmp_path / "song.wav"
     audio.write_bytes(b"x")

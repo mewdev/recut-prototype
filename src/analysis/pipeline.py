@@ -411,10 +411,12 @@ def run_structure(audio_bytes: bytes, filename: str = "track.mp3") -> dict:
 
 # ── 5. Stem separation + instrument activity ───────────────────────────────────
 @app.function(image=stems_image, gpu="T4", timeout=600, memory=12288)
-def run_stems(audio_bytes: bytes, filename: str = "track.mp3", min_range_s: float = 2.0) -> dict:
+def run_stems(audio_bytes: bytes, filename: str = "track.mp3", min_range_s: float = 2.0,
+              return_stems: bool = False) -> dict:
     """Demucs htdemucs -> 4 stems as 44.1 kHz stereo FLAC bytes + per-stem activity curves.
 
-    Returns {"stems": {name: flac bytes}, "activity": {name: [0-1 per 100 ms]},
+    Returns {"stems": {name: flac bytes} (empty unless `return_stems`: the client keeps stem
+    audio only on request, ~150 MB per track), "activity": {name: [0-1 per 100 ms]},
     "ranges": {name: [[start, end], ...]} (activity > 0.25 for >= min_range_s; the client
     recomputes them with the map's real bar length), "hop_s": 0.1, "sample_rate": 44100,
     "model": "demucs-htdemucs"}."""
@@ -449,14 +451,15 @@ def run_stems(audio_bytes: bytes, filename: str = "track.mp3", min_range_s: floa
         stems, activity, ranges = {}, {}, {}
         for name, tensor in zip(model.sources, out):
             x = tensor.cpu().numpy().astype(np.float32)  # channels x samples
-            buf = io.BytesIO()
-            sf.write(buf, x.T, sr, format="FLAC", subtype="PCM_24")
-            stems[name] = buf.getvalue()
+            if return_stems:
+                buf = io.BytesIO()
+                sf.write(buf, x.T, sr, format="FLAC", subtype="PCM_24")
+                stems[name] = buf.getvalue()
             activity[name] = stem_activity(x, sr)
             ranges[name] = activity_ranges(activity[name], 0.1, min_range_s)
 
         elapsed = round(time.time() - t0, 2)
-        print(f"demucs: {len(stems)} stems on {device}  {elapsed}s")
+        print(f"demucs: {len(activity)} curves ({len(stems)} stems returned) on {device}  {elapsed}s")
         return {"stems": stems, "activity": activity, "ranges": ranges, "hop_s": 0.1,
                 "sample_rate": sr, "model": "demucs-htdemucs"}
 
