@@ -35,6 +35,7 @@ GITIGNORE = """\
 *.tmp
 *.tmp.*
 .current_session
+.agent_sessions/
 """
 
 
@@ -102,8 +103,13 @@ def sync(tickets_dir: Path = TICKETS_DIR, message: Optional[str] = None, push: b
 
 def _sync_once(repo: Path, message: Optional[str], push: bool) -> dict:
     gi = repo / ".gitignore"
-    if not gi.exists() or "recut.sync" not in gi.read_text():
-        gi.write_text(GITIGNORE + ("\n" + gi.read_text() if gi.exists() else ""))
+    have = gi.read_text() if gi.exists() else ""
+    if "recut.sync" not in have:
+        gi.write_text(GITIGNORE + ("\n" + have if have else ""))
+    else:  # an older recut wrote it: add the patterns added since (e.g. .agent_sessions/)
+        missing = [ln for ln in GITIGNORE.splitlines() if ln and not ln.startswith("#") and ln not in have.splitlines()]
+        if missing:
+            gi.write_text(have + ("" if have.endswith("\n") else "\n") + "\n".join(missing) + "\n")
     _git(repo, "add", "-A")
     committed = False
     if _git(repo, "diff", "--cached", "--quiet", check=False).returncode != 0:
