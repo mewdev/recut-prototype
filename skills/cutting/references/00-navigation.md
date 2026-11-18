@@ -12,7 +12,8 @@ Read this before anything else, every time. Find the row matching the request, l
 | "From X" / "make it shorter" / "creative ending" / any vague or underspecified cut request | `prompt-disambiguation.md` |
 | What a `MusicMap` field means, how reliable it is, what it doesn't tell you | `map-interpretation.md` |
 | Which device (reverb/delay/eq/auto_filter/utility), send or automation to use, ordering | `effects-routing.md` |
-| Sound FX between songs: voice hits, screams, stingers; stacking phrases; a pause between songs | `sound-fx.md` |
+| Songs back to back ("A, then B"), where the next song enters, a pause between songs | `song-sequence.md` |
+| Sound FX between songs: voice hits, screams, stingers; stacking phrases | `sound-fx.md` |
 | Clicks, clipping, "why does this sound bad at the cut point", stagger/taper timing | `transitions-and-masking.md` |
 | How to end a track, fade timing, exit types | `exit-design.md` |
 | Whether to trust `validate()`, what it catches vs. what it silently allows | `validation-workflow.md` |

@@ -12,6 +12,15 @@ Runs from `engine.render_plan` once clip bounds and splices are known, and retur
 - `mid_vocal` (M3, needs `instrument_activity`): a splice lands inside a vocal range, more than
   one beat from the range's edges: it cuts a phrase in half
   (both skip silently when the map has no activity)
+- `song_change_gap` (song change only): audible silence (below -50 dBFS) between the outgoing
+  song's tail and the incoming song's first sound, gap nodes included: info with the number,
+  warn above 2 s (dancers wait for the next song; a requested pause is the exception)
+
+Joins that are not edits are not judged as edits:
+- contiguous (same source, the song plays on, no overlap, same gain, no fades): no splice rule
+- song change (the outgoing clip reaches its song's end, the incoming starts at its song's
+  beginning): no `downbeat`, `phrase_align`, `mid_vocal`, `energy_drop` or cross-song rule
+  (one song ending and another starting is not a beat-matched join); `song_change_gap` instead
 
 Cross-song rules (A5, PLAN §2), keyed by splice id:
 
@@ -51,6 +60,9 @@ LOUDNESS_MIN_WINDOW_S = 1.0
 DURATION_WARN_S = 2.0
 DURATION_ERROR_FRAC = 0.10
 DRUMS_BUSY = 0.6           # mean drum activity in the last bar before a fade-out
+SONG_GAP_DB = -50.0        # below this (dBFS RMS, 50 ms windows) a song change is "silence"
+SONG_GAP_WARN_S = 2.0      # shipped song changes measured 0.5-1.4 s of it, rejected ones 2.8-2.9 s
+SONG_GAP_WINDOW_S = 0.05
 
 
 def _boundaries(m: MusicMap) -> list[float]:
@@ -133,6 +145,69 @@ def _cross_song(sp: Splice, prev: ClipNode, nxt: ClipNode, rp: RenderSegment, rn
     return out
 
 
+
+def _music_span(m: MusicMap) -> tuple[float, float]:
+    """Start of the first and end of the last section that isn't `silence`."""
+    music = [s for s in m.segments if s.segment_name != "silence" and s.end - s.start > 1e-3]
+    return (music[0].start, music[-1].end) if music else (0.0, m.duration)
+
+
+def _bar_s(m: MusicMap) -> float:
+    return 60.0 / m.bpm * m.beats_per_bar if m.bpm else 2.0
+
+
+def _is_song_change(rp: RenderSegment, rn: RenderSegment, maps: dict[str, MusicMap]) -> bool:
+    """The outgoing clip plays its song to the end (within a bar of the last music) and the
+    incoming one starts its song (within a bar of the first music)."""
+    ma, mb = maps[rp.source], maps[rn.source]
+    return (rp.src_end >= _music_span(ma)[1] - _bar_s(ma)
+            and rn.src_start <= _music_span(mb)[0] + _bar_s(mb))
+
+
+def _is_contiguous(prev: ClipNode, nxt: ClipNode, rp: RenderSegment, rn: RenderSegment,
+                   sp: Splice) -> bool:
+    """The song simply plays on: same source, sample-contiguous, nothing changes at the join."""
+    return (prev.source == nxt.source and sp.overlap_ms <= 0 and abs(rp.src_end - rn.src_start) < 1e-3
+            and level_db(prev.gain) == level_db(nxt.gain) and prev.fade_out is None and nxt.fade_in is None)
+
+
+def _quiet_s(audio: Audio, t: float, gain_db: float, before: bool, limit_s: float = 10.0) -> float:
+    """Seconds of audio quieter than SONG_GAP_DB right before (or after) source time `t`."""
+    x = np.atleast_2d(audio.samples)
+    sr, w = audio.sr, max(1, int(SONG_GAP_WINDOW_S * audio.sr))
+    a, b = (max(0.0, t - limit_s), t) if before else (t, t + limit_s)
+    seg = np.abs(x[:, int(a * sr): int(b * sr)]).max(axis=0)
+    n = seg.size // w
+    if n == 0:
+        return 0.0
+    blocks = seg[: n * w].reshape(n, w) if not before else seg[seg.size - n * w:].reshape(n, w)
+    rms_db = 10 * np.log10(np.maximum((blocks.astype(np.float64) ** 2).mean(axis=1), 1e-20)) + gain_db
+    quiet = rms_db < SONG_GAP_DB
+    if before:
+        quiet = quiet[::-1]
+    run = int(np.argmin(quiet)) if not quiet.all() else n
+    return run * w / sr
+
+
+def _song_change_gap(prev: ClipNode, nxt: ClipNode, rp: RenderSegment, rn: RenderSegment,
+                     audio: Optional[dict[str, Audio]]) -> list[Issue]:
+    if not audio or prev.source not in audio or nxt.source not in audio:
+        return []
+    # shortcut: clip fades are not applied here (a fade-out only makes the silence start earlier)
+    tail = _quiet_s(audio[prev.source], rp.src_end, level_db(prev.gain), before=True)
+    lead = _quiet_s(audio[nxt.source], rn.src_start, level_db(nxt.gain), before=False)
+    silence = max(0.0, tail + (rn.out_start - rp.out_end) + lead)
+    msg = (f"song change {prev.id} → {nxt.id} at {rn.out_start:.2f}s: {silence:.1f} s of audible "
+           f"silence (below {SONG_GAP_DB:.0f} dBFS: {tail:.1f} s tail + {rn.out_start - rp.out_end:.1f} s "
+           f"between the clips + {lead:.1f} s lead-in)")
+    if silence > SONG_GAP_WARN_S:
+        return [Issue(severity="warn", rule="song_change_gap", node=nxt.id,
+                      message=msg + f": over {SONG_GAP_WARN_S} s reads as dead air. Unless a pause was "
+                                    f"asked for, start the next song as the tail fades (skills/cutting/"
+                                    f"references/song-sequence.md)")]
+    return [Issue(severity="info", rule="song_change_gap", node=nxt.id, message=msg)]
+
+
 def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegment],
               splices: list[Splice], duration_s: Optional[float] = None,
               audio: Optional[dict[str, Audio]] = None) -> list[Issue]:
@@ -152,6 +227,10 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
         if prev is None or nxt is None:
             continue
         rp, rn = seg_by_node[prev.id], seg_by_node[nxt.id]
+        if _is_contiguous(prev, nxt, rp, rn, sp):
+            continue
+        if _is_song_change(rp, rn, maps):
+            continue  # judged by song_change_gap below, not as a beat-matched join
         # downbeat: in output time the incoming clip starts at out_time, where the outgoing
         # source is `overlap` before its clip end; both must sit on a downbeat of their grid.
         # An overlap under SMOOTHING_XFADE_MS is a click cover: the join is the clip edge.
@@ -193,6 +272,13 @@ def lint_plan(plan: Plan, maps: dict[str, MusicMap], segments: list[RenderSegmen
                         severity="warn", rule="energy_drop", splice=sp.id, node=nxt.id,
                         message=f"{sp.id}: loudness drops {drop:.1f} dB ({prev.id} → {nxt.id}) "
                                 f"with no fade or crossfade"))
+
+    # song_change_gap: consecutive main-track clips (a gap node breaks the splice, not the change)
+    main_segs = sorted((sg for sg in segments if sg.track == plan.tracks[0].id), key=lambda sg: sg.out_start)
+    for rp, rn in zip(main_segs, main_segs[1:]):
+        prev, nxt = clips.get(rp.node_id), clips.get(rn.node_id)
+        if prev is not None and nxt is not None and _is_song_change(rp, rn, maps):
+            issues += _song_change_gap(prev, nxt, rp, rn, audio)
 
     # ending: the last clip stops at a section end / the song's end, or has a fade_out
     main = [s for s in segments if s.track == plan.tracks[0].id]  # the cut ends where the main track does

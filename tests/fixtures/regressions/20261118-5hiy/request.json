@@ -1,0 +1,13 @@
+{
+  "id": "20261118-5hiy",
+  "created_at": "2026-11-18T15:07:58+00:00",
+  "text": "(fixture: request text removed) Play song b whole, then song a whole; they dance to the last sound, so a enters when b's natural tail (incl. recorded reverb) has dissolved.",
+  "target_duration_s": null,
+  "client_name": null,
+  "client_contact": null,
+  "files": {
+    "a": "a.wav",
+    "b": "b.wav"
+  },
+  "status": "in_review"
+}

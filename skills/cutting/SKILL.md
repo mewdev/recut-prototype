@@ -44,8 +44,8 @@ Render with `recut ticket render <id>` (it prints the issues) or in code: `rende
 
 1. **Disambiguate the request first.** Most cutting prompts are underspecified — see `references/prompt-disambiguation.md`. State your interpretation explicitly before building anything.
 2. **Read the map, don't guess.** Load the song's `MusicMap` and check `references/map-interpretation.md` for what each field does and does not tell you.
-3. **Write the plan**: sources, a `main` track of clips, `xfade`s and `gap`s (pauses), in order; extra tracks for layers (a voice FX on top, see `references/sound-fx.md`). Pick sections and lengths in bars.
-4. **Render and read the issues.** `recut ticket render <id>` reports structure problems (`structure`), cross-song joins, `xfade_clamped`, the musical linter (`phrase_align`, `ending`, `energy_drop`, `duration`), and the audio QC after the render (`qc_*`: loudness, `qc_limiting`, true peak, clicks, gaps, gain/brightness jumps at splices). See `references/validation-workflow.md` for what the checks cover and, importantly, what they don't.
+3. **Write the plan**: sources, a `main` track of clips, `xfade`s and `gap`s (pauses), in order; extra tracks for layers (a voice FX on top, see `references/sound-fx.md`). Songs back to back: `references/song-sequence.md`. Pick sections and lengths in bars.
+4. **Render and read the issues.** `recut ticket render <id>` reports structure problems (`structure`), cross-song joins, `xfade_clamped`, the musical linter (`phrase_align`, `ending`, `energy_drop`, `duration`, `song_change_gap`: the audible silence where one song hands over to the next), and the audio QC after the render (`qc_*`: loudness, `qc_limiting`, true peak, clicks, gaps, gain/brightness jumps at splices). See `references/validation-workflow.md` for what the checks cover and, importantly, what they don't.
 5. **Apply effects with real signal-processing judgment** — see `references/effects-routing.md` and `references/transitions-and-masking.md` before adding devices, sends or automation. Reverb and delay belong on **returns** (a send), not inserted on every clip.
 6. **Design the exit deliberately** if the cut needs an ending — see `references/exit-design.md`. If the song's real ending should land mid-song (the most common manual fix), use the **ending transplant** recipe: `references/ending-transplant.md` (three variants as `plan.json` snippets).
 7. **Listen, then iterate.** `recut ticket iterate <id>` starts a new attempt instead of overwriting the last.
@@ -68,7 +68,8 @@ references/
 ├── map-interpretation.md       ← What the MusicMap tells you, what it doesn't, and a field-naming trap
 ├── prompt-disambiguation.md    ← Resolving vague cutting requests before touching anything
 ├── validation-workflow.md      ← What the checks catch, and what they do NOT catch
-├── sound-fx.md                 ← Voice hits/screams between songs, stacking from the vocal stem, pause
+├── song-sequence.md            ← Songs back to back: where the next song enters, no dead air, pauses
+├── sound-fx.md                 ← Voice hits/screams between songs, stacking from the vocal stem
 ├── ambient-soundscapes.md      ← Generative/drone pieces from song fragments (Fripp/Eno style)
 ├── known-limitations.md        ← Honest gaps in the current recut implementation
 └── api-reference.md            ← LEGACY Python API (Clip/XFade/Fade/Reverb/compose()); old saved compositions still load

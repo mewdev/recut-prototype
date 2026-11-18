@@ -102,7 +102,7 @@
     }
   ],
   "target_duration_s": 179,
-  "notes": "Iteration 1: original untouched from 0:00 through the final D-major chord: sections intro..inst#2 back to back (contiguous in the source, so the butt joins are sample-continuous), then inst#3 (starts 172.71 s) cut at 15.75 beats (map tempo 153.85 bpm, ends ~178.85 s), just before the solo piano D tone whose first attack is at ~178.97 s. 150 ms exp fade-out against a click. Reverb return A (low cut 200 Hz, 3 s decay, size 60, hi cut 5 kHz) fed from -26 dB rising to -12 dB over the last 4 beats so the final chord rings out instead of stopping dry.",
+  "notes": "(fixture: agent notes removed) plan.json",
   "returns": [
     {
       "id": "A",
