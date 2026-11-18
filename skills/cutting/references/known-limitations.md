@@ -8,7 +8,11 @@ The engine renders exactly one track of clips, plus return tracks and the master
 
 ## No stem or per-instrument editing
 
-Clips are full mixes (clients send full mixes only). Every device acts on the whole mix: you can filter or duck "the mix", not "the drums". Do not tell a user "I'll isolate the drums and fade just those"; that doesn't exist. See `effects-routing.md`, `transitions-and-masking.md`.
+Clips are full mixes (clients send full mixes only). Every device acts on the whole mix: you can filter or duck "the mix", not "the drums". Do not tell a user "I'll isolate the drums and fade just those"; that doesn't exist. The stem FLACs (`RECUT_KEEP_STEMS=1`) can be pre-mixed offline into a new source, e.g. a clean voice FX: `sound-fx.md`. See `effects-routing.md`, `transitions-and-masking.md`.
+
+## No pause (gap) clip
+
+There is no silence node. A pause between clips is a muted clip (`"gain": "-inf"`); see `sound-fx.md`.
 
 ## No time-stretching
 

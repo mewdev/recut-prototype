@@ -94,3 +94,10 @@ def test_duration_ok_warn_and_error(base):
 def test_duration_reported_once(base):
     out = lint(base, [clip("n1", "verse")], target_duration_s=60)
     assert [i.rule for i in out].count("duration") == 1
+
+
+def test_muted_clip_gain_minus_inf_lints(base):
+    # regression (ticket 20261118-jn7o): a documented "-inf" clip gain crashed lint_plan (float + str)
+    clips = [clip("n1", "chorus"), clip("n2", "chorus", gain="-inf", bars=4), clip("n3", "chorus", bars=4)]
+    out = [i for i in lint(base, clips) if i.rule == "energy_drop"]
+    assert [i.node for i in out] == ["n2"]  # loud → muted is a drop; muted → loud is not

@@ -67,6 +67,7 @@ references/
 ├── map-interpretation.md       ← What the MusicMap tells you, what it doesn't, and a field-naming trap
 ├── prompt-disambiguation.md    ← Resolving vague cutting requests before touching anything
 ├── validation-workflow.md      ← What the checks catch, and what they do NOT catch
+├── sound-fx.md                 ← Voice hits/screams between songs, stacking from the vocal stem, pause
 ├── ambient-soundscapes.md      ← Generative/drone pieces from song fragments (Fripp/Eno style)
 ├── known-limitations.md        ← Honest gaps in the current recut implementation
 └── api-reference.md            ← LEGACY Python API (Clip/XFade/Fade/Reverb/compose()); old saved compositions still load
