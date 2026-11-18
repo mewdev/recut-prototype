@@ -14,6 +14,10 @@ track or one review pass.
   write it up under *Blockers* in `docs/STATUS.md` for the operator.
 - Inside a ticket, an agent may tune that ticket's `plan.json` freely: that's the cut
   itself, not a code change.
+- **No `tasks/lessons.md` in this repo** (this overrides any global "self-improvement loop"
+  rule). A lesson from an operator correction goes where agents read it: cutting/musical
+  judgment into `skills/cutting/` or `skills/music-theory/`, tooling into a code fix with a
+  test, anything unresolved under *Blockers* in `docs/STATUS.md`. Commit it on a branch + PR.
 
 ## Operator reminder: client feedback (every session)
 
