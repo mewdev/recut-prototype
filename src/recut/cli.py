@@ -230,8 +230,12 @@ def cmd_serve(args) -> None:
     reminder = tickets.awaiting_client_message()
     if reminder:
         print("\n" + reminder + "\n")
+    # Reload on code changes by default (a reload mid-sync or mid-render drops that job; the next
+    # sync/poll redoes it): a server left running across a merge renders new plans
+    # with old code (e.g. "Input tag 'gap' ... does not match") while the CLI renders them fine.
+    pkg = pathlib.Path(__file__).resolve().parent
     uvicorn.run("recut.server.app:app", host=args.host, port=args.port, reload=args.reload,
-                log_level="warning")
+                reload_dirs=[str(pkg)] if args.reload else None, log_level="warning")
 
 
 def _intent_snippet(tid: str) -> str:
@@ -700,7 +704,9 @@ def main() -> None:
     serve_cmd = sub.add_parser("serve", help="Review server with live browser preview")
     serve_cmd.add_argument("--host", default="127.0.0.1")
     serve_cmd.add_argument("--port", type=int, default=8000)
-    serve_cmd.add_argument("--reload", action="store_true", help="auto-reload on code changes (dev)")
+    serve_cmd.add_argument("--no-reload", dest="reload", action="store_false",
+                           help="don't restart when recut's code changes (default: restart)")
+    serve_cmd.add_argument("--reload", action="store_true", help=argparse.SUPPRESS)  # old flag: now the default
     serve_cmd.set_defaults(func=cmd_serve)
 
     args = parser.parse_args()
