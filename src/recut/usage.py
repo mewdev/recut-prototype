@@ -2,8 +2,10 @@
 
 `sessions/<n>/transcript.jsonl` (copied by the Stop hook) → `sessions/<n>/usage.json`:
 `{model, models, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd,
-duration_s, turns}`. `model` is the model that produced most output; `models` has the per-model
-breakdown. `cost_usd` is an estimate (null when any model used is not in PRICES_PER_MTOK).
+duration_s, wall_s, turns}`. `model` is the one model that produced output, or "mixed" when the
+session switched models; `models` has the per-model breakdown. `duration_s` is active time: a gap
+that ends at the operator's next prompt counts up to IDLE_CAP_S, so hours the session sat waiting
+for the operator don't count (a long tool run counts in full); `wall_s` is first-to-last entry. `cost_usd` is an estimate (null when any model used is not in PRICES_PER_MTOK).
 
 The transcript format is not ours: unknown or broken lines are skipped, and an assistant message
 that appears several times (streamed in parts) counts once, with its last-seen usage.
@@ -13,6 +15,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+IDLE_CAP_S = 300.0  # waiting longer than this for the operator's next prompt is idle time
 
 
 # USD per million tokens, Anthropic first-party API list prices (source: Claude API pricing,
@@ -91,7 +95,7 @@ def _is_prompt(entry: dict) -> bool:
 
 
 def parse_transcript(text: str) -> dict:
-    stamps: list[float] = []
+    stamps: list[tuple[float, bool]] = []  # (time, entry is a typed prompt)
     turns = 0
     messages: dict[str, dict] = {}  # message id → {model, usage}; later entries replace earlier
     anon = 0
@@ -104,7 +108,7 @@ def parse_transcript(text: str) -> dict:
             continue
         t = _ts(e["timestamp"]) if "timestamp" in e else None
         if t is not None:
-            stamps.append(t)
+            stamps.append((t, _is_prompt(e)))
         if _is_prompt(e):
             turns += 1
         msg = e.get("message")
@@ -128,6 +132,8 @@ def parse_transcript(text: str) -> dict:
         acc["cache_read_tokens"] += _int(u.get("cache_read_input_tokens"))
         acc["cache_write_tokens"] += _int(u.get("cache_creation_input_tokens"))
     costs = []
+    stamps.sort()
+    producers = [n for n, a in models.items() if a["output_tokens"] > 0] or list(models)
     for name, acc in models.items():
         c = cost_usd(name, **acc)
         acc["cost_usd"] = round(c, 4) if c is not None else None
@@ -135,11 +141,14 @@ def parse_transcript(text: str) -> dict:
     total = {k: sum(a[k] for a in models.values())
              for k in ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens")}
     return {
-        "model": max(models, key=lambda m: models[m]["output_tokens"]) if models else None,
+        "model": (producers[0] if len(producers) == 1 else "mixed") if producers else None,
         "models": models,
         **total,
         "cost_usd": (round(sum(costs), 4) if costs and all(c is not None for c in costs) else None),
-        "duration_s": round(max(stamps) - min(stamps), 1) if len(stamps) > 1 else 0.0,
+        # a gap that ends at a typed prompt was the agent waiting for the operator: capped
+        "duration_s": round(sum(min(b - a, IDLE_CAP_S) if prompt else b - a
+                                for (a, _), (b, prompt) in zip(stamps, stamps[1:])), 1),
+        "wall_s": round(stamps[-1][0] - stamps[0][0], 1) if stamps else 0.0,
         "turns": turns,
     }
 
@@ -166,12 +175,14 @@ def load_usage(session_dir: Path) -> Optional[dict]:
 
 
 def refresh_stale(root: Path, ticket_id: Optional[str] = None) -> list[Path]:
-    """(Re)compute usage.json for every session whose transcript is newer than it (or has none)."""
+    """(Re)compute usage.json for every session whose transcript is newer than it (or has none,
+    or one in the older format)."""
     done = []
     pattern = f"{ticket_id}/sessions/*" if ticket_id else "*/sessions/*"
     for sd in sorted(root.glob(pattern)):
         tp, up = sd / TRANSCRIPT_FILE, sd / USAGE_FILE
-        if tp.exists() and (not up.exists() or up.stat().st_mtime < tp.stat().st_mtime):
+        if tp.exists() and (not up.exists() or up.stat().st_mtime < tp.stat().st_mtime
+                            or "wall_s" not in (load_usage(sd) or {})):  # written before active time
             if write_usage(sd) is not None:
                 done.append(sd)
     return done
