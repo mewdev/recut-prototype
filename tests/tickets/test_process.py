@@ -111,11 +111,17 @@ def test_work_instructions_carry_an_intent_template_and_the_hook_note(session, c
     assert "transcript.jsonl" in out
 
 
-def test_mark_current_session(session):
+def test_mark_agent_session(session, monkeypatch):
     tid, n, root = session
-    tickets.mark_current_session(tid, n, root)
-    assert (root / ".current_session").read_text().strip() == str(tickets.session_dir(tid, n, root).resolve())
-    assert [r.id for r in tickets.list_tickets(root)] == [tid]  # the pointer file doesn't break listing
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", "3cb15b6a-9a65")
+    p = tickets.mark_agent_session(tid, n, root)
+    assert p == root / ".agent_sessions" / "3cb15b6a-9a65"
+    assert p.read_text().strip() == str(tickets.session_dir(tid, n, root).resolve())
+    assert [r.id for r in tickets.list_tickets(root)] == [tid]  # the pointer folder doesn't break listing
+    for bad in ("", "../escape", "a b"):  # no Claude session (or an unsafe id): no pointer at all
+        monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", bad)
+        assert tickets.mark_agent_session(tid, n, root) is None
+    assert sorted(x.name for x in (root / ".agent_sessions").iterdir()) == ["3cb15b6a-9a65"]
 
 
 # ---- the Stop hook ------------------------------------------------------------------------
@@ -146,13 +152,30 @@ def test_hook_copies_the_transcript_from_stdin_json(tmp_path):
     assert not (sd / "transcript.jsonl.tmp").exists()
 
 
-def test_hook_falls_back_to_the_current_session_pointer(tmp_path):
-    t, sd, root = fake_transcript(tmp_path), tmp_path / "sess", tmp_path / "tickets"
-    sd.mkdir()
-    root.mkdir()
-    (root / ".current_session").write_text(f"{sd}\n")
-    r = run_hook(json.dumps({"transcript_path": str(t)}), {"RECUT_TICKETS_DIR": str(root)}, tmp_path)
-    assert r.returncode == 0 and (sd / "transcript.jsonl").exists()
+def test_hook_routes_parallel_agents_to_their_own_tickets(tmp_path):
+    """Regression (2026-11-18): one shared `.current_session` pointer sent every open agent's
+    transcript into the ticket that last ran `recut ticket work`, overwriting its transcript."""
+    root = tmp_path / "tickets"
+    sessions = {}
+    for sid, tid in [("aaa-111", "T1"), ("bbb-222", "T2")]:
+        sd = root / tid / "sessions" / "1"
+        sd.mkdir(parents=True)
+        (root / tickets.AGENT_SESSIONS_DIR).mkdir(exist_ok=True)  # what mark_agent_session writes
+        (root / tickets.AGENT_SESSIONS_DIR / sid).write_text(f"{sd}\n")
+        t = tmp_path / f"{sid}.jsonl"
+        t.write_text(f'{{"sessionId":"{sid}"}}\n')
+        sessions[sid] = (t, sd)
+    for sid, (t, _) in sessions.items():  # T2's `ticket work` ran last; T1's agent still lands in T1
+        r = run_hook(json.dumps({"session_id": sid, "transcript_path": str(t)}), {"RECUT_TICKETS_DIR": str(root)}, tmp_path)
+        assert r.returncode == 0
+    for sid, (t, sd) in sessions.items():
+        assert (sd / "transcript.jsonl").read_text() == t.read_text()
+    # a session that never ran `recut ticket work` (e.g. dev work) copies nothing anywhere
+    other = fake_transcript(tmp_path)
+    run_hook(json.dumps({"session_id": "ccc-333", "transcript_path": str(other)}), {"RECUT_TICKETS_DIR": str(root)}, tmp_path)
+    run_hook(json.dumps({"transcript_path": str(other)}), {"RECUT_TICKETS_DIR": str(root)}, tmp_path)
+    for sid, (t, sd) in sessions.items():
+        assert (sd / "transcript.jsonl").read_text() == t.read_text()
 
 
 def test_hook_test_override_env_and_quiet_failures(tmp_path):

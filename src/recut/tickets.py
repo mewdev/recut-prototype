@@ -9,6 +9,7 @@
 
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -286,14 +287,24 @@ def new_iteration(ticket_id: str, n: int, plan: Optional[dict] = None,
     return k
 
 
-def mark_current_session(ticket_id: str, n: int, root: Path = TICKETS_DIR) -> None:
-    """Remember the session being worked on, for the transcript hook (scripts/hooks/copy_transcript.sh):
-    a Claude Code hook can't see an `export` made inside an agent's shell, so it falls back to
-    this pointer file."""
-    (root / CURRENT_SESSION_FILE).write_text(str(session_dir(ticket_id, n, root).resolve()) + "\n")
+def mark_agent_session(ticket_id: str, n: int, root: Path = TICKETS_DIR,
+                       agent_session: Optional[str] = None) -> Optional[Path]:
+    """Point the calling Claude Code session at this ticket session, for the transcript hook
+    (scripts/hooks/copy_transcript.sh): a hook can't see an `export` made inside the agent's
+    shell, but it gets the Claude session id on stdin. One pointer file per Claude session
+    (`<root>/.agent_sessions/<id>`), so agents working different tickets at once never write
+    into each other's ticket (a single shared pointer did: the last `ticket work` won).
+    Without a Claude session id (`$CLAUDE_CODE_SESSION_ID`) nothing is written."""
+    sid = agent_session or os.environ.get("CLAUDE_CODE_SESSION_ID", "")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", sid):
+        return None
+    p = root / AGENT_SESSIONS_DIR / sid
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(str(session_dir(ticket_id, n, root).resolve()) + "\n")
+    return p
 
 
-CURRENT_SESSION_FILE = ".current_session"
+AGENT_SESSIONS_DIR = ".agent_sessions"
 STARTER_NOTES_PREFIX = "starter plan"  # `recut ticket work` seeds plan.notes with this
 
 
