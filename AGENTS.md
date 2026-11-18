@@ -120,9 +120,12 @@ Not covered by either skill: composing new melodies/lyrics/orchestration (out of
 
 ## Python Environment
 Use the `recut` environment's Python directly, never `conda run -n recut` (it picks up the
-wrong system Python). On the operator's Mac that's
-`/Users/michal/miniconda3/envs/recut/bin/python`. In other environments (cloud sessions,
-CI), use the Python where `pip install -e ".[dev]"` was run.
+wrong system Python). It is the `python` next to the `recut` command:
+`"$(dirname "$(command -v recut)")/python"` (the operator may give the path in the session;
+operators' home folders differ). If `recut` is not on PATH, call that env's `bin/recut` by its
+full path rather than guessing another Python. In other environments (cloud sessions, CI), use
+the Python where `pip install -e ".[dev]"` was run. `import recut` points numba's cache at
+`~/.cache/numba-recut`, so no `NUMBA_CACHE_DIR` is needed in a sandbox.
 
 ## Before Every Commit
 Run both and fix all errors before committing (with the environment's `ruff`/`python`):
