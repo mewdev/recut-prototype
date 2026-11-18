@@ -63,6 +63,9 @@ agent won't know it.
 | R1 convolution reverb (pedalboard Convolution + freely licensed IRs, reverb `type`) | candidate — wait for real tickets | operator on s2·it3 (low-cut return, -26 dB base send rising to -13 dB): "okay for now, needs real cases". Build only when a real ticket shows the algorithmic reverb is the limit |
 
 ## Blockers
+- **Clip positions in bars use the nominal BPM, not the map's beat grid; there is no way to place a clip at a time** (improvement pass 2, phase 2; ticket 20261118-idzo). `bars_to_seconds` (`src/recut/map/parser.py:75`) is `bars × beats_per_bar × 60 / bpm`, and the engine uses it for `offset_bars`/`bars` (`src/recut/engine.py:149-161`). On a track whose tempo drifts, whole bars miss the real downbeats, and to cut at a heard moment the agent hand-computed fractional bars (11.5213 …), then failed the render: `clip c2: chorus#2 has only 13.44 bars left after the offset; asked for 14.4366 bars` (3 renders, 15:52). Two parts:
+  1. Engine-only (no contract change, can be fixed): count bars on the map's downbeats (`seg.downbeats`), and fall back to nominal BPM past the last downbeat. Whole-bar edits then land on real downbeats.
+  2. Needs a contract change (§3 is frozen, so the operator decides): a time-based clip field, e.g. `offset_s`/`length_s`, or `at` snapped to the nearest beat. Without it, an edit at a heard moment that isn't on a bar still needs fractional bars.
 - (none open from ticket 20261118-jn7o: `-inf` gain lint crash, pause clip, stems as sources and multi-track are fixed, see Decisions 2026-11-18.)
 - (otherwise none open) Note: `examples/summer-party/summer-party-map.json` predates M0 (NaN loudness on a zero-length `silence`, an `inst` ending before the audio). It is not regenerated (no raw data); it still loads (NaN is read as the -200 dB floor).
 
