@@ -135,6 +135,12 @@ def match_loudness(sources: dict[str, LoadedSource]) -> None:
                 src.audio = Audio((src.audio.samples * db_to_gain(gain_db)).astype(np.float32), src.audio.sr)
 
 
+def clip_origin(seg) -> float:
+    """Where a clip's offsets count from: the first downbeat. The first segment starts at 0.0,
+    before it (pickup / lead-in), and the lead-in is not a bar."""
+    return seg.downbeats[0] if seg.downbeats and seg.downbeats[0] > seg.start else seg.start
+
+
 def _clip_bounds(node: ClipNode, m: MusicMap) -> tuple[float, float]:
     try:
         seg = get_segment(m, node.segment, node.index)
@@ -142,9 +148,7 @@ def _clip_bounds(node: ClipNode, m: MusicMap) -> tuple[float, float]:
         names = sorted({s.segment_name for s in m.segments if s.segment_name != "silence"})
         raise PlanError(f"clip {node.id}: {e}. Sections in source {node.source!r}: {names}") from e
     start, end = seg.start, seg.end
-    # offsets count from the first downbeat: the first segment starts at 0.0, before it
-    # (pickup / lead-in), and the lead-in is not a bar
-    origin = seg.downbeats[0] if seg.downbeats and seg.downbeats[0] > start else start
+    origin = clip_origin(seg)
     if node.offset_bars is not None:
         start = advance(m, origin, node.offset_bars, "bars")
     elif node.offset_beats is not None:

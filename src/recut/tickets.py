@@ -266,20 +266,100 @@ def new_session(ticket_id: str, agent: Optional[str] = None, model: Optional[str
     return n
 
 
-def latest_plan(ticket_id: str, root: Path = TICKETS_DIR) -> Optional[dict]:
+def _latest_plan_at(ticket_id: str, root: Path = TICKETS_DIR) -> Optional[tuple[int, int]]:
+    """(session, iteration) of the newest plan."""
     for n in reversed(session_numbers(ticket_id, root)):
         for k in reversed(iteration_numbers(ticket_id, n, root)):
-            p = iteration_dir(ticket_id, n, k, root) / "plan.json"
-            if p.exists():
-                return json.loads(p.read_text())
+            if (iteration_dir(ticket_id, n, k, root) / "plan.json").exists():
+                return n, k
     return None
+
+
+def latest_plan(ticket_id: str, root: Path = TICKETS_DIR) -> Optional[dict]:
+    at = _latest_plan_at(ticket_id, root)
+    return json.loads((iteration_dir(ticket_id, *at, root) / "plan.json").read_text()) if at else None
+
+
+_POSITION_KEYS = ("offset_bars", "offset_beats", "bars", "beats")
+
+
+def carry_plan(ticket_id: str, root: Path = TICKETS_DIR) -> tuple[Optional[dict], list[str]]:
+    """The latest plan, for a new iteration, so that it still sounds like its render.
+
+    If the code counts bars differently than when that plan was rendered (e.g. nominal tempo ->
+    the map's downbeats), the same numbers would land elsewhere in the song. Each clip whose
+    position moved gets its bar/beat numbers recomputed from the render's source times
+    (render.json `src_start`/`src_end`), so the copy renders the same cut. Returns the plan and
+    notes for the operator/agent (empty when nothing moved)."""
+    from recut.contracts import ClipNode, RenderInfo
+    from recut.engine import _clip_bounds, clip_origin
+    from recut.map.parser import count_between, get_segment, parse_recut_map
+
+    at = _latest_plan_at(ticket_id, root)
+    if at is None:
+        return None, []
+    d = iteration_dir(ticket_id, *at, root)
+    plan = json.loads((d / "plan.json").read_text())
+    rp = d / "render.json"
+    if not rp.exists() or is_stale(ticket_id, *at, root):  # no render that matches this plan
+        return plan, []
+    rendered = {s.node_id: s for s in RenderInfo.model_validate_json(rp.read_text()).segments}
+    maps: dict[str, object] = {}
+    kept, failed, worst = [], [], 0.0
+    for track in plan.get("tracks", []):
+        for c in track.get("clips", []):
+            seg_r = rendered.get(c.get("id"))
+            if c.get("type") != "clip" or seg_r is None or not any(c.get(k) is not None for k in _POSITION_KEYS):
+                continue
+            ref = plan.get("sources", {}).get(c.get("source"), {})
+            mp = ticket_dir(ticket_id, root) / ref.get("map", "")  # a stem shares its song's map
+            if not ref.get("map") or not mp.is_file():
+                continue
+            m = maps.setdefault(ref["map"], parse_recut_map(mp))
+            want = (seg_r.src_start, seg_r.src_end)
+            try:
+                now = _clip_bounds(ClipNode.model_validate(c), m)
+                moved = max(abs(now[0] - want[0]), abs(now[1] - want[1]))
+            except PlanError:
+                moved = float("inf")
+            if moved < 0.0005:
+                continue
+            new = dict(c)
+            origin = clip_origin(get_segment(m, c["segment"], c.get("index", 0)))
+            for key, unit in (("offset_bars", "bars"), ("offset_beats", "beats")):
+                if c.get(key) is not None:
+                    new[key] = round(count_between(m, origin, want[0], unit), 6)
+            for key, unit in (("bars", "bars"), ("beats", "beats")):
+                if c.get(key) is not None:
+                    new[key] = round(count_between(m, want[0], want[1], unit), 6)
+            try:
+                got = _clip_bounds(ClipNode.model_validate(new), m)
+                ok = max(abs(got[0] - want[0]), abs(got[1] - want[1])) < 0.0005
+            except PlanError:
+                ok = False
+            if ok:
+                c.update(new)
+                kept.append(c["id"])
+                worst = max(worst, moved)
+            else:
+                failed.append(c["id"])
+    notes = []
+    if kept:
+        shift = "it failed to render" if worst == float("inf") else f"up to {worst * 1000:.0f} ms"
+        notes.append(f"Kept {len(kept)} clip(s) where the previous render put them ({', '.join(kept)}): "
+                     f"bars/beats renumbered for the current bar counting (unchanged, {shift}).")
+    if failed:
+        notes.append(f"WARNING: clip(s) {', '.join(failed)} now land elsewhere than in the previous "
+                     "render: listen and check them.")
+    return plan, notes
 
 
 def new_iteration(ticket_id: str, n: int, plan: Optional[dict] = None,
                   root: Path = TICKETS_DIR) -> int:
-    """New iteration k in session n. Starts from `plan`, else a copy of the latest plan."""
+    """New iteration k in session n. Starts from `plan`, else a copy of the latest plan
+    (carry_plan: the copy sounds like its render)."""
     k = (iteration_numbers(ticket_id, n, root) or [0])[-1] + 1
-    plan = plan if plan is not None else latest_plan(ticket_id, root)
+    plan = plan if plan is not None else carry_plan(ticket_id, root)[0]
     d = iteration_dir(ticket_id, n, k, root)
     d.mkdir(parents=True)
     if plan is not None:
