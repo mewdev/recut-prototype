@@ -31,7 +31,7 @@ from recut.contracts.render import (
     Splice,
 )
 from recut.contracts.units import db_to_gain, parse_time, ramp_in
-from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment, parse_recut_map
+from recut.map.parser import advance, count_between, get_segment, parse_recut_map
 from recut.map.schema import MusicMap
 from recut.primitives.curves import make_envelope
 from recut.qc import RenderInfoQC, _momentary, integrated_lufs, run_qc
@@ -146,25 +146,21 @@ def _clip_bounds(node: ClipNode, m: MusicMap) -> tuple[float, float]:
     # (pickup / lead-in), and the lead-in is not a bar
     origin = seg.downbeats[0] if seg.downbeats and seg.downbeats[0] > start else start
     if node.offset_bars is not None:
-        start = origin + bars_to_seconds(m, node.offset_bars)
+        start = advance(m, origin, node.offset_bars, "bars")
     elif node.offset_beats is not None:
-        start = origin + beats_to_seconds(m, node.offset_beats)
+        start = advance(m, origin, node.offset_beats, "beats")
     if start >= end - 1e-6:
         raise PlanError(f"clip {node.id}: offset is past the end of {node.segment}#{node.index}")
-    length = None
-    if node.bars is not None:
-        length = bars_to_seconds(m, node.bars)
-    elif node.beats is not None:
-        length = beats_to_seconds(m, node.beats)
-    if length is not None:
-        if start + length > end + 0.05:  # 50 ms slack for beat-grid rounding
-            avail_bars = (end - start) / bars_to_seconds(m, 1)
+    unit, n = ("bars", node.bars) if node.bars is not None else ("beats", node.beats)
+    if n is not None:
+        stop = advance(m, start, n, unit)
+        if stop > end + 0.05:  # 50 ms slack for beat-grid rounding
             raise PlanError(
-                f"clip {node.id}: {node.segment}#{node.index} has only {avail_bars:.2f} bars "
-                f"left after the offset; asked for {node.bars or node.beats} "
-                f"{'bars' if node.bars is not None else 'beats'}"
+                f"clip {node.id}: {node.segment}#{node.index} has only "
+                f"{count_between(m, start, end, unit):.2f} {unit} left after the offset; "
+                f"asked for {n} {unit}"
             )
-        end = min(start + length, end)
+        end = min(stop, end)
     return start, end
 
 

@@ -3,7 +3,7 @@ import numpy as np
 from recut.audio import Audio
 from recut.compositor.effects import Reverb, ReverbSweep
 from recut.compositor.nodes import Clip, Node, XFade
-from recut.map.parser import bars_to_seconds, beats_to_seconds, get_segment
+from recut.map.parser import advance, beats_to_seconds, get_segment
 from recut.map.schema import MusicMap
 from recut.primitives.curves import make_envelope
 from recut.primitives.cut import cut
@@ -71,18 +71,18 @@ def compose(music_map: MusicMap, audio: Audio, *nodes: Node) -> Audio:
         end = segment.end
 
         if node.offset_bars is not None:
-            start += bars_to_seconds(music_map, node.offset_bars)
+            start = advance(music_map, start, node.offset_bars, "bars")
         elif node.offset_beats is not None:
-            start += beats_to_seconds(music_map, node.offset_beats)
+            start = advance(music_map, start, node.offset_beats, "beats")
 
         if node.bars is not None:
-            end = start + bars_to_seconds(music_map, node.bars)
+            end = advance(music_map, start, node.bars, "bars")
             if end > segment.end:
                 raise ValueError(
                     f"{node.bars} bars exceeds segment length for {node.segment_name!r}"
                 )
         elif node.beats is not None:
-            end = start + beats_to_seconds(music_map, node.beats)
+            end = advance(music_map, start, node.beats, "beats")
             if end > segment.end:
                 raise ValueError(
                     f"{node.beats} beats exceeds segment length for {node.segment_name!r}"

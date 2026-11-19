@@ -11,7 +11,7 @@ The `MusicMap` (`src/recut/map/schema.py`) tells you **structure**. It does not 
 | Map field | Reliability | Use for |
 |---|---|---|
 | `MusicMap.beats` / `MusicMap.bars` | High | Precise timestamps for cut points, sub-bar splicing via `offset_bars`/`offset_beats` |
-| `MusicMap.bpm`, `beats_per_bar` | **Verify before trusting** | `bars_to_seconds()` / `beats_to_seconds()` for `Clip(bars=...)`/`Clip(beats=...)` — see verification step below |
+| `MusicMap.bpm`, `beats_per_bar` | **Verify before trusting** | Nominal tempo: automation times (`"1 bar"`) and xfade/fade lengths in beats. Clip `bars`/`offset_bars` don't use it (they count the map's downbeats) — see below |
 | `EnrichedSegment.start/end/duration` | Medium | Coarse section boundaries |
 | `EnrichedSegment.segment_name` | Medium | Content hints (see label guide below) |
 | `EnrichedSegment.downbeats` | High | Sub-bar precision, snap targets |
@@ -38,43 +38,18 @@ The `MusicMap` (`src/recut/map/schema.py`) tells you **structure**. It does not 
 - **Phrase-level detail below `phrases`**: `phrases` gives sub-segment timestamps, but nothing marks "this phrase is a literal repeat of the previous one." If the user says "cut when it repeats," that's still a judgment call between `phrases` entries — ask which repeat they mean if ambiguous.
 - **Per-instrument activity only when enriched.** `instrument_activity` (drum/bass/vocal/other curves and `ranges`, from Demucs) and segment `drum_activity`/`vocal_activity` exist only when the map was enriched with stems; otherwise `loudness_db` is your only signal for "this section is dense/sparse". Use the `vocal` ranges to find sung/spoken phrases (e.g. a voice FX) and the `drum` ranges to find breaks.
 
-## Verify `bpm` before using `bars=`/`beats=`/`offset_bars=`
+## Clip bars count the map's downbeats; `bpm` is only the nominal tempo
 
-`bars_to_seconds()`/`beats_to_seconds()` (`src/recut/map/parser.py`) compute purely
-from the `bpm` field — they never look at the map's own `bars`/`beats` timestamp
-arrays. If `bpm` is a stale or octave-wrong estimate (a real, apparently common
-analysis-pipeline failure mode — found on a real song's map, where `bpm` was exactly
-half the tempo implied by the song's own downbeat grid), every `bars=`/`beats=`/
-`offset_bars=` value silently resolves to the wrong number of real seconds, with no
-error — `validate()` still passes, `compose()` still runs, it's just wrong.
+A clip's `bars`/`offset_bars` (and `beats`/`offset_beats`) count the map's real downbeats
+(beats), with fractions interpolated inside a bar: `offset_bars: 4` starts exactly on the
+section's 5th downbeat even when the tempo drifts, and a section's whole bar count always fits
+(`bars` equal to the section's `bars` ends on its end). Don't hand-compute fractional bars from
+`bpm` to reach a downbeat; count downbeats instead.
 
-**Before trusting any `bars=`/`beats=`/`offset_bars=` value on a song you haven't
-worked with before**, do this cheap check once:
-
-```python
-from recut.map.parser import bars_to_seconds
-real_bar_spacing = music_map.bars[1] - music_map.bars[0]
-print(bars_to_seconds(music_map, 1), "vs", real_bar_spacing)  # should match closely
-```
-
-If they disagree, the bpm field is wrong — either fix it at the source (derive a
-corrected value from `music_map.bars`, e.g. the mean bar-to-bar spacing, and patch the
-map JSON — cheap, gitignored, reversible) or account for the ratio in every
-`bars=`/`beats=` value you write, which is much more error-prone and not recommended.
-
-## `bars=`/`offset_bars=` summing to exactly a segment's end can false-positive an error
-
-When a clip is split for a partial-effect application (dry portion + effected tail —
-see `known-limitations.md`'s "No partial-clip effect application"), it's tempting to
-give the second `Clip` an explicit `bars=` that makes `offset_bars + bars` land exactly
-on `segment.end`. Don't — the real downbeat grid has a few ms of jitter per bar (beat
-detection isn't perfectly uniform), so `bars_to_seconds()`'s bpm-derived arithmetic can
-overshoot the segment's *actual* duration by single-digit milliseconds even when the
-bar-count math looks exact on paper, tripping `validate()`'s strict `>` check
-(`check_duration_exceeds`) with a confusing "N bars exceeds segment duration" error
-where N bars visually *should* fit. **Fix: drop the `bars=`/`beats=` cap on the tail
-clip and let it run to the segment's natural end instead of computing a value meant to
-land exactly there.**
+`bpm` (nominal, one number) is still what automation times (`"1 bar"`, `"2 beats"`) and xfade
+/fade lengths in beats use. On a track whose tempo drifts these can differ from the real bars
+by a few percent; if `bpm` disagrees with the grid by a factor (an octave-wrong estimate), the
+map is wrong: re-run the map rather than compensating in the plan.
 
 ## Practical workflow
 

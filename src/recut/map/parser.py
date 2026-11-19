@@ -9,13 +9,17 @@ Public parsers:
 MusicMap helpers (used by validator + compositor):
   get_segment(music_map, segment_name, index) -> EnrichedSegment
   bars_to_seconds(music_map, bars) -> float
-  beats_to_seconds(music_map, beats) -> float
+  beats_to_seconds(music_map, beats) -> float   (nominal tempo)
+  advance(music_map, t, n, unit) -> float      (n bars/beats after t on the map's grid)
+  count_between(music_map, t0, t1, unit) -> float
   first_segment(music_map) -> EnrichedSegment
   last_segment(music_map) -> EnrichedSegment
 """
 
 import warnings
 from pathlib import Path
+
+import numpy as np
 
 from recut.map.schema import EnrichedSegment, MusicMap, SegmentName
 from recut.map.tempo import bpm_disagrees, bpm_from_beats
@@ -78,6 +82,51 @@ def bars_to_seconds(music_map: MusicMap, bars: float) -> float:
 
 def beats_to_seconds(music_map: MusicMap, beats: float) -> float:
     return beats * (60 / music_map.bpm)
+
+
+# Clip positions count bars on the map's real downbeats (beats on its beats), not on the nominal
+# tempo: on a track whose tempo drifts, nominal bars miss the downbeats and a section's last bars
+# "don't fit". Fractions interpolate inside the grid unit; outside the grid the nominal tempo
+# extends it.
+def _grid(music_map: MusicMap, unit: str) -> tuple[np.ndarray, float]:
+    if unit == "bars":
+        pts = sorted({d for s in music_map.segments for d in s.downbeats})
+        return np.asarray(pts, dtype=float), bars_to_seconds(music_map, 1)
+    return np.asarray(sorted(set(music_map.beats)), dtype=float), beats_to_seconds(music_map, 1)
+
+
+def _pos(grid: np.ndarray, period: float, t: float) -> float:
+    """Fractional grid index of time t."""
+    if len(grid) < 2:
+        return (t - (grid[0] if len(grid) else 0.0)) / period
+    if t < grid[0]:
+        return (t - grid[0]) / period
+    if t > grid[-1]:
+        return len(grid) - 1 + (t - grid[-1]) / period
+    return float(np.interp(t, grid, np.arange(len(grid))))
+
+
+def _time(grid: np.ndarray, period: float, x: float) -> float:
+    """Time of fractional grid index x (inverse of _pos)."""
+    if len(grid) < 2:
+        return (grid[0] if len(grid) else 0.0) + x * period
+    if x < 0:
+        return float(grid[0] + x * period)
+    if x > len(grid) - 1:
+        return float(grid[-1] + (x - (len(grid) - 1)) * period)
+    return float(np.interp(x, np.arange(len(grid)), grid))
+
+
+def advance(music_map: MusicMap, t: float, n: float, unit: str = "bars") -> float:
+    """The time n bars (or beats) after time t, counted on the map's downbeats (or beats)."""
+    grid, period = _grid(music_map, unit)
+    return _time(grid, period, _pos(grid, period, t) + n)
+
+
+def count_between(music_map: MusicMap, t0: float, t1: float, unit: str = "bars") -> float:
+    """How many bars (or beats) of the map's grid lie between t0 and t1."""
+    grid, period = _grid(music_map, unit)
+    return _pos(grid, period, t1) - _pos(grid, period, t0)
 
 
 def first_segment(music_map: MusicMap) -> EnrichedSegment:
