@@ -2,8 +2,7 @@ from typing import Optional
 
 from recut.compositor.nodes import Clip, XFade
 from recut.map.parser import (
-    bars_to_seconds,
-    beats_to_seconds,
+    advance,
     first_segment,
     get_segment,
     last_segment,
@@ -30,25 +29,26 @@ def check_duration_exceeds(node: Clip, music_map: MusicMap) -> Optional[Validati
     # before bars/beats measures a length from it — checking against
     # segment.start alone (ignoring offset_bars/offset_beats) misses overflows
     # that only happen because of the offset.
+    # Bars/beats count on the map's downbeats/beats, like compose() and the engine.
     start = segment.start
     if node.offset_bars is not None:
-        start += bars_to_seconds(music_map, node.offset_bars)
+        start = advance(music_map, start, node.offset_bars, "bars")
     elif node.offset_beats is not None:
-        start += beats_to_seconds(music_map, node.offset_beats)
+        start = advance(music_map, start, node.offset_beats, "beats")
 
     if node.bars is not None:
-        requested_s = bars_to_seconds(music_map, node.bars)
+        requested_s = advance(music_map, start, node.bars, "bars") - start
         segment_duration_s = segment.end - segment.start
-        if start + requested_s > segment.end:
+        if start + requested_s > segment.end + 1e-6:
             return ValidationResult(
                 severity="error",
                 message=f"{node.bars} bars ({requested_s:.2f}s) from offset exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",
                 node=node,
             )
     elif node.beats is not None:
-        requested_s = beats_to_seconds(music_map, node.beats)
+        requested_s = advance(music_map, start, node.beats, "beats") - start
         segment_duration_s = segment.end - segment.start
-        if start + requested_s > segment.end:
+        if start + requested_s > segment.end + 1e-6:
             return ValidationResult(
                 severity="error",
                 message=f"{node.beats} beats ({requested_s:.2f}s) from offset exceeds '{node.segment_name}' segment duration ({segment_duration_s:.2f}s)",

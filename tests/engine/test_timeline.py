@@ -172,7 +172,9 @@ def test_clip_gain_automation_fades_the_clip(base):
     audio, info = render_plan(_plan([clip("n1", "verse", bars=2, automation=auto)], p, master={"devices": []}), d)
     ref, _ = render_plan(_plan([clip("n1", "verse", bars=2)], p, master={"devices": []}), d)
     n = audio.samples.shape[-1]
-    assert np.allclose(audio.samples[:, : n // 2 - 10], ref.samples[:, : n // 2 - 10])
+    # the clip's 2 bars are counted on the map's downbeats; automation's "1 bar" is nominal tempo
+    bar = int(round(60 / info.sources["a"].bpm * 4 * audio.sr))
+    assert np.allclose(audio.samples[:, : n - bar - 10], ref.samples[:, : n - bar - 10])
     assert np.abs(audio.samples[:, -50:]).max() < 1e-3 * np.abs(ref.samples).max() + 1e-4
 
 

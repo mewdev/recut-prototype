@@ -399,8 +399,11 @@ def _cmd_ticket(args) -> None:
             print(f"Analyzed + mapped sources: {', '.join(mapped)}")
         n = tickets.new_session(tid, agent=args.agent, model=args.model)
         tickets.mark_agent_session(tid, n)
-        k = tickets.new_iteration(tid, n, plan=None if tickets.latest_plan(tid) else _starter_plan(tid))
+        plan, notes = tickets.carry_plan(tid, from_shipped=True)
+        k = tickets.new_iteration(tid, n, plan=plan if plan is not None else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
+        for line in notes:
+            print(line)
     elif args.action == "audition":
         try:
             files = tickets.write_auditions(args.id, args.source, stem=args.stem, max_s=args.max_s)
@@ -424,8 +427,11 @@ def _cmd_ticket(args) -> None:
             print(f"No session yet — run `recut ticket work {tid}` first")
             raise SystemExit(1)
         n = sessions[-1]
-        k = tickets.new_iteration(tid, n)
+        plan, notes = tickets.carry_plan(tid)
+        k = tickets.new_iteration(tid, n, plan=plan)
         print(f"New iteration: {tickets.iteration_dir(tid, n, k) / 'plan.json'} (copied from the previous one)")
+        for line in notes:
+            print(line)
     elif args.action == "client":
         tid = args.id
         try:

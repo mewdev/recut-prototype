@@ -209,3 +209,46 @@ def test_map_force_rebuilds_existing_maps(tmp_path, monkeypatch):
         cmd_map(A())
         assert mm.call_count == 1
     assert (map_dir / "b.json").read_text() != "old"
+
+
+# --- 4. clip bars count the map's downbeats, not the nominal tempo -------------------------
+
+
+def _speeding_up(tmp_path):
+    # the tempo jumps up in the verse: its bars are shorter than the nominal (median) bar
+    beats = list(np.round(1.0 + np.cumsum([0.0] + [0.5] * 13 + [0.4] * 11), 4))
+    d = beats[::4]
+    raw = _raw(seg_bounds=((0.0, d[3], "intro"), (d[3], d[5], "verse"), (d[5], 12.0, "silence")))
+    raw["beats"], raw["downbeats"] = [float(b) for b in beats], [float(x) for x in d]
+    return _build(tmp_path, raw)
+
+
+def test_whole_section_in_bars_fits_when_the_tempo_drifts(tmp_path):
+    from recut.map.parser import bars_to_seconds
+
+    m = _speeding_up(tmp_path)
+    verse = m.segments[1]
+    assert verse.bars == 2  # not the song's last downbeat, so its end is not a bar
+    assert bars_to_seconds(m, 2) > verse.end - verse.start + 0.05  # nominal bars would overflow
+    node = ClipNode(type="clip", id="c", source="a", segment="verse", bars=2)
+    assert _clip_bounds(node, m) == (verse.start, pytest.approx(verse.end))
+
+
+def test_offset_bars_land_on_real_downbeats_and_fractions_interpolate(tmp_path):
+    m = _speeding_up(tmp_path)
+    db = m.segments[1].downbeats
+    one = ClipNode(type="clip", id="c", source="a", segment="verse", offset_bars=1, bars=1)
+    assert _clip_bounds(one, m) == (pytest.approx(db[1]), pytest.approx(m.segments[1].end))
+    half = ClipNode(type="clip", id="c", source="a", segment="verse", offset_bars=0.5)
+    assert _clip_bounds(half, m)[0] == pytest.approx((db[0] + db[1]) / 2)
+    beat = ClipNode(type="clip", id="c", source="a", segment="verse", offset_beats=1)
+    assert _clip_bounds(beat, m)[0] == pytest.approx(min(b for b in m.beats if b > db[0]))
+
+
+def test_too_many_bars_reports_real_bars_left(tmp_path):
+    from recut.engine import PlanError
+
+    m = _speeding_up(tmp_path)
+    node = ClipNode(type="clip", id="c", source="a", segment="verse", offset_bars=1, bars=2)
+    with pytest.raises(PlanError, match="has only 1.00 bars left"):
+        _clip_bounds(node, m)
