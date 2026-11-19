@@ -13,6 +13,21 @@ Ambiguous — does "from" mean:
 
 **Signal:** if the user describes a repetition or loop at that point ("when the motif repeats"), they usually mean **start there** — the repetition is what they want to keep or escape from.
 
+### "Shorten to [time], fade out" (e.g. "zkrátit cca na 3:15, do ztracena")
+Two distinct edits:
+- **A)** Keep the original timing and fade out at that time (a tail trim). Nothing before it moves.
+- **B)** Remove material from the middle so the whole song fits the time, ending with its own fade.
+
+**Default to A.** A target time plus "fade out" usually names the point where the music may stop, and
+clients who dance, skate or perform to the track (school classes, dance groups) have a choreography set
+to the original timing: an internal cut shifts every move after it. Evidence: ticket 20261119-qdor cut 8
+bars of organ solo at 2:50 to keep the song's own fade (B); the client answered "the choreography is done
+till 3:15, then fade out". Only use B when the request asks to keep the ending or says the length is a
+hard limit with no fixed timing; say which one you built in `intent.json`.
+
+For A, play the original to the first downbeat after the time and fade from there (2-4 bars), so the
+fade starts after the given moment rather than eating into it.
+
 ### "Make it shorter"
 **Ask:** where does it feel too long — beginning, end, or a section in the middle?
 
