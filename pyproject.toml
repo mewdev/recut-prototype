@@ -7,7 +7,7 @@ dependencies = [
     "librosa",
     "scipy",
     "pedalboard",
-    "modal<1.7",  # 1.7 refuses Python 3.10 images: lift after the pipeline images move to 3.11 (STATUS M5)
+    "modal[api-proxy-support]<1.7",  # extra: Modal honors HTTPS_PROXY (sandboxes, cloud) and needs python-socks for it. 1.7 refuses Python 3.10 images: lift after the pipeline images move to 3.11 (STATUS M5)
     "pydantic",
     "soundfile",
     "fastapi",
