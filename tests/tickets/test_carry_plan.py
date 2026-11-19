@@ -65,3 +65,19 @@ def test_stale_render_is_not_used(rendered):
     (d / "plan.json").write_text((d / "plan.json").read_text())  # plan edited after the render
     plan, notes = tickets.carry_plan(tid, root)
     assert notes == [] and plan == json.loads((d / "plan.json").read_text())
+
+
+def test_rework_starts_from_the_shipped_plan_not_a_later_one(rendered):
+    from recut.contracts import Review
+
+    root, tid, d, cid = rendered
+    n, k = tickets._latest_plan_at(tid, root)
+    tickets.save_review(tid, n, Review(iteration=k, verdict="ship"), root=root)
+    shipped = json.loads((d / "plan.json").read_text())
+    later = tickets.new_iteration(tid, n, root=root)  # an unreviewed try after the ship
+    p = tickets.iteration_dir(tid, n, later, root) / "plan.json"
+    p.write_text(json.dumps({**shipped, "notes": "experiment"}))
+
+    plan, notes = tickets.carry_plan(tid, root, from_shipped=True)
+    assert plan == shipped and f"it{k}" in notes[0] and f"it{later}" in notes[0]
+    assert tickets.carry_plan(tid, root)[0]["notes"] == "experiment"  # iterate: latest plan

@@ -399,7 +399,7 @@ def _cmd_ticket(args) -> None:
             print(f"Analyzed + mapped sources: {', '.join(mapped)}")
         n = tickets.new_session(tid, agent=args.agent, model=args.model)
         tickets.mark_agent_session(tid, n)
-        plan, notes = tickets.carry_plan(tid)
+        plan, notes = tickets.carry_plan(tid, from_shipped=True)
         k = tickets.new_iteration(tid, n, plan=plan if plan is not None else _starter_plan(tid))
         _print_work_instructions(tid, n, k)
         for line in notes:

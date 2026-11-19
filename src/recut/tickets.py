@@ -283,8 +283,11 @@ def latest_plan(ticket_id: str, root: Path = TICKETS_DIR) -> Optional[dict]:
 _POSITION_KEYS = ("offset_bars", "offset_beats", "bars", "beats")
 
 
-def carry_plan(ticket_id: str, root: Path = TICKETS_DIR) -> tuple[Optional[dict], list[str]]:
+def carry_plan(ticket_id: str, root: Path = TICKETS_DIR,
+               from_shipped: bool = False) -> tuple[Optional[dict], list[str]]:
     """The latest plan, for a new iteration, so that it still sounds like its render.
+    `from_shipped` (a rework, `recut ticket work`): the newest shipped plan instead, i.e. what the
+    client heard, not an unreviewed iteration made after it.
 
     If the code counts bars differently than when that plan was rendered (e.g. nominal tempo ->
     the map's downbeats), the same numbers would land elsewhere in the song. Each clip whose
@@ -298,11 +301,19 @@ def carry_plan(ticket_id: str, root: Path = TICKETS_DIR) -> tuple[Optional[dict]
     at = _latest_plan_at(ticket_id, root)
     if at is None:
         return None, []
+    notes = []
+    shipped = next(((n, k) for n in reversed(session_numbers(ticket_id, root))
+                    if (k := _shipped_iteration(ticket_id, n, root)) is not None), None)
+    if from_shipped and shipped and shipped != at \
+            and (iteration_dir(ticket_id, *shipped, root) / "plan.json").exists():
+        notes.append(f"Starting from the shipped s{shipped[0]}·it{shipped[1]} (what the client heard); "
+                     f"the newer s{at[0]}·it{at[1]} was not shipped.")
+        at = shipped
     d = iteration_dir(ticket_id, *at, root)
     plan = json.loads((d / "plan.json").read_text())
     rp = d / "render.json"
     if not rp.exists() or is_stale(ticket_id, *at, root):  # no render that matches this plan
-        return plan, []
+        return plan, notes
     rendered = {s.node_id: s for s in RenderInfo.model_validate_json(rp.read_text()).segments}
     maps: dict[str, object] = {}
     kept, failed, worst = [], [], 0.0
@@ -343,7 +354,6 @@ def carry_plan(ticket_id: str, root: Path = TICKETS_DIR) -> tuple[Optional[dict]
                 worst = max(worst, moved)
             else:
                 failed.append(c["id"])
-    notes = []
     if kept:
         shift = "it failed to render" if worst == float("inf") else f"up to {worst * 1000:.0f} ms"
         notes.append(f"Kept {len(kept)} clip(s) where the previous render put them ({', '.join(kept)}): "
