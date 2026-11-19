@@ -129,7 +129,7 @@ async function ticketPage(tid) {
   S.tid = tid;
   $("#main").innerHTML = `
     <div class="row" style="justify-content:space-between">
-      <div><h2 style="margin:4px 0">${esc(tid)}</h2><div id="req" class="muted"></div></div>
+      <div><h2 style="margin:4px 0">${esc(tid)}</h2><div id="cname" style="margin-bottom:4px"></div><div id="req" class="muted"></div></div>
       <div class="row" id="iters"></div>
     </div>
     <div class="row" style="margin:10px 0">
@@ -172,6 +172,7 @@ async function loadTicket(first) {
   S.ticket = t;
   const r = t.request;
   $("#hdr").textContent = `status: ${r.status}`;
+  $("#cname").textContent = r.client_name ? `client: ${r.client_name}` : "";
   const cf = t.client_feedback || [];
   const lastCf = cf[cf.length - 1];
   $("#client").textContent = lastCf
