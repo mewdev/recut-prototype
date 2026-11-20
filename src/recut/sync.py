@@ -123,10 +123,21 @@ def _sync_once(repo: Path, message: Optional[str], push: bool) -> dict:
     if not push or not _has_remote(repo):
         return {"status": "committed" if committed else "clean", "pushed": False}
     branch = _branch(repo)
-    pull = _git(repo, "pull", "-q", "--rebase", "--autostash", "origin", branch, check=False)
-    if pull.returncode != 0 and "couldn't find remote ref" not in pull.stderr:
-        _git(repo, "rebase", "--abort", check=False)
-        return {"status": "push-failed", "error": pull.stderr.strip()[-400:], "committed": committed}
+    # Never stash: other processes (render, server, CLI) write ticket files while this runs, and
+    # `pull --autostash` moved those writes into a stash that a failed rebase never put back.
+    fetch = _git(repo, "fetch", "-q", "origin", branch, check=False)
+    if fetch.returncode != 0 and "couldn't find remote ref" not in fetch.stderr:
+        return {"status": "push-failed", "error": fetch.stderr.strip()[-400:], "committed": committed}
+    upstream = f"origin/{branch}"
+    has_upstream = _git(repo, "rev-parse", "-q", "--verify", upstream, check=False).returncode == 0
+    if has_upstream and _git(repo, "merge-base", "--is-ancestor", upstream, "HEAD", check=False).returncode != 0:
+        if _git(repo, "status", "--porcelain").stdout.strip():
+            (repo / ".git" / "recut-sync.pending").touch()  # a file changed after the commit: commit it first
+            return {"status": "queued", "committed": committed}
+        rebase = _git(repo, "rebase", "-q", upstream, check=False)
+        if rebase.returncode != 0:
+            _git(repo, "rebase", "--abort", check=False)
+            return {"status": "push-failed", "error": rebase.stderr.strip()[-400:], "committed": committed}
     p = _git(repo, "push", "-q", "-u", "origin", branch, check=False)
     if p.returncode != 0:
         return {"status": "push-failed", "error": p.stderr.strip()[-400:], "committed": committed}
